@@ -1,0 +1,38 @@
+spring:
+  jackson:
+    time-zone:
+      Europe/Rome
+  application:
+    name: "@project.artifactId@"
+    version: "@project.version@"
+  jmx.enabled: true
+  resources:
+    static-locations: classpath:/static/
+    cache:
+      cachecontrol:
+        max-age: 3600
+        no-transform: true
+        must-revalidate: true
+  config:
+    activate:
+      on-profile: default
+  data:
+    mongodb:
+      database: ${MONGODB_DBNAME:mil}
+      uri: ${MONGODB_URI:mongodb://localhost:27017}
+
+management:
+  health:
+    redis.enabled: ${REDIS_CACHE_ENABLED:false}
+    mongo.enabled: ${HEALTH_MONGO_ENABLED:true}
+  endpoint:
+    health:
+      probes.enabled: true
+      group:
+        readiness.include: "*"
+        liveness.include: livenessState,diskSpace,ping,binders
+  endpoints:
+    jmx:
+      exposure.include: "*"
+    web:
+      exposure.include: info, health
