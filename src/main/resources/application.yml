@@ -1,0 +1,42 @@
+spring:
+  jackson:
+    time-zone:
+      Europe/Rome
+  application:
+    name: "@project.artifactId@"
+    version: "@project.version@"
+  jmx.enabled: true
+  config:
+    activate:
+      on-profile: default
+  data:
+    mongodb:
+      database: ${MONGODB_DBNAME:mil}
+      uri: ${MONGODB_URI:mongodb://localhost:27017}
+      config:
+        connectionPool:
+          maxSize: ${MONGODB_CONNECTIONPOOL_MAX_SIZE:100}
+          minSize: ${MONGODB_CONNECTIONPOOL_MIN_SIZE:5}
+          maxWaitTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_WAIT_MS:120000}
+          maxConnectionLifeTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_LIFE_MS:0}
+          maxConnectionIdleTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_IDLE_MS:120000}
+          maxConnecting: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTING:2}
+
+server:
+  port: ${CITIZEN_PORT:8084}
+
+management:
+  health:
+    mongo.enabled: ${HEALTH_MONGO_ENABLED:false}
+  endpoint:
+    health:
+      show-details: always
+      probes.enabled: true
+      group:
+        readiness.include: "*"
+        liveness.include: livenessState,diskSpace,ping
+  endpoints:
+    jmx:
+      exposure.include: "*"
+    web:
+      exposure.include: info, health
