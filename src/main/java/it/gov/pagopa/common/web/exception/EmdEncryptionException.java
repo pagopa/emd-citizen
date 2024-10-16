@@ -1,8 +1,7 @@
-package it.gov.pagopa.onboarding.citizen.exception.custom;
+package it.gov.pagopa.common.web.exception;
 
-import it.gov.pagopa.common.web.exception.ServiceException;
-import it.gov.pagopa.onboarding.citizen.constants.OnboardingCitizenConstants.ExceptionCode;
 
+import it.gov.pagopa.common.utils.CommonConstants.ExceptionCode;
 
 public class EmdEncryptionException extends ServiceException {
 

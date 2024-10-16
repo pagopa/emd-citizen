@@ -1,4 +1,4 @@
-package it.gov.pagopa.onboarding.citizen.exception.custom;
+package it.gov.pagopa.onboarding.citizen.configuration;
 
 
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;

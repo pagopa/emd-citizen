@@ -1,5 +1,6 @@
 package it.gov.pagopa.onboarding.citizen.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CitizenConsentDTO {
+    @JsonAlias("fiscalCode")
     private String hashedFiscalCode;
     private String tppId;
     private Boolean tppState;

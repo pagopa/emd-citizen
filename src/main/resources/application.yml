@@ -6,13 +6,6 @@ spring:
     name: "@project.artifactId@"
     version: "@project.version@"
   jmx.enabled: true
-  resources:
-    static-locations: classpath:/static/
-    cache:
-      cachecontrol:
-        max-age: 3600
-        no-transform: true
-        must-revalidate: true
   config:
     activate:
       on-profile: default
@@ -20,17 +13,28 @@ spring:
     mongodb:
       database: ${MONGODB_DBNAME:mil}
       uri: ${MONGODB_URI:mongodb://localhost:27017}
+      config:
+        connectionPool:
+          maxSize: ${MONGODB_CONNECTIONPOOL_MAX_SIZE:100}
+          minSize: ${MONGODB_CONNECTIONPOOL_MIN_SIZE:5}
+          maxWaitTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_WAIT_MS:120000}
+          maxConnectionLifeTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_LIFE_MS:0}
+          maxConnectionIdleTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_IDLE_MS:120000}
+          maxConnecting: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTING:2}
+
+server:
+  port: ${CITIZEN_PORT:8084}
 
 management:
   health:
-    redis.enabled: ${REDIS_CACHE_ENABLED:false}
-    mongo.enabled: ${HEALTH_MONGO_ENABLED:true}
+    mongo.enabled: ${HEALTH_MONGO_ENABLED:false}
   endpoint:
     health:
+      show-details: always
       probes.enabled: true
       group:
         readiness.include: "*"
-        liveness.include: livenessState,diskSpace,ping,binders
+        liveness.include: livenessState,diskSpace,ping
   endpoints:
     jmx:
       exposure.include: "*"

@@ -3,12 +3,13 @@ package it.gov.pagopa.onboarding.citizen.service;
 import it.gov.pagopa.common.utils.Utils;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
-import it.gov.pagopa.onboarding.citizen.dto.mapper.CitizenConsentMapperToDTO;
-import it.gov.pagopa.onboarding.citizen.exception.custom.EmdEncryptionException;
-import it.gov.pagopa.onboarding.citizen.exception.custom.ExceptionMap;
+import it.gov.pagopa.onboarding.citizen.dto.mapper.CitizenConsentObjectToDTOMapper;
+import it.gov.pagopa.common.web.exception.EmdEncryptionException;
+import it.gov.pagopa.onboarding.citizen.configuration.ExceptionMap;
 import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentDTOFaker;
+import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentFaker;
 import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
-import it.gov.pagopa.onboarding.citizen.model.mapper.CitizenConsentMapperToObject;
+import it.gov.pagopa.onboarding.citizen.model.mapper.CitizenConsentDTOToObjectMapper;
 import it.gov.pagopa.onboarding.citizen.repository.CitizenRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,15 +24,16 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith({SpringExtension.class, MockitoExtension.class})
 @ContextConfiguration(classes = {
         CitizenServiceImpl.class,
-        CitizenConsentMapperToDTO.class,
-        CitizenConsentMapperToObject.class,
+        CitizenConsentObjectToDTOMapper.class,
+        CitizenConsentDTOToObjectMapper.class,
         ExceptionMap.class
 })
 class CitizenServiceTest {
@@ -43,21 +45,25 @@ class CitizenServiceTest {
     CitizenRepository citizenRepository;
 
     @Autowired
-    CitizenConsentMapperToObject mapperToObject;
-    @Autowired
-    ExceptionMap exceptionMap;
+    CitizenConsentDTOToObjectMapper mapperToObject;
+
+    private static final String FISCAL_CODE = "fiscalCode";
+    private static final String HASHED_FISCAL_CODE = Utils.createSHA256(FISCAL_CODE);
+    private static final String TPP_ID = "tppId";
+    private static final boolean TPP_STATE = true;
+    private static final CitizenConsent CITIZEN_CONSENT = CitizenConsentFaker.mockInstance(true);
 
     @Test
     void createCitizenConsent_Ok() {
 
         CitizenConsentDTO citizenConsentDTO = CitizenConsentDTOFaker.mockInstance(true);
-        CitizenConsent citizenConsent = mapperToObject.citizenConsentDTOMapper(citizenConsentDTO);
+        CitizenConsent citizenConsent = mapperToObject.map(citizenConsentDTO);
 
         Mockito.when(citizenRepository.save(Mockito.any()))
                 .thenReturn(Mono.just(citizenConsent));
 
         CitizenConsentDTO response = citizenService.createCitizenConsent(citizenConsentDTO).block();
-        assert response != null;
+        assertNotNull(response);
         citizenConsentDTO.setLastUpdateDate(response.getLastUpdateDate());
         citizenConsentDTO.setCreationDate(response.getCreationDate());
 
@@ -78,30 +84,27 @@ class CitizenServiceTest {
 
     @Test
     void updateChannelState_Ok() {
-        String hashedFiscalCode = "hashedFiscalCode";
-        String tppId = "tppId";
-        boolean tppState = true;
-        CitizenConsent citizenConsent = new CitizenConsent();
 
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(hashedFiscalCode, tppId))
-                .thenReturn(Mono.just(citizenConsent));
+        
+
+        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
+                .thenReturn(Mono.just(CITIZEN_CONSENT));
         Mockito.when(citizenRepository.save(Mockito.any()))
-                .thenReturn(Mono.just(citizenConsent));
+                .thenReturn(Mono.just(CITIZEN_CONSENT));
 
-        CitizenConsentDTO response = citizenService.updateChannelState(hashedFiscalCode, tppId, tppState).block();
-        assert response != null;
-        assertEquals(tppState, response.getTppState());
+        CitizenConsentDTO response = citizenService.updateChannelState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
+        assertNotNull(response);
+        assertEquals(TPP_STATE, response.getTppState());
     }
 
     @Test
     void updateChannelState_Ko_CitizenNotOnboarded() {
-        String hashedFiscalCode = "hashedFiscalCode";
-        String tppId = "tppId";
 
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(hashedFiscalCode, tppId))
+
+        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.empty());
 
-        Executable executable = () -> citizenService.updateChannelState(hashedFiscalCode, tppId, true).block();
+        Executable executable = () -> citizenService.updateChannelState(FISCAL_CODE, TPP_ID, true).block();
         ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
 
         assertEquals("CITIZEN_NOT_ONBOARDED", exception.getMessage());
@@ -109,28 +112,22 @@ class CitizenServiceTest {
 
     @Test
     void getConsentStatus_Ok() {
-        String fiscalCode = "fiscalCode";
-        String tppId = "tppId";
-        String hashedFiscalCode = Utils.createSHA256(fiscalCode);
-        CitizenConsent citizenConsent = new CitizenConsent();
+        
 
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(hashedFiscalCode, tppId))
-                .thenReturn(Mono.just(citizenConsent));
+        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
+                .thenReturn(Mono.just(CITIZEN_CONSENT));
 
-        CitizenConsentDTO response = citizenService.getConsentStatus(fiscalCode, tppId).block();
-        assert response != null;
+        CitizenConsentDTO response = citizenService.getConsentStatus(FISCAL_CODE, TPP_ID).block();
+        assertNotNull(response);
     }
 
     @Test
     void getConsentStatus_Ko_CitizenNotOnboarded() {
-        String fiscalCode = "fiscalCode";
-        String tppId = "tppId";
-        String hashedFiscalCode = Utils.createSHA256(fiscalCode);
 
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(hashedFiscalCode, tppId))
+        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.empty());
 
-        Executable executable = () -> citizenService.getConsentStatus(fiscalCode, tppId).block();
+        Executable executable = () -> citizenService.getConsentStatus(FISCAL_CODE, TPP_ID).block();
         ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
 
         assertEquals("CITIZEN_NOT_ONBOARDED", exception.getMessage());
@@ -138,27 +135,25 @@ class CitizenServiceTest {
 
     @Test
     void getListEnabledConsents_Ok() {
-        String fiscalCode = "fiscalCode";
-        String hashedFiscalCode = Utils.createSHA256(fiscalCode);
-        CitizenConsent citizenConsent = new CitizenConsent();
+        
 
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppStateTrue(hashedFiscalCode))
-                .thenReturn(Flux.just(citizenConsent));
+        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppStateTrue(HASHED_FISCAL_CODE))
+                .thenReturn(Flux.just(CITIZEN_CONSENT));
 
-        Flux<CitizenConsentDTO> response = citizenService.getListEnabledConsents(fiscalCode);
-        assertEquals(1, response.count().block());
+        List<CitizenConsentDTO> response = citizenService.getListEnabledConsents(FISCAL_CODE).block();
+        assertNotNull(response);
+        assertEquals(1, response.size());
     }
 
     @Test
     void getListAllConsents_Ok() {
-        String fiscalCode = "fiscalCode";
-        String hashedFiscalCode = Utils.createSHA256(fiscalCode);
-        CitizenConsent citizenConsent = new CitizenConsent();
+        
 
-        Mockito.when(citizenRepository.findByHashedFiscalCode(hashedFiscalCode))
-                .thenReturn(Flux.just(citizenConsent));
+        Mockito.when(citizenRepository.findByHashedFiscalCode(HASHED_FISCAL_CODE))
+                .thenReturn(Flux.just(CITIZEN_CONSENT));
 
-        Flux<CitizenConsentDTO> response = citizenService.getListAllConsents(fiscalCode);
-        assertEquals(1, response.count().block());
+        List<CitizenConsentDTO> response = citizenService.getListAllConsents(FISCAL_CODE).block();
+        assertNotNull(response);
+        assertEquals(1, response.size());
     }
 }

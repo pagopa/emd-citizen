@@ -2,7 +2,7 @@ package it.gov.pagopa.onboarding.citizen.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
-import it.gov.pagopa.onboarding.citizen.model.mapper.CitizenConsentMapperToObject;
+import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentDTOFaker;
 import it.gov.pagopa.onboarding.citizen.service.CitizenServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -12,10 +12,8 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
 import java.util.List;
 
 @WebFluxTest(CitizenControllerImpl.class)
@@ -30,12 +28,13 @@ class CitizenControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
-    CitizenConsentMapperToObject mapperToObject;
+    private static final String FISCAL_CODE = "fiscalCode";
+    private static final String TPP_ID  = "tppId";
+
 
     @Test
     void saveCitizenConsent_Ok() {
-        CitizenConsentDTO citizenConsentDTO = new CitizenConsentDTO();
+        CitizenConsentDTO citizenConsentDTO = CitizenConsentDTOFaker.mockInstance(true);
 
         Mockito.when(citizenService.createCitizenConsent(citizenConsentDTO)).thenReturn(Mono.just(citizenConsentDTO));
 
@@ -44,7 +43,7 @@ class CitizenControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(citizenConsentDTO)
                 .exchange()
-                .expectStatus().isCreated()
+                .expectStatus().isOk()
                 .expectBody(CitizenConsentDTO.class)
                 .consumeWith(response -> {
                     CitizenConsentDTO resultResponse = response.getResponseBody();
@@ -55,10 +54,7 @@ class CitizenControllerTest {
 
     @Test
     void stateUpdate_Ok() {
-        CitizenConsentDTO citizenConsentDTO = new CitizenConsentDTO();
-        citizenConsentDTO.setHashedFiscalCode("hashedFiscalCode");
-        citizenConsentDTO.setTppId("tppId");
-        citizenConsentDTO.setTppState(true);
+        CitizenConsentDTO citizenConsentDTO = CitizenConsentDTOFaker.mockInstance(true);
 
         Mockito.when(citizenService.updateChannelState(
                         citizenConsentDTO.getHashedFiscalCode(),
@@ -82,15 +78,14 @@ class CitizenControllerTest {
 
     @Test
     void getConsentStatus_Ok() {
-        String fiscalCode = "fiscalCode";
-        String tppId = "tppId";
-        CitizenConsentDTO citizenConsentDTO = new CitizenConsentDTO();
 
-        Mockito.when(citizenService.getConsentStatus(fiscalCode, tppId))
+        CitizenConsentDTO citizenConsentDTO = CitizenConsentDTOFaker.mockInstance(true);
+
+        Mockito.when(citizenService.getConsentStatus(FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.just(citizenConsentDTO));
 
         webClient.get()
-                .uri("/emd/citizen/{fiscalCode}/{tppId}", fiscalCode, tppId)
+                .uri("/emd/citizen/{fiscalCode}/{tppId}", FISCAL_CODE, TPP_ID)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(CitizenConsentDTO.class)
@@ -103,14 +98,13 @@ class CitizenControllerTest {
 
     @Test
     void getCitizenConsentsEnabled_Ok() {
-        String fiscalCode = "fiscalCode";
-        List<CitizenConsentDTO> citizenConsentDTOList = Collections.singletonList(new CitizenConsentDTO());
+        List<CitizenConsentDTO> citizenConsentDTOList = List.of(CitizenConsentDTOFaker.mockInstance(true));
 
-        Mockito.when(citizenService.getListEnabledConsents(fiscalCode))
-                .thenReturn(Flux.fromIterable(citizenConsentDTOList));
+        Mockito.when(citizenService.getListEnabledConsents(FISCAL_CODE))
+                .thenReturn(Mono.just(citizenConsentDTOList));
 
         webClient.get()
-                .uri("/emd/citizen/list/{fiscalCode}/enabled", fiscalCode)
+                .uri("/emd/citizen/list/{fiscalCode}/enabled", FISCAL_CODE)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(CitizenConsentDTO.class)
@@ -123,14 +117,13 @@ class CitizenControllerTest {
 
     @Test
     void getCitizenConsents_Ok() {
-        String fiscalCode = "fiscalCode";
-        List<CitizenConsentDTO> citizenConsentDTOList = Collections.singletonList(new CitizenConsentDTO());
+        List<CitizenConsentDTO> citizenConsentDTOList = List.of(CitizenConsentDTOFaker.mockInstance(true));
 
-        Mockito.when(citizenService.getListAllConsents(fiscalCode))
-                .thenReturn(Flux.fromIterable(citizenConsentDTOList));
+        Mockito.when(citizenService.getListAllConsents(FISCAL_CODE))
+                .thenReturn(Mono.just(citizenConsentDTOList));
 
         webClient.get()
-                .uri("/emd/citizen/list/{fiscalCode}", fiscalCode)
+                .uri("/emd/citizen/list/{fiscalCode}", FISCAL_CODE)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(CitizenConsentDTO.class)

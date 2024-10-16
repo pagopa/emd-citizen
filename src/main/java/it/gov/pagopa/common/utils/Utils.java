@@ -1,5 +1,5 @@
 package it.gov.pagopa.common.utils;
-import it.gov.pagopa.onboarding.citizen.exception.custom.EmdEncryptionException;
+import it.gov.pagopa.common.web.exception.EmdEncryptionException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
@@ -30,10 +30,7 @@ public class Utils {
         }
     }
 
-    public static void logInfo(String message){
-        log.info(inputSanify(message));
-    }
-    private static String inputSanify(String message){
+    public static String inputSanify(String message){
         if (message != null)
             return message.replaceAll("[\\r\\n]", "");
         return "[EMD][WARNING] Null log";

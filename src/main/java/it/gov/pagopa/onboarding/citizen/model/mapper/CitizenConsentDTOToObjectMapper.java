@@ -6,9 +6,9 @@ import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CitizenConsentMapperToObject{
+public class CitizenConsentDTOToObjectMapper {
 
-    public CitizenConsent citizenConsentDTOMapper(CitizenConsentDTO citizenConsentDTO){
+    public CitizenConsent map(CitizenConsentDTO citizenConsentDTO){
         return CitizenConsent.builder()
                 .tppState(true)
                 .tppId(citizenConsentDTO.getTppId())

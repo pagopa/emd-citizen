@@ -3,7 +3,6 @@ package it.gov.pagopa.onboarding.citizen.controller;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.service.CitizenServiceImpl;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -22,35 +21,33 @@ public class CitizenControllerImpl implements CitizenController {
     @Override
     public Mono<ResponseEntity<CitizenConsentDTO>> saveCitizenConsent(@Valid CitizenConsentDTO citizenConsentDTO) {
         return citizenService.createCitizenConsent(citizenConsentDTO)
-                .map(consent -> new ResponseEntity<>(consent, HttpStatus.CREATED));
+                .map(ResponseEntity::ok);
     }
 
     @Override
     public Mono<ResponseEntity<CitizenConsentDTO>> stateUpdate(@Valid CitizenConsentDTO citizenConsentDTO) {
         return citizenService.updateChannelState(
-                        citizenConsentDTO.getHashedFiscalCode(),
+                        citizenConsentDTO.getHashedFiscalCode(), //at this stage the fiscalCode has not yet been hashed
                         citizenConsentDTO.getTppId(),
                         citizenConsentDTO.getTppState())
-                .map(consent -> new ResponseEntity<>(consent, HttpStatus.OK));
+                .map(ResponseEntity::ok);
     }
 
     @Override
     public Mono<ResponseEntity<CitizenConsentDTO>> getConsentStatus(String fiscalCode, String tppId) {
         return citizenService.getConsentStatus(fiscalCode, tppId)
-                .map(consent -> new ResponseEntity<>(consent, HttpStatus.OK));
+                .map(ResponseEntity::ok);
     }
 
     @Override
     public Mono<ResponseEntity<List<CitizenConsentDTO>>> getCitizenConsentsEnabled(String fiscalCode) {
         return citizenService.getListEnabledConsents(fiscalCode)
-                .collectList()
-                .map(consents -> new ResponseEntity<>(consents, HttpStatus.OK));
+                .map(ResponseEntity::ok);
     }
 
     @Override
     public Mono<ResponseEntity<List<CitizenConsentDTO>>> getCitizenConsents(String fiscalCode) {
         return citizenService.getListAllConsents(fiscalCode)
-                .collectList()
-                .map(consents -> new ResponseEntity<>(consents, HttpStatus.OK));
+                .map(ResponseEntity::ok);
     }
 }

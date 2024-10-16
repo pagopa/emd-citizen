@@ -1,11 +1,11 @@
 package it.gov.pagopa.common.web.exception;
 
 import it.gov.pagopa.common.web.dto.ErrorDTO;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -23,7 +23,7 @@ public class ErrorManager {
   }
 
   @ExceptionHandler(RuntimeException.class)
-  protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, HttpServletRequest request) {
+  protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, ServerHttpRequest request) {
 
     logClientException(error, request);
 
@@ -46,7 +46,7 @@ public class ErrorManager {
               .body(errorDTO);
     }
   }
-  public static void logClientException(RuntimeException error, HttpServletRequest request) {
+  public static void logClientException(RuntimeException error, ServerHttpRequest request) {
     Throwable unwrappedException = error.getCause() instanceof ServiceException
             ? error.getCause()
             : error;
@@ -71,7 +71,7 @@ public class ErrorManager {
     }
   }
 
-  public static String getRequestDetails(HttpServletRequest request) {
-    return "%s %s".formatted(request.getMethod(), request.getRequestURI());
+  public static String getRequestDetails(ServerHttpRequest request) {
+    return "%s %s".formatted(request.getMethod(), request.getURI());
   }
 }
