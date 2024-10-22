@@ -7,7 +7,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -27,11 +26,11 @@ public class ServiceExceptionHandler {
 
   @SuppressWarnings("squid:S1452")
   @ExceptionHandler(ServiceException.class)
-  protected ResponseEntity<? extends ServiceExceptionPayload> handleException(ServiceException error, ServerHttpRequest request) {
+  protected ResponseEntity<? extends ServiceExceptionPayload> handleException(ServiceException error) {
     if (null != error.getPayload()) {
-      return handleBodyProvidedException(error, request);
+      return handleBodyProvidedException(error);
     }
-    return errorManager.handleException(transcodeException(error), request);
+    return errorManager.handleException(transcodeException(error));
   }
 
   private ClientException transcodeException(ServiceException error) {
@@ -45,9 +44,9 @@ public class ServiceExceptionHandler {
     return new ClientExceptionWithBody(httpStatus, error.getCode(), error.getMessage(), error.isPrintStackTrace(), error);
   }
 
-  private ResponseEntity<? extends ServiceExceptionPayload> handleBodyProvidedException(ServiceException error, ServerHttpRequest request) {
+  private ResponseEntity<? extends ServiceExceptionPayload> handleBodyProvidedException(ServiceException error) {
     ClientException clientException = transcodeException(error);
-    ErrorManager.logClientException(clientException, request);
+    ErrorManager.logClientException(clientException);
 
     return ResponseEntity.status(clientException.getHttpStatus())
             .contentType(MediaType.APPLICATION_JSON)

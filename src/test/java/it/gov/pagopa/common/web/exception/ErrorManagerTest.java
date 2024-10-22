@@ -75,7 +75,7 @@ class ErrorManagerTest {
             .expectStatus().isBadRequest();
 
     checkStackTraceSuppressedLog(memoryAppender,
-            "A ClientExceptionNoBody occurred handling request GET /test: HttpStatus 400 BAD_REQUEST - NOTFOUND ClientExceptionNoBody at it.gov.pagopa.common.web.exception.ErrorManagerTest\\$TestController.testEndpoint\\(ErrorManagerTest.java:[0-9]+\\)");
+            "HttpStatus 400 BAD_REQUEST - NOTFOUND ClientExceptionNoBody");
   }
 
   @Test
@@ -119,7 +119,7 @@ class ErrorManagerTest {
             .expectBody()
             .json(EXPECTED_GENERIC_ERROR);
 
-    checkStackTraceSuppressedLog(memoryAppender, "A ClientException occurred handling request GET /test: HttpStatus null - null at UNKNOWN");
+    checkStackTraceSuppressedLog(memoryAppender, "HttpStatus null - null");
     memoryAppender.reset();
 
     Mockito.doThrow(
@@ -134,7 +134,7 @@ class ErrorManagerTest {
             .expectBody()
             .json(EXPECTED_GENERIC_ERROR);
 
-    checkStackTraceSuppressedLog(memoryAppender, "A ClientException occurred handling request GET /test: HttpStatus 400 BAD_REQUEST - ClientException with httpStatus and message at it.gov.pagopa.common.web.exception.ErrorManagerTest\\$TestController.testEndpoint\\(ErrorManagerTest.java:[0-9]+\\)");
+    checkStackTraceSuppressedLog(memoryAppender, "HttpStatus 400 BAD_REQUEST - ClientException with httpStatus and message");
     memoryAppender.reset();
 
     Mockito.doThrow(new ClientException(HttpStatus.BAD_REQUEST,
@@ -150,7 +150,7 @@ class ErrorManagerTest {
             .json(EXPECTED_GENERIC_ERROR);
 
     checkLog(memoryAppender,
-            "Something went wrong handling request GET /test: HttpStatus 400 BAD_REQUEST - ClientException with httpStatus, message and throwable",
+            "Something went wrong : HttpStatus 400 BAD_REQUEST - ClientException with httpStatus, message and throwable",
             "it.gov.pagopa.common.web.exception.ClientException: ClientException with httpStatus, message and throwable",
             "it.gov.pagopa.common.web.exception.ErrorManagerTest$TestController.testEndpoint"
     );

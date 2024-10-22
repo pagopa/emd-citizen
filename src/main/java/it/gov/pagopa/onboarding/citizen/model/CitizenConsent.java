@@ -17,7 +17,6 @@ public class CitizenConsent {
     private String hashedFiscalCode;
     private String tppId;
     private Boolean tppState;
-    private String userId;
     private LocalDateTime creationDate;
     private LocalDateTime lastUpdateDate;
 

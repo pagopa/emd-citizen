@@ -1,6 +1,5 @@
 package it.gov.pagopa.onboarding.citizen.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentDTOFaker;
 import it.gov.pagopa.onboarding.citizen.service.CitizenServiceImpl;
@@ -25,8 +24,7 @@ class CitizenControllerTest {
     @Autowired
     private WebTestClient webClient;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+
 
     private static final String FISCAL_CODE = "fiscalCode";
     private static final String TPP_ID  = "tppId";

@@ -1,4 +1,5 @@
 package it.gov.pagopa.common.utils;
+
 import it.gov.pagopa.common.web.exception.EmdEncryptionException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -8,7 +9,6 @@ import java.security.NoSuchAlgorithmException;
 
 @Slf4j
 public class Utils {
-
 
     private Utils(){}
     public static String createSHA256(String fiscalCode)  {
@@ -25,14 +25,14 @@ public class Utils {
             }
             return hexString.toString();
         } catch (NoSuchAlgorithmException e) {
-            log.error("Something went wrong creating SHA256");
+                log.info("Something went wrong creating SHA256");
             throw new EmdEncryptionException("Something went wrong creating SHA256",true,e);
         }
     }
 
     public static String inputSanify(String message){
         if (message != null)
-            return message.replaceAll("[\\r\\n]", "");
-        return "[EMD][WARNING] Null log";
+           return message.replaceAll("[\\r\\n]", " ");
+       return "[EMD][WARNING] Null log";
     }
 }
