@@ -12,7 +12,6 @@ public class CitizenConsentFaker {
         return CitizenConsent.builder()
                 .tppId("tppId")
                 .tppState(bias)
-                .userId("userId")
                 .hashedFiscalCode("hashedFiscalCode")
                 .creationDate(LocalDateTime.now())
                 .lastUpdateDate(LocalDateTime.now())

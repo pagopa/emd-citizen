@@ -13,7 +13,6 @@ public class CitizenConsentDTOToObjectMapper {
                 .tppState(true)
                 .tppId(citizenConsentDTO.getTppId())
                 .hashedFiscalCode(citizenConsentDTO.getHashedFiscalCode())
-                .userId(citizenConsentDTO.getUserId())
                 .build();
     }
 }

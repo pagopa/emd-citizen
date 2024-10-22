@@ -1,6 +1,6 @@
 package it.gov.pagopa.onboarding.citizen.constants;
 
-public class OnboardingCitizenConstants {
+public class CitizenConstants {
     public static final class ExceptionCode {
 
         public static final String CITIZEN_NOT_ONBOARDED = "CITIZEN_NOT_ONBOARDED";
@@ -23,5 +23,5 @@ public class OnboardingCitizenConstants {
     }
 
 
-    private OnboardingCitizenConstants() {}
+    private CitizenConstants() {}
 }

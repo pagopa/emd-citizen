@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -23,9 +22,9 @@ public class ErrorManager {
   }
 
   @ExceptionHandler(RuntimeException.class)
-  protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, ServerHttpRequest request) {
+  protected ResponseEntity<ErrorDTO> handleException(RuntimeException error) {
 
-    logClientException(error, request);
+    logClientException(error);
 
     if(error instanceof ClientExceptionNoBody clientExceptionNoBody){
       return ResponseEntity.status(clientExceptionNoBody.getHttpStatus()).build();
@@ -46,14 +45,14 @@ public class ErrorManager {
               .body(errorDTO);
     }
   }
-  public static void logClientException(RuntimeException error, ServerHttpRequest request) {
+  public static void logClientException(RuntimeException error) {
     Throwable unwrappedException = error.getCause() instanceof ServiceException
             ? error.getCause()
             : error;
 
     String clientExceptionMessage = "";
     if(error instanceof ClientException clientException) {
-      clientExceptionMessage = ": HttpStatus %s - %s%s".formatted(
+      clientExceptionMessage = "HttpStatus %s - %s%s".formatted(
               clientException.getHttpStatus(),
               (clientException instanceof ClientExceptionWithBody clientExceptionWithBody) ? clientExceptionWithBody.getCode() + ": " : "",
               clientException.getMessage()
@@ -61,17 +60,10 @@ public class ErrorManager {
     }
 
     if(!(error instanceof ClientException clientException) || clientException.isPrintStackTrace() || unwrappedException.getCause() != null){
-      log.error("Something went wrong handling request {}{}", getRequestDetails(request), clientExceptionMessage, unwrappedException);
+      log.error("Something went wrong : {}", clientExceptionMessage, unwrappedException);
     } else {
-      log.info("A {} occurred handling request {}{} at {}",
-              unwrappedException.getClass().getSimpleName() ,
-              getRequestDetails(request),
-              clientExceptionMessage,
-              unwrappedException.getStackTrace().length > 0 ? unwrappedException.getStackTrace()[0] : "UNKNOWN");
+      log.info("{}",clientExceptionMessage);
     }
   }
 
-  public static String getRequestDetails(ServerHttpRequest request) {
-    return "%s %s".formatted(request.getMethod(), request.getURI());
-  }
 }

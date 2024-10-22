@@ -12,8 +12,8 @@ public class CitizenConsentObjectToDTOMapper {
         return CitizenConsentDTO.builder()
                 .tppState(citizenConsent.getTppState())
                 .tppId(citizenConsent.getTppId())
-                .hashedFiscalCode(citizenConsent.getHashedFiscalCode())
-                .userId(citizenConsent.getUserId())
+                .creationDate(citizenConsent.getCreationDate())
+                .lastUpdateDate(citizenConsent.getLastUpdateDate())
                 .build();
     }
 }

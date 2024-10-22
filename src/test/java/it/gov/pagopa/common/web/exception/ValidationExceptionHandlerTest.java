@@ -68,7 +68,7 @@ class ValidationExceptionHandlerTest {
                 });
     }
     @Test
-    void testHandleHeaderNotValidException() {
+    void testHandleMissingRequestValueException() {
         String invalidJson = "{}";
 
         webTestClient.put()
@@ -83,7 +83,45 @@ class ValidationExceptionHandlerTest {
                     ErrorDTO errorDTO = response.getResponseBody();
                     assertThat(errorDTO).isNotNull();
                     assertThat(errorDTO.getCode()).isEqualTo("INVALID_REQUEST");
-                    assertThat(errorDTO.getMessage()).isEqualTo("Invalid request");
+                    assertThat(errorDTO.getMessage()).isEqualTo("Something went wrong due to a missing request value");
+
+                });
+    }
+
+    @Test
+    void testHandleNoResourceFoundException() {
+        String invalidJson = "{}";
+
+        webTestClient.put()
+                .uri("/wrongPath")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ValidationDTO("data"))
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(ErrorDTO.class)
+
+                .consumeWith(response -> {
+                    ErrorDTO errorDTO = response.getResponseBody();
+                    assertThat(errorDTO).isNotNull();
+                    assertThat(errorDTO.getCode()).isEqualTo("INVALID_REQUEST");
+                    assertThat(errorDTO.getMessage()).isEqualTo("Something went wrong due to a missing static resource");
+
+                });
+    }
+
+    @Test
+    void testHandleMethodNotAllowedException() {
+
+        webTestClient.get()
+                .uri("/test")
+                .exchange()
+                .expectStatus().is4xxClientError()
+                .expectBody(ErrorDTO.class)
+                .consumeWith(response -> {
+                    ErrorDTO errorDTO = response.getResponseBody();
+                    assertThat(errorDTO).isNotNull();
+                    assertThat(errorDTO.getCode()).isEqualTo("INVALID_REQUEST");
+                    assertThat(errorDTO.getMessage()).isEqualTo("Request is not supported");
 
                 });
     }
