@@ -22,8 +22,6 @@ spring:
           maxConnectionIdleTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_IDLE_MS:120000}
           maxConnecting: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTING:2}
 
-server:
-  port: ${CITIZEN_PORT:8084}
 
 management:
   health:
