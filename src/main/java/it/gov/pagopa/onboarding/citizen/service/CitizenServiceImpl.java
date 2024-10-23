@@ -48,7 +48,7 @@ public class CitizenServiceImpl implements CitizenService {
                 .switchIfEmpty(
                         citizenRepository.save(citizenConsent)
                                 .doOnSuccess(savedConsent -> log.info("[EMD][CREATE-CITIZEN-CONSENT] Created new citizen consent"))
-                                .map(mapperToDTO::map)
+                                .flatMap(savedConsent -> Mono.just(mapperToDTO.map(savedConsent))) // Map the saved consent
                 );
     }
 
