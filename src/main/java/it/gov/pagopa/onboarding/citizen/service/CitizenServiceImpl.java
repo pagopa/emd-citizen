@@ -32,7 +32,6 @@ public class CitizenServiceImpl implements CitizenService {
         this.mapperToObject = mapperToObject;
         this.exceptionMap = exceptionMap;
     }
-
     @Override
     public Mono<CitizenConsentDTO> createCitizenConsent(CitizenConsentDTO citizenConsentDTO) {
         CitizenConsent citizenConsent = mapperToObject.map(citizenConsentDTO);
@@ -41,10 +40,16 @@ public class CitizenServiceImpl implements CitizenService {
         citizenConsent.setCreationDate(LocalDateTime.now());
         citizenConsent.setLastUpdateDate(LocalDateTime.now());
         log.info("[EMD-CITIZEN][CREATE] Received consent: {}",inputSanify(citizenConsent.toString()));
-        return citizenRepository.save(citizenConsent)
-                .map(mapperToDTO::map)
-                .doOnSuccess(savedConsent -> log.info("[EMD][CREATE-CITIZEN-CONSENT] Created"));
-
+        return citizenRepository.findById(hashedFiscalCode)
+                .flatMap(existingConsent -> {
+                    log.info("[EMD][CREATE-CITIZEN-CONSENT] Citizen consent already exists");
+                    return Mono.just(mapperToDTO.map(existingConsent));
+                })
+                .switchIfEmpty(
+                        citizenRepository.save(citizenConsent)
+                                .doOnSuccess(savedConsent -> log.info("[EMD][CREATE-CITIZEN-CONSENT] Created new citizen consent"))
+                                .map(mapperToDTO::map)
+                );
     }
 
     @Override
@@ -54,7 +59,7 @@ public class CitizenServiceImpl implements CitizenService {
                 ,hashedFiscalCode, inputSanify(tppId), tppState);
         return citizenRepository.findByHashedFiscalCodeAndTppId(hashedFiscalCode, tppId)
                 .switchIfEmpty(Mono.error(exceptionMap.throwException
-                        (ExceptionName.CITIZEN_NOT_ONBOARDED,"Citizen not founded during update state process")))
+                        (ExceptionName.CITIZEN_NOT_ONBOARDED,"Citizen consent not founded during update state process")))
                 .flatMap(citizenConsent -> {
                     citizenConsent.setTppState(tppState);
                     citizenConsent.setLastUpdateDate(LocalDateTime.now());
@@ -70,9 +75,9 @@ public class CitizenServiceImpl implements CitizenService {
         log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Received hashedFiscalCode: {} and tppId: {}",hashedFiscalCode,inputSanify(tppId));
         return citizenRepository.findByHashedFiscalCodeAndTppId(hashedFiscalCode, tppId)
                 .switchIfEmpty(Mono.error(exceptionMap.throwException
-                        (ExceptionName.CITIZEN_NOT_ONBOARDED,"Citizen not founded during get process ")))
+                        (ExceptionName.CITIZEN_NOT_ONBOARDED,"Citizen consent not founded during get process ")))
                 .map(mapperToDTO::map)
-                .doOnSuccess(consent -> log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Consent found::  {}",consent));
+                .doOnSuccess(consent -> log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Consent consent found::  {}",consent));
 
     }
 
