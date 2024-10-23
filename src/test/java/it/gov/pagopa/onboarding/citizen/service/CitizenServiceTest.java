@@ -28,6 +28,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 
 @ExtendWith({SpringExtension.class, MockitoExtension.class})
 @ContextConfiguration(classes = {
@@ -59,6 +60,26 @@ class CitizenServiceTest {
         CitizenConsentDTO citizenConsentDTO = dtoMapper.map(CITIZEN_CONSENT);
 
         Mockito.when(citizenRepository.save(Mockito.any()))
+                .thenReturn(Mono.just(CITIZEN_CONSENT));
+
+        Mockito.when(citizenRepository.findById(anyString()))
+                .thenReturn(Mono.empty());
+
+        CitizenConsentDTO response = citizenService.createCitizenConsent(CITIZEN_CONSENT_DTO).block();
+        assertNotNull(response);
+
+        assertEquals(citizenConsentDTO, response);
+    }
+
+    @Test
+    void createCitizenConsent_AlreadyExists() {
+
+        CitizenConsentDTO citizenConsentDTO = dtoMapper.map(CITIZEN_CONSENT);
+
+        Mockito.when(citizenRepository.save(Mockito.any()))
+                .thenReturn(Mono.empty());
+
+        Mockito.when(citizenRepository.findById(anyString()))
                 .thenReturn(Mono.just(CITIZEN_CONSENT));
 
         CitizenConsentDTO response = citizenService.createCitizenConsent(CITIZEN_CONSENT_DTO).block();
@@ -103,7 +124,7 @@ class CitizenServiceTest {
         Executable executable = () -> citizenService.updateChannelState(FISCAL_CODE, TPP_ID, true).block();
         ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
 
-        assertEquals("Citizen not founded during update state process", exception.getMessage());
+        assertEquals("Citizen consent not founded during update state process", exception.getMessage());
     }
 
     @Test
@@ -126,7 +147,7 @@ class CitizenServiceTest {
         Executable executable = () -> citizenService.getConsentStatus(FISCAL_CODE, TPP_ID).block();
         ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
 
-        assertEquals("Citizen not founded during get process ", exception.getMessage());
+        assertEquals("Citizen consent not founded during get process ", exception.getMessage());
     }
 
     @Test

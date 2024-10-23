@@ -40,7 +40,7 @@ public class CitizenServiceImpl implements CitizenService {
         citizenConsent.setCreationDate(LocalDateTime.now());
         citizenConsent.setLastUpdateDate(LocalDateTime.now());
         log.info("[EMD-CITIZEN][CREATE] Received consent: {}",inputSanify(citizenConsent.toString()));
-        return citizenRepository.findById(hashedFiscalCode)
+        return citizenRepository.findByHashedFiscalCodeAndTppId(hashedFiscalCode,citizenConsent.getTppId())
                 .flatMap(existingConsent -> {
                     log.info("[EMD][CREATE-CITIZEN-CONSENT] Citizen consent already exists");
                     return Mono.just(mapperToDTO.map(existingConsent));
@@ -48,7 +48,7 @@ public class CitizenServiceImpl implements CitizenService {
                 .switchIfEmpty(
                         citizenRepository.save(citizenConsent)
                                 .doOnSuccess(savedConsent -> log.info("[EMD][CREATE-CITIZEN-CONSENT] Created new citizen consent"))
-                                .map(mapperToDTO::map)
+                                .flatMap(savedConsent -> Mono.just(mapperToDTO.map(savedConsent)))
                 );
     }
 
