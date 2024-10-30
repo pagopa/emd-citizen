@@ -1,7 +1,9 @@
 package it.gov.pagopa.onboarding.citizen.controller;
 
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentStateUpdateDTO;
 import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentDTOFaker;
+import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentStateUpdateDTOFaker;
 import it.gov.pagopa.onboarding.citizen.service.CitizenServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -26,7 +28,7 @@ class CitizenControllerTest {
 
 
 
-    private static final String FISCAL_CODE = "fiscalCode";
+    private static final String FISCAL_CODE = "MLXHZZ43A70H203T";
     private static final String TPP_ID  = "tppId";
 
 
@@ -52,25 +54,27 @@ class CitizenControllerTest {
 
     @Test
     void stateUpdate_Ok() {
-        CitizenConsentDTO citizenConsentDTO = CitizenConsentDTOFaker.mockInstance(true);
+        CitizenConsentStateUpdateDTO citizenConsentStateUpdateDTO = CitizenConsentStateUpdateDTOFaker.mockInstance(true);
+
+        CitizenConsentDTO expectedResponseDTO = CitizenConsentDTOFaker.mockInstance(true);
 
         Mockito.when(citizenService.updateChannelState(
-                        citizenConsentDTO.getHashedFiscalCode(),
-                        citizenConsentDTO.getTppId(),
-                        citizenConsentDTO.getTppState()))
-                .thenReturn(Mono.just(citizenConsentDTO));
+                        citizenConsentStateUpdateDTO.getHashedFiscalCode(),
+                        citizenConsentStateUpdateDTO.getTppId(),
+                        citizenConsentStateUpdateDTO.getTppState()))
+                .thenReturn(Mono.just(expectedResponseDTO));
 
         webClient.put()
                 .uri("/emd/citizen/stateUpdate")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(citizenConsentDTO)
+                .bodyValue(citizenConsentStateUpdateDTO)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(CitizenConsentDTO.class)
                 .consumeWith(response -> {
                     CitizenConsentDTO resultResponse = response.getResponseBody();
                     Assertions.assertNotNull(resultResponse);
-                    Assertions.assertEquals(citizenConsentDTO, resultResponse);
+                    Assertions.assertEquals(expectedResponseDTO, resultResponse);
                 });
     }
 

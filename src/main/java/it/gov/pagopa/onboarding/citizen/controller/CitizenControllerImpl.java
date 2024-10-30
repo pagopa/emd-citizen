@@ -1,6 +1,7 @@
 package it.gov.pagopa.onboarding.citizen.controller;
 
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentStateUpdateDTO;
 import it.gov.pagopa.onboarding.citizen.service.CitizenServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -25,11 +26,11 @@ public class CitizenControllerImpl implements CitizenController {
     }
 
     @Override
-    public Mono<ResponseEntity<CitizenConsentDTO>> stateUpdate(@Valid CitizenConsentDTO citizenConsentDTO) {
+    public Mono<ResponseEntity<CitizenConsentDTO>> stateUpdate(@Valid CitizenConsentStateUpdateDTO citizenConsentStateUpdateDTO) {
         return citizenService.updateChannelState(
-                        citizenConsentDTO.getHashedFiscalCode(), //at this stage the fiscalCode has not yet been hashed
-                        citizenConsentDTO.getTppId(),
-                        citizenConsentDTO.getTppState())
+                        citizenConsentStateUpdateDTO.getHashedFiscalCode(),
+                        citizenConsentStateUpdateDTO.getTppId(),
+                        citizenConsentStateUpdateDTO.getTppState())
                 .map(ResponseEntity::ok);
     }
 
