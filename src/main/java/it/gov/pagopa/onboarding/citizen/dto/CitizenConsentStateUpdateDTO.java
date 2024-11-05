@@ -10,7 +10,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CitizenConsentStateUpdateDTO {
-    private String hashedFiscalCode;
+    private String fiscalCode;
     private String tppId;
     private Boolean tppState;
 }

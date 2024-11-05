@@ -6,7 +6,7 @@ import reactor.core.publisher.Flux;
 
 public interface CitizenRepository extends ReactiveMongoRepository<CitizenConsent, String>, CitizenSpecificRepository {
 
-    Flux<CitizenConsent> findByHashedFiscalCode(String hashedFiscalCode);
+    Flux<CitizenConsent> findByFiscalCode(String fiscalCode);
 
     //Flux<CitizenConsent> findByHashedFiscalCodeAndTppStateTrue(String hashedFiscalCode);
 

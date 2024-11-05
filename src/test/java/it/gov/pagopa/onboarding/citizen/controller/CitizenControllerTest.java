@@ -59,7 +59,7 @@ class CitizenControllerTest {
         CitizenConsentDTO expectedResponseDTO = CitizenConsentDTOFaker.mockInstance(true);
 
         Mockito.when(citizenService.updateChannelState(
-                        citizenConsentStateUpdateDTO.getHashedFiscalCode(),
+                        citizenConsentStateUpdateDTO.getFiscalCode(),
                         citizenConsentStateUpdateDTO.getTppId(),
                         citizenConsentStateUpdateDTO.getTppState()))
                 .thenReturn(Mono.just(expectedResponseDTO));

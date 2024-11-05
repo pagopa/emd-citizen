@@ -30,11 +30,11 @@ class CitizenSpecificRepositoryImplTest {
     }
 
     @Test
-    void testFindByHashedFiscalCodeAndTppStateTrue() {
+    void testFindByFiscalCodeAndTppStateTrue() {
         String hashedFiscalCode = "hashedCode";
         CitizenConsent citizenConsent = new CitizenConsent();
         citizenConsent.setId("1");
-        citizenConsent.setHashedFiscalCode(hashedFiscalCode);
+        citizenConsent.setFiscalCode(hashedFiscalCode);
 
         Map<String, ConsentDetails> consents = new HashMap<>();
         ConsentDetails consentDetails = new ConsentDetails();
@@ -45,20 +45,20 @@ class CitizenSpecificRepositoryImplTest {
         when(mongoTemplate.aggregate(Mockito.any(), Mockito.eq(CitizenConsent.class), Mockito.eq(CitizenConsent.class)))
                 .thenReturn(Flux.just(citizenConsent));
 
-        Flux<CitizenConsent> result = repository.findByHashedFiscalCodeAndTppStateTrue(hashedFiscalCode);
+        Flux<CitizenConsent> result = repository.findByFiscalCodeAndTppStateTrue(hashedFiscalCode);
 
         Assertions.assertEquals(1, result.count().block());
-        Assertions.assertEquals(hashedFiscalCode, result.blockFirst().getHashedFiscalCode());
+        Assertions.assertEquals(hashedFiscalCode, result.blockFirst().getFiscalCode());
         Mockito.verify(mongoTemplate).aggregate(Mockito.any(), Mockito.eq(CitizenConsent.class), Mockito.eq(CitizenConsent.class));
     }
 
     @Test
-    void testFindByHashedFiscalCodeAndTppId() {
+    void testFindByFiscalCodeAndTppId() {
         String hashedFiscalCode = "hashedCode";
         String tppId = "tpp1";
         CitizenConsent citizenConsent = new CitizenConsent();
         citizenConsent.setId("1");
-        citizenConsent.setHashedFiscalCode(hashedFiscalCode);
+        citizenConsent.setFiscalCode(hashedFiscalCode);
 
         Map<String, ConsentDetails> consents = new HashMap<>();
         ConsentDetails consentDetails = new ConsentDetails();
@@ -69,9 +69,9 @@ class CitizenSpecificRepositoryImplTest {
         when(mongoTemplate.aggregate(Mockito.any(), Mockito.eq(CitizenConsent.class), Mockito.eq(CitizenConsent.class)))
                 .thenReturn(Flux.just(citizenConsent));
 
-        Mono<CitizenConsent> result = repository.findByHashedFiscalCodeAndTppId(hashedFiscalCode, tppId);
+        Mono<CitizenConsent> result = repository.findByFiscalCodeAndTppId(hashedFiscalCode, tppId);
 
-        Assertions.assertEquals(hashedFiscalCode, result.block().getHashedFiscalCode());
+        Assertions.assertEquals(hashedFiscalCode, result.block().getFiscalCode());
         Mockito.verify(mongoTemplate).aggregate(Mockito.any(), Mockito.eq(CitizenConsent.class), Mockito.eq(CitizenConsent.class));
     }
 

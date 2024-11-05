@@ -10,9 +10,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @SuperBuilder
 public class ConsentDetails {
-    private Boolean tc;
     private Boolean tppState;
-    private LocalDateTime creationDate;
-    private LocalDateTime lastTcUpdateDate;
-    private LocalDateTime lastUpdateDate;
+    private LocalDateTime tcDate;
 }

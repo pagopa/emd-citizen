@@ -15,17 +15,14 @@ public class CitizenConsentFaker {
         Map<String, ConsentDetails> consents = new HashMap<>();
 
         ConsentDetails consentDetails = ConsentDetails.builder()
-                .tc(bias)
                 .tppState(bias)
-                .creationDate(LocalDateTime.now())
-                .lastTcUpdateDate(LocalDateTime.now())
-                .lastUpdateDate(LocalDateTime.now())
+                .tcDate(LocalDateTime.now())
                 .build();
 
         consents.put("tppId", consentDetails);
 
         return CitizenConsent.builder()
-                .hashedFiscalCode("hashedFiscalCode")
+                .fiscalCode("fiscalCode")
                 .consents(consents)
                 .build();
     }

@@ -28,7 +28,7 @@ public class CitizenControllerImpl implements CitizenController {
     @Override
     public Mono<ResponseEntity<CitizenConsentDTO>> stateUpdate(@Valid CitizenConsentStateUpdateDTO citizenConsentStateUpdateDTO) {
         return citizenService.updateChannelState(
-                        citizenConsentStateUpdateDTO.getHashedFiscalCode(),
+                        citizenConsentStateUpdateDTO.getFiscalCode(),
                         citizenConsentStateUpdateDTO.getTppId(),
                         citizenConsentStateUpdateDTO.getTppState())
                 .map(ResponseEntity::ok);

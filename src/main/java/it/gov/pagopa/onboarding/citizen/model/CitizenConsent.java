@@ -14,7 +14,7 @@ import java.util.Map;
 public class CitizenConsent {
 
     private String id;
-    private String hashedFiscalCode;
+    private String fiscalCode;
     private Map<String, ConsentDetails> consents;
 
 }

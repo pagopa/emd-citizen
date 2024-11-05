@@ -65,8 +65,7 @@ class CitizenServiceTest {
     void createCitizenConsent_Ok() {
         CitizenConsentDTO citizenConsentDTO = dtoMapper.map(CITIZEN_CONSENT);
 
-        TppDTO mockTppDTO = new TppDTO();
-        mockTppDTO.setTppId(CITIZEN_CONSENT_DTO.getConsents().keySet().stream().findFirst().orElse(null));
+        TppDTO mockTppDTO = TppDTOFaker.mockInstance();
         mockTppDTO.setState(true);
 
         Mockito.when(tppConnector.get(anyString()))
@@ -78,7 +77,7 @@ class CitizenServiceTest {
         Mockito.when(citizenRepository.findById(anyString()))
                 .thenReturn(Mono.empty());
 
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(anyString(), anyString()))
+        Mockito.when(citizenRepository.findByFiscalCodeAndTppId(anyString(), anyString()))
                 .thenReturn(Mono.empty());
 
         CitizenConsentDTO response = citizenService.createCitizenConsent(CITIZEN_CONSENT_DTO).block();
@@ -102,7 +101,7 @@ class CitizenServiceTest {
         Mockito.when(citizenRepository.findById(anyString()))
                 .thenReturn(Mono.just(CITIZEN_CONSENT));
 
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(anyString(), anyString()))
+        Mockito.when(citizenRepository.findByFiscalCodeAndTppId(anyString(), anyString()))
                 .thenReturn(Mono.just(CITIZEN_CONSENT));
 
         CitizenConsentDTO response = citizenService.createCitizenConsent(CITIZEN_CONSENT_DTO).block();
@@ -117,7 +116,7 @@ class CitizenServiceTest {
         citizenConsentDTO.getConsents().clear();
 
         Mockito.when(tppConnector.get(anyString())).thenReturn(Mono.empty());
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(anyString(), anyString()))
+        Mockito.when(citizenRepository.findByFiscalCodeAndTppId(anyString(), anyString()))
                 .thenReturn(Mono.empty());
 
         ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class,
@@ -133,7 +132,7 @@ class CitizenServiceTest {
         mockTppDTO.setState(false);
 
         Mockito.when(tppConnector.get(anyString())).thenReturn(Mono.just(mockTppDTO));
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(anyString(), anyString()))
+        Mockito.when(citizenRepository.findByFiscalCodeAndTppId(anyString(), anyString()))
                 .thenReturn(Mono.empty());
 
         CitizenConsentDTO citizenConsentDTO = dtoMapper.map(CITIZEN_CONSENT);
@@ -160,8 +159,13 @@ class CitizenServiceTest {
     @Test
     void updateChannelState_Ok() {
 
+        TppDTO mockTppDTO = TppDTOFaker.mockInstance();
+        mockTppDTO.setState(true);
 
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
+        Mockito.when(tppConnector.get(anyString()))
+                .thenReturn(Mono.just(mockTppDTO));
+
+        Mockito.when(citizenRepository.findByFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.just(CITIZEN_CONSENT));
 
         Mockito.when(citizenRepository.save(Mockito.any()))
@@ -177,8 +181,13 @@ class CitizenServiceTest {
     @Test
     void updateChannelState_Ko_CitizenNotOnboarded() {
 
+        TppDTO mockTppDTO = TppDTOFaker.mockInstance();
+        mockTppDTO.setState(true);
 
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
+        Mockito.when(tppConnector.get(anyString()))
+                .thenReturn(Mono.just(mockTppDTO));
+
+        Mockito.when(citizenRepository.findByFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.empty());
 
         Executable executable = () -> citizenService.updateChannelState(FISCAL_CODE, TPP_ID, true).block();
@@ -189,10 +198,17 @@ class CitizenServiceTest {
 
     @Test
     void updateChannelState_Ok_ConsentDetailsIsNull() {
+
+        TppDTO mockTppDTO = TppDTOFaker.mockInstance();
+        mockTppDTO.setState(true);
+
         CitizenConsent citizenConsentWithConsentDetailNull = CitizenConsentFaker.mockInstance(true);
         citizenConsentWithConsentDetailNull.getConsents().put(TPP_ID, null);
 
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
+        Mockito.when(tppConnector.get(anyString()))
+                .thenReturn(Mono.just(mockTppDTO));
+
+        Mockito.when(citizenRepository.findByFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.just(citizenConsentWithConsentDetailNull));
 
         Mockito.when(citizenRepository.save(Mockito.any()))
@@ -204,12 +220,36 @@ class CitizenServiceTest {
         assertEquals("ConsentDetails is null for this tppId", exception.getMessage());
     }
 
+    @Test
+    void updateChannelState_Ko_TppResponseIsNull() {
+
+        Mockito.when(tppConnector.get(anyString())).thenReturn(Mono.empty());
+
+        Executable executable = () -> citizenService.updateChannelState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
+        ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
+
+        assertEquals("TPP does not exist or is not active", exception.getMessage());
+    }
+
+    @Test
+    void updateChannelState_Ko_TppInactive() {
+
+        TppDTO mockTppDTO = TppDTOFaker.mockInstance();
+        mockTppDTO.setState(false);
+
+        Mockito.when(tppConnector.get(anyString())).thenReturn(Mono.just(mockTppDTO));
+
+        Executable executable = () -> citizenService.updateChannelState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
+        ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
+
+        assertEquals("TPP does not exist or is not active", exception.getMessage());
+    }
 
     @Test
     void getConsentStatus_Ok() {
 
 
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
+        Mockito.when(citizenRepository.findByFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.just(CITIZEN_CONSENT));
 
         CitizenConsentDTO response = citizenService.getConsentStatus(FISCAL_CODE, TPP_ID).block();
@@ -219,7 +259,7 @@ class CitizenServiceTest {
     @Test
     void getConsentStatus_Ko_CitizenNotOnboarded() {
 
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
+        Mockito.when(citizenRepository.findByFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.empty());
 
         Executable executable = () -> citizenService.getConsentStatus(FISCAL_CODE, TPP_ID).block();
@@ -232,7 +272,7 @@ class CitizenServiceTest {
     void getListEnabledConsents_Ok() {
 
 
-        Mockito.when(citizenRepository.findByHashedFiscalCodeAndTppStateTrue(HASHED_FISCAL_CODE))
+        Mockito.when(citizenRepository.findByFiscalCodeAndTppStateTrue(HASHED_FISCAL_CODE))
                 .thenReturn(Flux.just(CITIZEN_CONSENT));
 
         List<CitizenConsentDTO> response = citizenService.getListEnabledConsents(FISCAL_CODE).block();
@@ -242,7 +282,7 @@ class CitizenServiceTest {
 
     @Test
     void getListAllConsents_Ok() {
-        Mockito.when(citizenRepository.findByHashedFiscalCode(HASHED_FISCAL_CODE))
+        Mockito.when(citizenRepository.findByFiscalCode(HASHED_FISCAL_CODE))
                 .thenReturn(Flux.just(CITIZEN_CONSENT));
 
         List<CitizenConsentDTO> response = citizenService.getListAllConsents(FISCAL_CODE).block();

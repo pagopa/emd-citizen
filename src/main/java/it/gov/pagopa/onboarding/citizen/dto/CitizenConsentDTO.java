@@ -15,7 +15,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class CitizenConsentDTO {
     @JsonAlias("fiscalCode")
-    private String hashedFiscalCode;
+    private String fiscalCode;
     private Map<String, ConsentDTO> consents;
 
     @Data
@@ -23,9 +23,7 @@ public class CitizenConsentDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ConsentDTO {
-        private Boolean tc;
         private Boolean tppState;
-        private LocalDateTime creationDate;
-        private LocalDateTime lastUpdateDate;
+        private LocalDateTime tcDate;
     }
 }

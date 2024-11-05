@@ -15,14 +15,12 @@ public class CitizenConsentDTOToObjectMapper {
         Map<String, ConsentDetails> consents = new HashMap<>();
 
         citizenConsentDTO.getConsents().forEach((tppId, consentDTO) -> consents.put(tppId, ConsentDetails.builder()
-                .tc(consentDTO.getTc())
                 .tppState(consentDTO.getTppState())
-                .creationDate(consentDTO.getCreationDate())
-                .lastTcUpdateDate(consentDTO.getLastUpdateDate())
+                .tcDate(consentDTO.getTcDate())
                 .build()));
 
         return CitizenConsent.builder()
-                .hashedFiscalCode(citizenConsentDTO.getHashedFiscalCode())
+                .fiscalCode(citizenConsentDTO.getFiscalCode())
                 .consents(consents)
                 .build();
     }

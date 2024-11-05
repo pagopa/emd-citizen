@@ -12,10 +12,10 @@ public class CitizenConsentDTOFaker {
     public static CitizenConsentDTO mockInstance(Boolean bias) {
         Map<String, CitizenConsentDTO.ConsentDTO> consents = new HashMap<>();
 
-        consents.put("tppId", new CitizenConsentDTO.ConsentDTO(bias, bias, LocalDateTime.now(), LocalDateTime.now()));
+        consents.put("tppId", new CitizenConsentDTO.ConsentDTO(bias, LocalDateTime.now()));
 
         return CitizenConsentDTO.builder()
-                .hashedFiscalCode("hashedFiscalCode")
+                .fiscalCode("fiscalCode")
                 .consents(consents)
                 .build();
     }

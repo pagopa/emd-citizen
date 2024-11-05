@@ -5,6 +5,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface CitizenSpecificRepository {
-    Flux<CitizenConsent> findByHashedFiscalCodeAndTppStateTrue(String hashedFiscalCode);
-    Mono<CitizenConsent> findByHashedFiscalCodeAndTppId(String hashedFiscalCode, String tppId);
+    Flux<CitizenConsent> findByFiscalCodeAndTppStateTrue(String fiscalCode);
+    Mono<CitizenConsent> findByFiscalCodeAndTppId(String fiscalCode, String tppId);
 }

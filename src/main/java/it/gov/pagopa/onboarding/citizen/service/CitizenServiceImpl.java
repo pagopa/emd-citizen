@@ -40,13 +40,9 @@ public class CitizenServiceImpl implements CitizenService {
     @Override
     public Mono<CitizenConsentDTO> createCitizenConsent(CitizenConsentDTO citizenConsentDTO) {
         CitizenConsent citizenConsent = mapperToObject.map(citizenConsentDTO);
-        String hashedFiscalCode = Utils.createSHA256(citizenConsent.getHashedFiscalCode());
-        citizenConsent.setHashedFiscalCode(hashedFiscalCode);
+        String fiscalCode = citizenConsent.getFiscalCode();
 
-        citizenConsent.getConsents().forEach((tppId, consentDetails) -> {
-            consentDetails.setCreationDate(LocalDateTime.now());
-            consentDetails.setLastUpdateDate(LocalDateTime.now());
-        });
+        citizenConsent.getConsents().forEach((tppId, consentDetails) -> consentDetails.setTcDate(LocalDateTime.now()));
 
         log.info("[EMD-CITIZEN][CREATE] Received consent: {}", inputSanify(citizenConsent.toString()));
 
@@ -55,7 +51,7 @@ public class CitizenServiceImpl implements CitizenService {
             return Mono.error(exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, "TPP does not exist or is not active"));
         }
 
-        return citizenRepository.findByHashedFiscalCodeAndTppId(hashedFiscalCode, tppId)
+        return citizenRepository.findByFiscalCodeAndTppId(fiscalCode, tppId)
                 .flatMap(existingConsent -> {
                     log.info("[EMD][CREATE-CITIZEN-CONSENT] Citizen consent already exists");
                     return Mono.just(mapperToDTO.map(existingConsent));
@@ -75,32 +71,37 @@ public class CitizenServiceImpl implements CitizenService {
 
     @Override
     public Mono<CitizenConsentDTO> updateChannelState(String fiscalCode, String tppId, boolean tppState) {
-        String hashedFiscalCode = Utils.createSHA256(fiscalCode);
-        log.info("[EMD][[CITIZEN][UPDATE-CHANNEL-STATE] Received hashedFiscalCode: {} and tppId: {} with state: {}"
-                , hashedFiscalCode, inputSanify(tppId), tppState);
-        return citizenRepository.findByHashedFiscalCodeAndTppId(hashedFiscalCode, tppId)
-                .switchIfEmpty(Mono.error(exceptionMap.throwException
-                        (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during update state process")))
-                .flatMap(citizenConsent -> {
-                    ConsentDetails consentDetails = citizenConsent.getConsents().get(tppId);
-                    if (consentDetails != null) {
-                        consentDetails.setTppState(tppState);
-                        consentDetails.setLastUpdateDate(LocalDateTime.now());
-                    } else {
-                        return Mono.error(exceptionMap.throwException
-                                (ExceptionName.CITIZEN_NOT_ONBOARDED, "ConsentDetails is null for this tppId"));
+        log.info("[EMD][CITIZEN][UPDATE-CHANNEL-STATE] Received hashedFiscalCode: {} and tppId: {} with state: {}",
+                Utils.createSHA256(fiscalCode), inputSanify(tppId), tppState);
+
+        return tppConnector.get(tppId)
+                .switchIfEmpty(Mono.error(exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, "TPP does not exist or is not active")))
+                .flatMap(tppResponse -> {
+                    if (tppResponse == null || !Boolean.TRUE.equals(tppResponse.getState())) {
+                        return Mono.error(exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, "TPP does not exist or is not active"));
                     }
-                    return citizenRepository.save(citizenConsent);
-                })
-                .map(mapperToDTO::map)
-                .doOnSuccess(savedConsent -> log.info("[EMD][[CITIZEN][UPDATE-CHANNEL-STATE] Updated state"));
+                    return citizenRepository.findByFiscalCodeAndTppId(fiscalCode, tppId)
+                            .switchIfEmpty(Mono.error(exceptionMap.throwException
+                                    (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during update state process")))
+                            .flatMap(citizenConsent -> {
+                                ConsentDetails consentDetails = citizenConsent.getConsents().get(tppId);
+                                if (consentDetails != null) {
+                                    consentDetails.setTppState(tppState);
+                                } else {
+                                    return Mono.error(exceptionMap.throwException
+                                            (ExceptionName.CITIZEN_NOT_ONBOARDED, "ConsentDetails is null for this tppId"));
+                                }
+                                return citizenRepository.save(citizenConsent);
+                            })
+                            .map(mapperToDTO::map)
+                            .doOnSuccess(savedConsent -> log.info("[EMD][CITIZEN][UPDATE-CHANNEL-STATE] Updated state"));
+                });
     }
 
     @Override
     public Mono<CitizenConsentDTO> getConsentStatus(String fiscalCode, String tppId) {
-        String hashedFiscalCode = Utils.createSHA256(fiscalCode);
-        log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Received hashedFiscalCode: {} and tppId: {}", hashedFiscalCode, inputSanify(tppId));
-        return citizenRepository.findByHashedFiscalCodeAndTppId(hashedFiscalCode, tppId)
+        log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Received hashedFiscalCode: {} and tppId: {}", Utils.createSHA256(fiscalCode), inputSanify(tppId));
+        return citizenRepository.findByFiscalCodeAndTppId(fiscalCode, tppId)
                 .switchIfEmpty(Mono.error(exceptionMap.throwException
                         (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during get process ")))
                 .map(mapperToDTO::map)
@@ -110,9 +111,8 @@ public class CitizenServiceImpl implements CitizenService {
 
     @Override
     public Mono<List<CitizenConsentDTO>> getListEnabledConsents(String fiscalCode) {
-        String hashedFiscalCode = Utils.createSHA256(fiscalCode);
-        log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Received hashedFiscalCode: {}", hashedFiscalCode);
-        return citizenRepository.findByHashedFiscalCodeAndTppStateTrue(hashedFiscalCode)
+        log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Received hashedFiscalCode: {}", Utils.createSHA256(fiscalCode));
+        return citizenRepository.findByFiscalCodeAndTppStateTrue(fiscalCode)
                 .collectList()
                 .map(consentList -> consentList.stream()
                         .map(mapperToDTO::map)
@@ -124,9 +124,8 @@ public class CitizenServiceImpl implements CitizenService {
 
     @Override
     public Mono<List<CitizenConsentDTO>> getListAllConsents(String fiscalCode) {
-        String hashedFiscalCode = Utils.createSHA256(fiscalCode);
-        log.info("[EMD-CITIZEN][FIND-ALL-CITIZEN-CONSENTS] Received hashedFiscalCode: {}", (hashedFiscalCode));
-        return citizenRepository.findByHashedFiscalCode(hashedFiscalCode)
+        log.info("[EMD-CITIZEN][FIND-ALL-CITIZEN-CONSENTS] Received hashedFiscalCode: {}", (Utils.createSHA256(fiscalCode)));
+        return citizenRepository.findByFiscalCode(fiscalCode)
                 .collectList()
                 .map(consentList -> consentList.stream()
                         .map(mapperToDTO::map)

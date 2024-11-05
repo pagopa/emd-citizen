@@ -8,7 +8,7 @@ public class CitizenConsentStateUpdateDTOFaker {
 
     public static CitizenConsentStateUpdateDTO mockInstance(Boolean tppState) {
         return CitizenConsentStateUpdateDTO.builder()
-                .hashedFiscalCode("hashedFiscalCode")
+                .fiscalCode("hashedFiscalCode")
                 .tppId("tppId")
                 .tppState(tppState)
                 .build();

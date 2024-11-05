@@ -21,9 +21,9 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
         this.mongoTemplate = mongoTemplate;
     }
 
-    public Flux<CitizenConsent> findByHashedFiscalCodeAndTppStateTrue(String hashedFiscalCode) {
+    public Flux<CitizenConsent> findByFiscalCodeAndTppStateTrue(String fiscalCode) {
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("hashedFiscalCode").is(hashedFiscalCode)),
+                Aggregation.match(Criteria.where("fiscalCode").is(fiscalCode)),
                 Aggregation.unwind("consents"),
                 Aggregation.match(Criteria.where("consents.tppState").is(true))
         );
@@ -38,19 +38,19 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
 
                     return Flux.just(CitizenConsent.builder()
                             .id(result.getId())
-                            .hashedFiscalCode(result.getHashedFiscalCode())
+                            .fiscalCode(result.getFiscalCode())
                             .consents(validConsents)
                             .build());
                 });
     }
 
-    public Mono<CitizenConsent> findByHashedFiscalCodeAndTppId(String hashedFiscalCode, String tppId) {
+    public Mono<CitizenConsent> findByFiscalCodeAndTppId(String fiscalCode, String tppId) {
         if (tppId == null) {
             return Mono.empty();
         }
 
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("hashedFiscalCode").is(hashedFiscalCode)),
+                Aggregation.match(Criteria.where("fiscalCode").is(fiscalCode)),
                 Aggregation.match(Criteria.where("consents." + tppId).exists(true))
         );
 
