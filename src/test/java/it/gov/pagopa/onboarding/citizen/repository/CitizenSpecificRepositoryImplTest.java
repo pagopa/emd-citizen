@@ -35,7 +35,7 @@ class CitizenSpecificRepositoryImplTest {
     @Test
     void testFindByFiscalCodeAndTppStateTrue() {
         CitizenSpecificRepositoryImpl.ConsentKeyWrapper key = new CitizenSpecificRepositoryImpl.ConsentKeyWrapper();
-        key.setKey("tppId");
+        key.setK("tppId");
         String hashedFiscalCode = "hashedCode";
 
         when(mongoTemplate.aggregate(Mockito.any(), anyString(), Mockito.eq(CitizenSpecificRepositoryImpl.ConsentKeyWrapper.class)))
