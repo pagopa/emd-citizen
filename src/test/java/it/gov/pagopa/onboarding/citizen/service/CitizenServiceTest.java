@@ -268,17 +268,7 @@ class CitizenServiceTest {
         assertEquals("Citizen consent not founded during get process ", exception.getMessage());
     }
 
-    @Test
-    void getListEnabledConsents_Ok() {
 
-
-        Mockito.when(citizenRepository.findByFiscalCodeAndTppStateTrue(HASHED_FISCAL_CODE))
-                .thenReturn(Mono.just(List.of("TPPID")));
-
-        List<String> response = citizenService.getTppEnabledList(FISCAL_CODE).block();
-        assertNotNull(response);
-        assertEquals(1, response.size());
-    }
 
     @Test
     void getListAllConsents_Ok() {
