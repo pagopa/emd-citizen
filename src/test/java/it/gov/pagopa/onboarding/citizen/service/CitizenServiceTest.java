@@ -273,9 +273,9 @@ class CitizenServiceTest {
 
 
         Mockito.when(citizenRepository.findByFiscalCodeAndTppStateTrue(HASHED_FISCAL_CODE))
-                .thenReturn(Flux.just(CITIZEN_CONSENT));
+                .thenReturn(Mono.just(List.of("TPPID")));
 
-        List<CitizenConsentDTO> response = citizenService.getListEnabledConsents(FISCAL_CODE).block();
+        List<String> response = citizenService.getTppEnabledList(FISCAL_CODE).block();
         assertNotNull(response);
         assertEquals(1, response.size());
     }
@@ -283,10 +283,10 @@ class CitizenServiceTest {
     @Test
     void getListAllConsents_Ok() {
         Mockito.when(citizenRepository.findByFiscalCode(HASHED_FISCAL_CODE))
-                .thenReturn(Flux.just(CITIZEN_CONSENT));
+                .thenReturn(Mono.just(CITIZEN_CONSENT));
 
-        List<CitizenConsentDTO> response = citizenService.getListAllConsents(FISCAL_CODE).block();
+        CitizenConsentDTO response = citizenService.get(FISCAL_CODE).block();
         assertNotNull(response);
-        assertEquals(1, response.size());
+        assertEquals(CITIZEN_CONSENT, response);
     }
 }

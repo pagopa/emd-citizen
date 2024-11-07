@@ -11,6 +11,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -100,39 +101,40 @@ class CitizenControllerTest {
 
     @Test
     void getCitizenConsentsEnabled_Ok() {
-        List<CitizenConsentDTO> citizenConsentDTOList = List.of(CitizenConsentDTOFaker.mockInstance(true));
+        List<String> tppIdList = List.of("tpp1","tpp2");
 
-        Mockito.when(citizenService.getListEnabledConsents(FISCAL_CODE))
-                .thenReturn(Mono.just(citizenConsentDTOList));
+        Mockito.when(citizenService.getTppEnabledList(FISCAL_CODE))
+                .thenReturn(Mono.just(tppIdList));
 
         webClient.get()
                 .uri("/emd/citizen/list/{fiscalCode}/enabled", FISCAL_CODE)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBodyList(CitizenConsentDTO.class)
+                .expectBody(new ParameterizedTypeReference<List<String>>() {
+                })
                 .consumeWith(response -> {
-                    List<CitizenConsentDTO> resultResponse = response.getResponseBody();
+                    List<String> resultResponse = response.getResponseBody();
                     Assertions.assertNotNull(resultResponse);
-                    Assertions.assertEquals(citizenConsentDTOList.size(), resultResponse.size());
+                    Assertions.assertEquals(tppIdList.size(), resultResponse.size());
                 });
     }
 
     @Test
     void getCitizenConsents_Ok() {
-        List<CitizenConsentDTO> citizenConsentDTOList = List.of(CitizenConsentDTOFaker.mockInstance(true));
+        CitizenConsentDTO citizenConsentDTO = CitizenConsentDTOFaker.mockInstance(true);
 
-        Mockito.when(citizenService.getListAllConsents(FISCAL_CODE))
-                .thenReturn(Mono.just(citizenConsentDTOList));
+        Mockito.when(citizenService.get(FISCAL_CODE))
+                .thenReturn(Mono.just(citizenConsentDTO));
 
         webClient.get()
                 .uri("/emd/citizen/list/{fiscalCode}", FISCAL_CODE)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBodyList(CitizenConsentDTO.class)
+                .expectBody(CitizenConsentDTO.class)
                 .consumeWith(response -> {
-                    List<CitizenConsentDTO> resultResponse = response.getResponseBody();
+                    CitizenConsentDTO resultResponse = response.getResponseBody();
                     Assertions.assertNotNull(resultResponse);
-                    Assertions.assertEquals(citizenConsentDTOList.size(), resultResponse.size());
+                    Assertions.assertEquals(citizenConsentDTO, resultResponse);
                 });
     }
 }

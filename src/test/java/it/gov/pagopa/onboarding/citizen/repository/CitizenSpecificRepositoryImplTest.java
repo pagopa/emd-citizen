@@ -13,8 +13,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,25 +34,19 @@ class CitizenSpecificRepositoryImplTest {
 
     @Test
     void testFindByFiscalCodeAndTppStateTrue() {
+        CitizenSpecificRepositoryImpl.ConsentKeyWrapper key = new CitizenSpecificRepositoryImpl.ConsentKeyWrapper();
+        key.setKey("tppId");
         String hashedFiscalCode = "hashedCode";
-        CitizenConsent citizenConsent = new CitizenConsent();
-        citizenConsent.setId("1");
-        citizenConsent.setFiscalCode(hashedFiscalCode);
 
-        Map<String, ConsentDetails> consents = new HashMap<>();
-        ConsentDetails consentDetails = new ConsentDetails();
-        consentDetails.setTppState(true);
-        consents.put("tpp1", consentDetails);
-        citizenConsent.setConsents(consents);
+        when(mongoTemplate.aggregate(Mockito.any(), anyString(), Mockito.eq(CitizenSpecificRepositoryImpl.ConsentKeyWrapper.class)))
+                .thenReturn(Flux.just(key));
 
-        when(mongoTemplate.aggregate(Mockito.any(), Mockito.eq(CitizenConsent.class), Mockito.eq(CitizenConsent.class)))
-                .thenReturn(Flux.just(citizenConsent));
+        List<String> result = repository.findByFiscalCodeAndTppStateTrue(hashedFiscalCode).block();
 
-        Flux<CitizenConsent> result = repository.findByFiscalCodeAndTppStateTrue(hashedFiscalCode);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1,result.size());
+        Assertions.assertEquals("tppId", result.get(0));
 
-        Assertions.assertEquals(1, result.count().block());
-        Assertions.assertEquals(hashedFiscalCode, result.blockFirst().getFiscalCode());
-        Mockito.verify(mongoTemplate).aggregate(Mockito.any(), Mockito.eq(CitizenConsent.class), Mockito.eq(CitizenConsent.class));
     }
 
     @Test
