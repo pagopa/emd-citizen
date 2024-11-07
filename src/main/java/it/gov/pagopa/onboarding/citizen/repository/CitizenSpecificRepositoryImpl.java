@@ -29,7 +29,8 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("fiscalCode").is(fiscalCode)),
                 Aggregation.project("consents").asArray("consentsArray"),
-                Aggregation.match(Criteria.where("consentsArray.v.tppState").is(true))
+                Aggregation.match(Criteria.where("consentsArray.v.tppState").is(true)),
+                Aggregation.project("consentsArray.k").and("key")
         );
 
         return mongoTemplate.aggregate(aggregation, "citizen_consents", ConsentKeyWrapper.class)
