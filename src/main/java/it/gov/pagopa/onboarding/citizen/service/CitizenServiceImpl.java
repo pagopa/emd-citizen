@@ -17,8 +17,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static it.gov.pagopa.common.utils.Utils.inputSanify;
 
@@ -107,8 +107,12 @@ public class CitizenServiceImpl implements CitizenService {
     public Mono<List<String>> getTppEnabledList(String fiscalCode) {
         log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Received hashedFiscalCode: {}", Utils.createSHA256(fiscalCode));
 
-        return citizenRepository.findByFiscalCodeAndTppStateTrue(fiscalCode)
-                .switchIfEmpty(Mono.just(Collections.emptyList()))
+        return citizenRepository.findByFiscalCode(fiscalCode)
+                .switchIfEmpty(Mono.empty())
+                .map(citizenConsent -> citizenConsent.getConsents().entrySet().stream()
+                        .filter(tpp -> tpp.getValue().getTppState())
+                        .map(Map.Entry::getKey)
+                        .toList())
                 .doOnSuccess(tppIdList -> log.info("EMD][CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Consents found:  {}", (tppIdList.size())));
     }
 

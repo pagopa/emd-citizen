@@ -13,11 +13,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,23 +27,6 @@ class CitizenSpecificRepositoryImplTest {
     public void setUp() {
         mongoTemplate = Mockito.mock(ReactiveMongoTemplate.class);
         repository = new CitizenSpecificRepositoryImpl(mongoTemplate);
-    }
-
-    @Test
-    void testFindByFiscalCodeAndTppStateTrue() {
-        CitizenSpecificRepositoryImpl.ConsentKeyWrapper key = new CitizenSpecificRepositoryImpl.ConsentKeyWrapper();
-        key.setK("tppId");
-        String hashedFiscalCode = "hashedCode";
-
-        when(mongoTemplate.aggregate(Mockito.any(), anyString(), Mockito.eq(CitizenSpecificRepositoryImpl.ConsentKeyWrapper.class)))
-                .thenReturn(Flux.just(key));
-
-        List<String> result = repository.findByFiscalCodeAndTppStateTrue(hashedFiscalCode).block();
-
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(1,result.size());
-        Assertions.assertEquals("tppId", result.get(0));
-
     }
 
     @Test
