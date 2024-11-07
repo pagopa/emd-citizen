@@ -14,6 +14,8 @@ public class CitizenConstants {
 
         public static final String CITIZEN_NOT_ONBOARDED = "CITIZEN_NOT_ONBOARDED";
         public static final String GENERIC_ERROR = "GENERIC_ERROR";
+        public static final String TPP_NOT_FOUND = "TPP does not exist or is not active";
+
         private ExceptionMessage() {}
     }
 

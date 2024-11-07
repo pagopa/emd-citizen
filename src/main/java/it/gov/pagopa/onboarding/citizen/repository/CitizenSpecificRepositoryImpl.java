@@ -1,16 +1,14 @@
 package it.gov.pagopa.onboarding.citizen.repository;
 
 import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
-import it.gov.pagopa.onboarding.citizen.model.ConsentDetails;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Repository
 public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository {
@@ -21,7 +19,7 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
         this.mongoTemplate = mongoTemplate;
     }
 
-    public Flux<CitizenConsent> findByFiscalCodeAndTppStateTrue(String fiscalCode) {
+    public Mono<List<String>> findByFiscalCodeAndTppStateTrue(String fiscalCode) {
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("fiscalCode").is(fiscalCode)),
                 Aggregation.unwind("consents"),
@@ -30,18 +28,20 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
 
         return mongoTemplate.aggregate(aggregation, CitizenConsent.class, CitizenConsent.class)
                 .flatMap(result -> {
-                    Map<String, ConsentDetails> validConsents = result.getConsents()
+
+                    List<String> validConsentIds = result.getConsents()
                             .entrySet()
                             .stream()
                             .filter(entry -> entry.getValue().getTppState())
-                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                            .map(Map.Entry::getKey)
+                            .toList();
 
-                    return Flux.just(CitizenConsent.builder()
-                            .id(result.getId())
-                            .fiscalCode(result.getFiscalCode())
-                            .consents(validConsents)
-                            .build());
-                });
+                    return Mono.just(validConsentIds);
+                })
+                .collectList()
+                .map(lists -> lists.stream()
+                        .flatMap(List::stream)
+                        .toList());
     }
 
     public Mono<CitizenConsent> findByFiscalCodeAndTppId(String fiscalCode, String tppId) {

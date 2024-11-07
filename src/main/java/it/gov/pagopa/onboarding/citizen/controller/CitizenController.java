@@ -46,7 +46,7 @@ public interface CitizenController {
      * @return a list of channels with enabled consents
      */
     @GetMapping("/list/{fiscalCode}/enabled")
-    Mono<ResponseEntity<List<CitizenConsentDTO>>> getCitizenConsentsEnabled(@PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
+    Mono<ResponseEntity<List<String>>> getTppEnabledList(@PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
 
     /**
      * List all channels and their consent status for a specific citizen.
@@ -55,6 +55,6 @@ public interface CitizenController {
      * @return a list of all channels with their consent statuses
      */
     @GetMapping("/list/{fiscalCode}")
-    Mono<ResponseEntity<List<CitizenConsentDTO>>> getCitizenConsents(@PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
+    Mono<ResponseEntity<CitizenConsentDTO>> get(@PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
 
 }

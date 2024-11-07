@@ -41,14 +41,15 @@ public class CitizenControllerImpl implements CitizenController {
     }
 
     @Override
-    public Mono<ResponseEntity<List<CitizenConsentDTO>>> getCitizenConsentsEnabled(String fiscalCode) {
-        return citizenService.getListEnabledConsents(fiscalCode)
+    public Mono<ResponseEntity<List<String>>> getTppEnabledList(String fiscalCode) {
+        return citizenService.getTppEnabledList(fiscalCode)
                 .map(ResponseEntity::ok);
     }
 
     @Override
-    public Mono<ResponseEntity<List<CitizenConsentDTO>>> getCitizenConsents(String fiscalCode) {
-        return citizenService.getListAllConsents(fiscalCode)
+    public Mono<ResponseEntity<CitizenConsentDTO>> get(String fiscalCode) {
+        return citizenService.get(fiscalCode)
                 .map(ResponseEntity::ok);
     }
+
 }
