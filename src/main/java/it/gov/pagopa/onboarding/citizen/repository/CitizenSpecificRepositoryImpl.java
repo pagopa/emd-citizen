@@ -30,13 +30,13 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
                 Aggregation.match(Criteria.where("fiscalCode").is(fiscalCode)),
                 Aggregation.project("consents").asArray("consentsArray"),
                 Aggregation.match(Criteria.where("consentsArray.v.tppState").is(true)),
-                Aggregation.project("consentsArray.k").and("key")
+                Aggregation.project("consentsArray.k")
         );
 
         return mongoTemplate.aggregate(aggregation, "citizen_consents", ConsentKeyWrapper.class)
                 .collectList()
                 .map(results -> results.stream()
-                        .map(ConsentKeyWrapper::getKey)
+                        .map(ConsentKeyWrapper::getK)
                         .collect(Collectors.toList()));
     }
     public Mono<CitizenConsent> findByFiscalCodeAndTppId(String fiscalCode, String tppId) {
@@ -54,7 +54,7 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
     }
     @Data
     public static class ConsentKeyWrapper {
-        private String key;
+        private String k;
     }
 
 }
