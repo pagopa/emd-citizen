@@ -44,4 +44,10 @@ class BloomFilterServiceTest {
         assertFalse(bloomFilterService.mightContain("fiscalCode2"));
         assertFalse(bloomFilterService.mightContain("nonexistentHashedFiscalCode"));
     }
+
+    @Test
+    void testAdd() {
+        bloomFilterService.add("fiscalCode3");
+        assertTrue(bloomFilterService.mightContain("fiscalCode3"));
+    }
 }

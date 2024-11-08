@@ -45,4 +45,7 @@ public class BloomFilterServiceImpl implements BloomFilterService{
         this.initializeBloomFilter();
     }
 
+    public void add(String fiscalCode){
+        bloomFilter.put(fiscalCode);
+    }
 }
