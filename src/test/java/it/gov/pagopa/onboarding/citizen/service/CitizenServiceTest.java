@@ -24,10 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -171,7 +168,7 @@ class CitizenServiceTest {
         Mockito.when(citizenRepository.save(Mockito.any()))
                 .thenReturn(Mono.just(CITIZEN_CONSENT));
 
-        CitizenConsentDTO response = citizenService.updateChannelState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
+        CitizenConsentDTO response = citizenService.updateTppState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
 
         assertNotNull(response);
 
@@ -190,7 +187,7 @@ class CitizenServiceTest {
         Mockito.when(citizenRepository.findByFiscalCodeAndTppId(HASHED_FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.empty());
 
-        Executable executable = () -> citizenService.updateChannelState(FISCAL_CODE, TPP_ID, true).block();
+        Executable executable = () -> citizenService.updateTppState(FISCAL_CODE, TPP_ID, true).block();
         ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
 
         assertEquals("Citizen consent not founded during update state process", exception.getMessage());
@@ -214,7 +211,7 @@ class CitizenServiceTest {
         Mockito.when(citizenRepository.save(Mockito.any()))
                 .thenReturn(Mono.just(citizenConsentWithConsentDetailNull));
 
-        Executable executable = () -> citizenService.updateChannelState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
+        Executable executable = () -> citizenService.updateTppState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
         ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
 
         assertEquals("ConsentDetails is null for this tppId", exception.getMessage());
@@ -225,7 +222,7 @@ class CitizenServiceTest {
 
         Mockito.when(tppConnector.get(anyString())).thenReturn(Mono.empty());
 
-        Executable executable = () -> citizenService.updateChannelState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
+        Executable executable = () -> citizenService.updateTppState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
         ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
 
         assertEquals("TPP does not exist or is not active", exception.getMessage());
@@ -239,7 +236,7 @@ class CitizenServiceTest {
 
         Mockito.when(tppConnector.get(anyString())).thenReturn(Mono.just(mockTppDTO));
 
-        Executable executable = () -> citizenService.updateChannelState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
+        Executable executable = () -> citizenService.updateTppState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
         ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
 
         assertEquals("TPP does not exist or is not active", exception.getMessage());

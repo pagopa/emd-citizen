@@ -57,4 +57,8 @@ public interface CitizenController {
     @GetMapping("/list/{fiscalCode}")
     Mono<ResponseEntity<CitizenConsentDTO>> get(@PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
 
+    @GetMapping("/filter/{fiscalCode}")
+    Mono<ResponseEntity<String>> getAllFiscalCode(@PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
+
+
 }

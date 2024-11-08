@@ -4,6 +4,7 @@ import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentStateUpdateDTO;
 import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentDTOFaker;
 import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentStateUpdateDTOFaker;
+import it.gov.pagopa.onboarding.citizen.service.BloomFilterServiceImpl;
 import it.gov.pagopa.onboarding.citizen.service.CitizenServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,9 @@ class CitizenControllerTest {
 
     @MockBean
     private CitizenServiceImpl citizenService;
+
+    @MockBean
+    private BloomFilterServiceImpl bloomFilterService;
 
     @Autowired
     private WebTestClient webClient;
@@ -59,7 +63,7 @@ class CitizenControllerTest {
 
         CitizenConsentDTO expectedResponseDTO = CitizenConsentDTOFaker.mockInstance(true);
 
-        Mockito.when(citizenService.updateChannelState(
+        Mockito.when(citizenService.updateTppState(
                         citizenConsentStateUpdateDTO.getFiscalCode(),
                         citizenConsentStateUpdateDTO.getTppId(),
                         citizenConsentStateUpdateDTO.getTppState()))
@@ -135,6 +139,39 @@ class CitizenControllerTest {
                     CitizenConsentDTO resultResponse = response.getResponseBody();
                     Assertions.assertNotNull(resultResponse);
                     Assertions.assertEquals(citizenConsentDTO, resultResponse);
+                });
+    }
+
+    @Test
+    void getAllFiscalCode_Ok() {
+        Mockito.when(bloomFilterService.mightContain(FISCAL_CODE))
+                .thenReturn(true);
+
+        webClient.get()
+                .uri("/emd/citizen/filter/{fiscalCode}", FISCAL_CODE)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(response -> {
+                    String resultResponse = response.getResponseBody();
+                    Assertions.assertNotNull(resultResponse);
+                    Assertions.assertEquals("OK", resultResponse);
+                });
+    }
+    @Test
+    void getAllFiscalCode_NoChannelsEnabled() {
+        Mockito.when(bloomFilterService.mightContain(FISCAL_CODE))
+                .thenReturn(false);
+
+        webClient.get()
+                .uri("/emd/citizen/filter/{fiscalCode}", FISCAL_CODE)
+                .exchange()
+                .expectStatus().isAccepted()
+                .expectBody(String.class)
+                .consumeWith(response -> {
+                    String resultResponse = response.getResponseBody();
+                    Assertions.assertNotNull(resultResponse);
+                    Assertions.assertEquals("NO CHANNELS ENABLED", resultResponse);
                 });
     }
 }

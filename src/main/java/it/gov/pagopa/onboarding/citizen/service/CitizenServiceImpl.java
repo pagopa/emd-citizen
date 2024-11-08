@@ -64,7 +64,7 @@ public class CitizenServiceImpl implements CitizenService {
 
 
     @Override
-    public Mono<CitizenConsentDTO> updateChannelState(String fiscalCode, String tppId, boolean tppState) {
+    public Mono<CitizenConsentDTO> updateTppState(String fiscalCode, String tppId, boolean tppState) {
         log.info("[EMD][CITIZEN][UPDATE-CHANNEL-STATE] Received hashedFiscalCode: {} and tppId: {} with state: {}",
                 Utils.createSHA256(fiscalCode), inputSanify(tppId), tppState);
 
