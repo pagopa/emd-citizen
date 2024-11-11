@@ -28,14 +28,11 @@ public class BloomFilterServiceImpl implements BloomFilterService{
     public void initializeBloomFilter() {
         bloomFilter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 1000000, 0.01);
 
-        citizenRepository.findAllFiscalCodes()
-                    .doOnNext(string -> {
-                        log.info("{} added to filter",string);
-                        bloomFilter.put(string);
-                    })
+        citizenRepository.findAll()
+                    .doOnNext(citizenConsent ->
+                        bloomFilter.put(citizenConsent.getFiscalCode()))
                     .doOnComplete(() -> log.info("Bloom filter initialized"))
                     .subscribe();
-
     }
     @Override
 
