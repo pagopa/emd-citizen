@@ -10,7 +10,7 @@ public interface CitizenRepository extends ReactiveMongoRepository<CitizenConsen
 
     Mono<CitizenConsent> findByFiscalCode(String fiscalCode);
 
-    @Query(value = "{}", fields = "{ 'fiscalCode' : 1 }")
+    @Query(value = "{}", fields = "{ 'fiscalCode' : 1, '_id' : 0 }")
     Flux<String> findAllFiscalCodes();
 
 }
