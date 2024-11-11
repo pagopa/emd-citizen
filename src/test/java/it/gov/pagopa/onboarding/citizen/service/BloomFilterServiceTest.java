@@ -1,5 +1,6 @@
 package it.gov.pagopa.onboarding.citizen.service;
 
+import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentFaker;
 import it.gov.pagopa.onboarding.citizen.repository.CitizenRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,23 +26,21 @@ class BloomFilterServiceTest {
     @BeforeEach
     void setUp() {
 
-        when(citizenRepository.findAllFiscalCodes()).thenReturn(Flux.just("fiscalCode1", "fiscalCode2"));
+        when(citizenRepository.findAll()).thenReturn(Flux.just(CitizenConsentFaker.mockInstance(true)));
         bloomFilterService.initializeBloomFilter();
     }
 
     @Test
     void testMightContain() {
-        assertTrue(bloomFilterService.mightContain("fiscalCode1"));
-        assertTrue(bloomFilterService.mightContain("fiscalCode2"));
+        assertTrue(bloomFilterService.mightContain("fiscalCode"));
         assertFalse(bloomFilterService.mightContain("nonExistentFiscalCode"));
     }
 
     @Test
     void testUpdate() {
-        when(citizenRepository.findAllFiscalCodes()).thenReturn(Flux.just("fiscalCode1"));
+        when(citizenRepository.findAll()).thenReturn(Flux.just(CitizenConsentFaker.mockInstance(true)));
         bloomFilterService.update();
-        assertTrue(bloomFilterService.mightContain("fiscalCode1"));
-        assertFalse(bloomFilterService.mightContain("fiscalCode2"));
+        assertTrue(bloomFilterService.mightContain("fiscalCode"));
         assertFalse(bloomFilterService.mightContain("nonexistentHashedFiscalCode"));
     }
 
