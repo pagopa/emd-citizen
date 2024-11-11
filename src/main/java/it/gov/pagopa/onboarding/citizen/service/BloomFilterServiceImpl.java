@@ -29,14 +29,18 @@ public class BloomFilterServiceImpl implements BloomFilterService{
         bloomFilter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 1000000, 0.01);
 
         citizenRepository.findAllFiscalCodes()
-                    .doOnNext(bloomFilter::put)
+                    .doOnNext(string -> {
+                        log.info("{} added to filter",string);
+                        bloomFilter.put(string);
+                    })
                     .doOnComplete(() -> log.info("Bloom filter initialized"))
                     .subscribe();
+
     }
     @Override
 
-    public boolean mightContain(String hashedFiscalCode) {
-        return bloomFilter.mightContain(hashedFiscalCode);
+    public boolean mightContain(String fiscalCode) {
+        return bloomFilter.mightContain(fiscalCode);
     }
 
 
