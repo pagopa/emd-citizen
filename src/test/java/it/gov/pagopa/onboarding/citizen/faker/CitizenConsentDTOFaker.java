@@ -15,7 +15,7 @@ public class CitizenConsentDTOFaker {
         consents.put("tppId", new CitizenConsentDTO.ConsentDTO(bias, LocalDateTime.now()));
 
         return CitizenConsentDTO.builder()
-                .fiscalCode("fiscalCode")
+                .fiscalCode("MLXHZZ43A70H203T")
                 .consents(consents)
                 .build();
     }

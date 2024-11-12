@@ -104,27 +104,26 @@ class CitizenControllerTest {
     }
 
     @Test
-    void getCitizenConsentsEnabled_Ok() {
-        List<String> tppIdList = List.of("tpp1","tpp2");
+    void getTppEnabledList_Ok() {
+        List<String> tppEnabledList = List.of("TPP1", "TPP2");
 
         Mockito.when(citizenService.getTppEnabledList(FISCAL_CODE))
-                .thenReturn(Mono.just(tppIdList));
+                .thenReturn(Mono.just(tppEnabledList));
 
         webClient.get()
                 .uri("/emd/citizen/list/{fiscalCode}/enabled", FISCAL_CODE)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<List<String>>() {
-                })
+                .expectBody(new ParameterizedTypeReference<List<String>>() {})
                 .consumeWith(response -> {
                     List<String> resultResponse = response.getResponseBody();
                     Assertions.assertNotNull(resultResponse);
-                    Assertions.assertEquals(tppIdList.size(), resultResponse.size());
+                    Assertions.assertEquals(tppEnabledList.size(), resultResponse.size());
                 });
     }
 
     @Test
-    void getCitizenConsents_Ok() {
+    void get_Ok() {
         CitizenConsentDTO citizenConsentDTO = CitizenConsentDTOFaker.mockInstance(true);
 
         Mockito.when(citizenService.get(FISCAL_CODE))

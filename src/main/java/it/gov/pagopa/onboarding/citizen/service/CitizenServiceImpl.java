@@ -62,7 +62,6 @@ public class CitizenServiceImpl implements CitizenService {
                 .switchIfEmpty(validationService.validateTppAndSaveConsent(fiscalCode, tppId, citizenConsent));
     }
 
-
     @Override
     public Mono<CitizenConsentDTO> updateTppState(String fiscalCode, String tppId, boolean tppState) {
         log.info("[EMD][CITIZEN][UPDATE-CHANNEL-STATE] Received hashedFiscalCode: {} and tppId: {} with state: {}",
@@ -71,9 +70,10 @@ public class CitizenServiceImpl implements CitizenService {
         return tppConnector.get(tppId)
                 .switchIfEmpty(Mono.error(exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, ExceptionMessage.TPP_NOT_FOUND)))
                 .flatMap(tppResponse -> {
-                    if (tppResponse == null || !Boolean.TRUE.equals(tppResponse.getState())) {
+                    if (!validationService.isTppValid(tppResponse)) {
                         return Mono.error(exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, ExceptionMessage.TPP_NOT_FOUND));
                     }
+
                     return citizenRepository.findByFiscalCodeAndTppId(fiscalCode, tppId)
                             .switchIfEmpty(Mono.error(exceptionMap.throwException
                                     (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during update state process")))

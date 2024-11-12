@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.mockito.Mockito.when;
 
@@ -48,8 +49,62 @@ class CitizenSpecificRepositoryImplTest {
 
         Mono<CitizenConsent> result = repository.findByFiscalCodeAndTppId(hashedFiscalCode, tppId);
 
-        Assertions.assertEquals(hashedFiscalCode, result.block().getFiscalCode());
+        Assertions.assertEquals(hashedFiscalCode, Objects.requireNonNull(result.block()).getFiscalCode());
         Mockito.verify(mongoTemplate).aggregate(Mockito.any(), Mockito.eq(CitizenConsent.class), Mockito.eq(CitizenConsent.class));
     }
 
+    @Test
+    void testFindByFiscalCodeAndTppId_TppIdNull() {
+        String hashedFiscalCode = "hashedCode";
+        String tppId = null;
+        Mono<CitizenConsent> result = repository.findByFiscalCodeAndTppId(hashedFiscalCode, tppId);
+
+        Assertions.assertNotEquals(Boolean.TRUE, result.hasElement().block());
+    }
+
+    @Test
+    void testFindByFiscalCodeAndTppId_EmptyResult() {
+        String hashedFiscalCode = "hashedCode";
+        String tppId = "tpp1";
+
+        when(mongoTemplate.aggregate(Mockito.any(), Mockito.eq(CitizenConsent.class), Mockito.eq(CitizenConsent.class)))
+                .thenReturn(Flux.empty());
+
+        Mono<CitizenConsent> result = repository.findByFiscalCodeAndTppId(hashedFiscalCode, tppId);
+
+        Assertions.assertNull(result.block());
+    }
+
+    @Test
+    void testConsentKeyWrapperGetterSetter() {
+        CitizenSpecificRepositoryImpl.ConsentKeyWrapper consentKeyWrapper = new CitizenSpecificRepositoryImpl.ConsentKeyWrapper();
+
+        consentKeyWrapper.setK("testKey");
+
+        Assertions.assertEquals("testKey", consentKeyWrapper.getK());
+    }
+
+    @Test
+    void testConsentKeyWrapperToString() {
+
+        CitizenSpecificRepositoryImpl.ConsentKeyWrapper consentKeyWrapper = new CitizenSpecificRepositoryImpl.ConsentKeyWrapper();
+        consentKeyWrapper.setK("testKey");
+
+        Assertions.assertEquals("CitizenSpecificRepositoryImpl.ConsentKeyWrapper(k=testKey)", consentKeyWrapper.toString());
+    }
+
+    @Test
+    void testConsentKeyWrapperEqualsAndHashCode() {
+
+        CitizenSpecificRepositoryImpl.ConsentKeyWrapper consentKeyWrapper1 = new CitizenSpecificRepositoryImpl.ConsentKeyWrapper();
+        CitizenSpecificRepositoryImpl.ConsentKeyWrapper consentKeyWrapper2 = new CitizenSpecificRepositoryImpl.ConsentKeyWrapper();
+        consentKeyWrapper1.setK("testKey");
+        consentKeyWrapper2.setK("testKey");
+
+        Assertions.assertEquals(consentKeyWrapper1, consentKeyWrapper2);
+        Assertions.assertEquals(consentKeyWrapper1.hashCode(), consentKeyWrapper2.hashCode());
+
+        consentKeyWrapper2.setK("differentKey");
+        Assertions.assertNotEquals(consentKeyWrapper1, consentKeyWrapper2);
+    }
 }
