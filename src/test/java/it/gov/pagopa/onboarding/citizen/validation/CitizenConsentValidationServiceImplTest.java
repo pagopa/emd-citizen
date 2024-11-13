@@ -9,6 +9,7 @@ import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentDTOFaker;
 import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentFaker;
 import it.gov.pagopa.onboarding.citizen.faker.TppDTOFaker;
 import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
+import it.gov.pagopa.onboarding.citizen.model.ConsentDetails;
 import it.gov.pagopa.onboarding.citizen.repository.CitizenRepository;
 import it.gov.pagopa.onboarding.citizen.service.BloomFilterServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,7 @@ class CitizenConsentValidationServiceImplTest {
 
     @Test
     void handleExistingConsent_ConsentAlreadyExists() {
+
         CitizenConsent existingConsent = CITIZEN_CONSENT;
         String tppId = "existingTppId";
         existingConsent.getConsents().put(tppId, CITIZEN_CONSENT.getConsents().get(tppId));
@@ -65,6 +67,7 @@ class CitizenConsentValidationServiceImplTest {
 
     @Test
     void handleExistingConsent_NewConsentForTpp() {
+
         CitizenConsent existingConsent = CITIZEN_CONSENT;
         TppDTO activeTppDTO = TPP_DTO;
         activeTppDTO.setState(true);
@@ -85,10 +88,16 @@ class CitizenConsentValidationServiceImplTest {
 
     @Test
     void validateTppAndSaveConsent_TppValidAndActive() {
-        String fiscalCode = CITIZEN_CONSENT.getFiscalCode();
+
+        CitizenConsent citizenConsentWithValidConsent = CITIZEN_CONSENT;
+        String fiscalCode = citizenConsentWithValidConsent.getFiscalCode();
         TppDTO activeTppDTO = TPP_DTO;
         activeTppDTO.setState(true);
 
+        ConsentDetails consentDetails = new ConsentDetails();
+        consentDetails.setTppState(true);
+
+        citizenConsentWithValidConsent.getConsents().put(activeTppDTO.getTppId(), consentDetails);
 
         when(tppConnector.get(anyString())).thenReturn(Mono.just(activeTppDTO));
         when(citizenRepository.save(CITIZEN_CONSENT)).thenReturn(Mono.just(CITIZEN_CONSENT));
@@ -107,15 +116,21 @@ class CitizenConsentValidationServiceImplTest {
 
     @Test
     void validateTppAndSaveConsent_TppInvalid() {
-        String fiscalCode = CITIZEN_CONSENT.getFiscalCode();
-        String tppId = "inactiveTppId";
+
+        CitizenConsent citizenConsentWithInvalidConsent = CITIZEN_CONSENT;
+        String fiscalCode = citizenConsentWithInvalidConsent.getFiscalCode();
 
         TppDTO inactiveTppDTO = TPP_DTO;
         inactiveTppDTO.setState(false);
 
+        ConsentDetails consentDetails = new ConsentDetails();
+        consentDetails.setTppState(false);
+
+        citizenConsentWithInvalidConsent.getConsents().put(inactiveTppDTO.getTppId(), consentDetails);
+
         when(tppConnector.get(anyString())).thenReturn(Mono.just(inactiveTppDTO));
 
-        StepVerifier.create(validationService.validateTppAndSaveConsent(fiscalCode, tppId, CITIZEN_CONSENT))
+        StepVerifier.create(validationService.validateTppAndSaveConsent(fiscalCode, inactiveTppDTO.getTppId(), CITIZEN_CONSENT))
                 .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
                         "TPP is not active or is invalid".equals(throwable.getMessage()) &&
                         "TPP_NOT_FOUND".equals(((ClientExceptionWithBody) throwable).getCode()))
@@ -127,13 +142,11 @@ class CitizenConsentValidationServiceImplTest {
 
     @Test
     void validateTppAndSaveConsent_TppNotFound() {
+
         String fiscalCode = CITIZEN_CONSENT.getFiscalCode();
-        String tppId = "inactiveTppId";
+        String tppId = "nonExistentTppId";
 
-        TppDTO inactiveTppDTO = TPP_DTO;
-        inactiveTppDTO.setState(false);
-
-        when(tppConnector.get(anyString())).thenReturn(Mono.just(inactiveTppDTO));
+        when(tppConnector.get(tppId)).thenReturn(Mono.error(new RuntimeException("TPP not found")));
 
         StepVerifier.create(validationService.validateTppAndSaveConsent(fiscalCode, tppId, CITIZEN_CONSENT))
                 .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
@@ -145,4 +158,44 @@ class CitizenConsentValidationServiceImplTest {
         verify(bloomFilterService, never()).add(fiscalCode);
     }
 
+    @Test
+    void validateTppAndSaveConsent_TppInactive() {
+
+        String fiscalCode = CITIZEN_CONSENT.getFiscalCode();
+        TppDTO inactiveTppDTO = TPP_DTO;
+        inactiveTppDTO.setState(false);
+
+        ConsentDetails consentDetails = new ConsentDetails();
+        consentDetails.setTppState(false);
+
+        CITIZEN_CONSENT.getConsents().put(inactiveTppDTO.getTppId(), consentDetails);
+
+        when(tppConnector.get(anyString())).thenReturn(Mono.just(inactiveTppDTO));
+
+        StepVerifier.create(validationService.validateTppAndSaveConsent(fiscalCode, inactiveTppDTO.getTppId(), CITIZEN_CONSENT))
+                .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
+                        "TPP is not active or is invalid".equals(throwable.getMessage()) &&
+                        "TPP_NOT_FOUND".equals(((ClientExceptionWithBody) throwable).getCode()))
+                .verify();
+
+        verify(citizenRepository, never()).save(any());
+        verify(bloomFilterService, never()).add(fiscalCode);
+    }
+
+    @Test
+    void handleExistingConsent_TppNotFound() {
+
+        String tppId = "nonExistentTppId";
+
+        when(tppConnector.get(anyString())).thenReturn(Mono.error(new RuntimeException("TPP not found")));
+
+        StepVerifier.create(validationService.handleExistingConsent(CITIZEN_CONSENT, tppId, CITIZEN_CONSENT))
+                .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
+                        "TPP does not exist or is not active".equals(throwable.getMessage()) &&
+                        "TPP_NOT_FOUND".equals(((ClientExceptionWithBody) throwable).getCode()))
+                .verify();
+
+        verify(citizenRepository, never()).save(any());
+        verify(bloomFilterService, never()).add(anyString());
+    }
 }

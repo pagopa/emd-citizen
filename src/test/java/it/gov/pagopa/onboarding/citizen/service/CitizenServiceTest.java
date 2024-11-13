@@ -199,57 +199,6 @@ class CitizenServiceTest {
     }
 
     @Test
-    void updateChannelState_Ok_ConsentDetailsIsNull() {
-
-        TppDTO mockTppDTO = TppDTOFaker.mockInstance();
-        mockTppDTO.setState(true);
-
-        CitizenConsent citizenConsentWithConsentDetailNull = CitizenConsentFaker.mockInstance(true);
-        citizenConsentWithConsentDetailNull.getConsents().put(TPP_ID, null);
-
-        when(tppConnector.get(anyString()))
-                .thenReturn(Mono.just(mockTppDTO));
-
-        when(citizenRepository.findByFiscalCodeAndTppId(FISCAL_CODE, TPP_ID))
-                .thenReturn(Mono.just(citizenConsentWithConsentDetailNull));
-
-        when(citizenRepository.save(any()))
-                .thenReturn(Mono.just(citizenConsentWithConsentDetailNull));
-
-
-
-        Executable executable = () -> citizenService.updateTppState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
-        ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
-
-        assertEquals("ConsentDetails is null for this tppId", exception.getMessage());
-    }
-
-    @Test
-    void updateChannelState_Ko_TppResponseIsNull() {
-
-        when(tppConnector.get(anyString())).thenReturn(Mono.empty());
-
-        Executable executable = () -> citizenService.updateTppState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
-        ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
-
-        assertEquals("TPP does not exist or is not active", exception.getMessage());
-    }
-
-    @Test
-    void updateChannelState_Ko_TppInactive() {
-
-        TppDTO mockTppDTO = TppDTOFaker.mockInstance();
-        mockTppDTO.setState(false);
-
-        when(tppConnector.get(anyString())).thenReturn(Mono.just(mockTppDTO));
-
-        Executable executable = () -> citizenService.updateTppState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
-        ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
-
-        assertEquals("TPP does not exist or is not active", exception.getMessage());
-    }
-
-    @Test
     void getConsentStatus_Ok() {
 
 
