@@ -68,28 +68,17 @@ public class CitizenServiceImpl implements CitizenService {
                 Utils.createSHA256(fiscalCode), inputSanify(tppId), tppState);
 
         return tppConnector.get(tppId)
-                .switchIfEmpty(Mono.error(exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, ExceptionMessage.TPP_NOT_FOUND)))
-                .flatMap(tppResponse -> {
-                    if (!validationService.isTppValid(tppResponse)) {
-                        return Mono.error(exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, ExceptionMessage.TPP_NOT_FOUND));
-                    }
-
-                    return citizenRepository.findByFiscalCodeAndTppId(fiscalCode, tppId)
-                            .switchIfEmpty(Mono.error(exceptionMap.throwException
-                                    (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during update state process")))
-                            .flatMap(citizenConsent -> {
-                                ConsentDetails consentDetails = citizenConsent.getConsents().get(tppId);
-                                if (consentDetails != null) {
-                                    consentDetails.setTppState(tppState);
-                                } else {
-                                    return Mono.error(exceptionMap.throwException
-                                            (ExceptionName.CITIZEN_NOT_ONBOARDED, "ConsentDetails is null for this tppId"));
-                                }
-                                return citizenRepository.save(citizenConsent);
-                            })
-                            .map(mapperToDTO::map)
-                            .doOnSuccess(savedConsent -> log.info("[EMD][CITIZEN][UPDATE-CHANNEL-STATE] Updated state"));
-                });
+                .onErrorMap(error ->exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, ExceptionMessage.TPP_NOT_FOUND))
+                .flatMap(tppResponse -> citizenRepository.findByFiscalCodeAndTppId(fiscalCode, tppId)
+                        .switchIfEmpty(Mono.error(exceptionMap.throwException
+                                (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during update state process")))
+                        .flatMap(citizenConsent -> {
+                            ConsentDetails consentDetails = citizenConsent.getConsents().get(tppId);
+                            consentDetails.setTppState(tppState);
+                            return citizenRepository.save(citizenConsent);
+                        })
+                        .map(mapperToDTO::map)
+                        .doOnSuccess(savedConsent -> log.info("[EMD][CITIZEN][UPDATE-CHANNEL-STATE] Updated state")));
     }
 
     @Override

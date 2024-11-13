@@ -170,7 +170,6 @@ class CitizenServiceTest {
         when(citizenRepository.save(any()))
                 .thenReturn(Mono.just(CITIZEN_CONSENT));
 
-        when(validationService.isTppValid(mockTppDTO)).thenReturn(true);
 
         CitizenConsentDTO response = citizenService.updateTppState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
 
@@ -191,7 +190,7 @@ class CitizenServiceTest {
         when(citizenRepository.findByFiscalCodeAndTppId(FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.empty());
 
-        when(validationService.isTppValid(mockTppDTO)).thenReturn(true);
+
 
         Executable executable = () -> citizenService.updateTppState(FISCAL_CODE, TPP_ID, true).block();
         ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
@@ -217,7 +216,7 @@ class CitizenServiceTest {
         when(citizenRepository.save(any()))
                 .thenReturn(Mono.just(citizenConsentWithConsentDetailNull));
 
-        when(validationService.isTppValid(mockTppDTO)).thenReturn(true);
+
 
         Executable executable = () -> citizenService.updateTppState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
         ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);

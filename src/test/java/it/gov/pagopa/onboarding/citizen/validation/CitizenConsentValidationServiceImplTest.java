@@ -117,7 +117,7 @@ class CitizenConsentValidationServiceImplTest {
 
         StepVerifier.create(validationService.validateTppAndSaveConsent(fiscalCode, tppId, CITIZEN_CONSENT))
                 .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
-                        "TPP does not exist or is not active".equals(throwable.getMessage()) &&
+                        "TPP is not active or is invalid".equals(throwable.getMessage()) &&
                         "TPP_NOT_FOUND".equals(((ClientExceptionWithBody) throwable).getCode()))
                 .verify();
 
@@ -126,21 +126,23 @@ class CitizenConsentValidationServiceImplTest {
     }
 
     @Test
-    void isTppValid_TrueWhenActive() {
-        TppDTO activeTpp = TPP_DTO;
-        activeTpp.setState(true);
-        assertTrue(validationService.isTppValid(activeTpp));
+    void validateTppAndSaveConsent_TppNotFound() {
+        String fiscalCode = CITIZEN_CONSENT.getFiscalCode();
+        String tppId = "inactiveTppId";
+
+        TppDTO inactiveTppDTO = TPP_DTO;
+        inactiveTppDTO.setState(false);
+
+        when(tppConnector.get(anyString())).thenReturn(Mono.just(inactiveTppDTO));
+
+        StepVerifier.create(validationService.validateTppAndSaveConsent(fiscalCode, tppId, CITIZEN_CONSENT))
+                .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
+                        "TPP does not exist or is not active".equals(throwable.getMessage()) &&
+                        "TPP_NOT_FOUND".equals(((ClientExceptionWithBody) throwable).getCode()))
+                .verify();
+
+        verify(citizenRepository, never()).save(any());
+        verify(bloomFilterService, never()).add(fiscalCode);
     }
 
-    @Test
-    void isTppValid_FalseWhenInactive() {
-        TppDTO inactiveTpp = TPP_DTO;
-        inactiveTpp.setState(false);
-        assertFalse(validationService.isTppValid(inactiveTpp));
-    }
-
-    @Test
-    void isTppValid_FalseWhenNull() {
-        assertFalse(validationService.isTppValid(null));
-    }
 }

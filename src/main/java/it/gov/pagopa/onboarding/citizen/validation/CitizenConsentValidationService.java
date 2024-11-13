@@ -1,7 +1,6 @@
 package it.gov.pagopa.onboarding.citizen.validation;
 
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
-import it.gov.pagopa.onboarding.citizen.dto.TppDTO;
 import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
 import reactor.core.publisher.Mono;
 
@@ -11,5 +10,4 @@ public interface CitizenConsentValidationService {
 
     Mono<CitizenConsentDTO> validateTppAndSaveConsent(String fiscalCode, String tppId, CitizenConsent citizenConsent);
 
-    boolean isTppValid(TppDTO tppResponse);
 }

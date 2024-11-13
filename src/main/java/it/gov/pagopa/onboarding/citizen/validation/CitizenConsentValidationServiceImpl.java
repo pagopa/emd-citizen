@@ -3,9 +3,9 @@ package it.gov.pagopa.onboarding.citizen.validation;
 import it.gov.pagopa.common.utils.Utils;
 import it.gov.pagopa.onboarding.citizen.configuration.ExceptionMap;
 import it.gov.pagopa.onboarding.citizen.connector.tpp.TppConnectorImpl;
+import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants;
 import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.ExceptionName;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
-import it.gov.pagopa.onboarding.citizen.dto.TppDTO;
 import it.gov.pagopa.onboarding.citizen.dto.mapper.CitizenConsentObjectToDTOMapper;
 import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
 import it.gov.pagopa.onboarding.citizen.repository.CitizenRepository;
@@ -47,36 +47,30 @@ public class CitizenConsentValidationServiceImpl implements CitizenConsentValida
     @Override
     public Mono<CitizenConsentDTO> validateTppAndSaveConsent(String fiscalCode, String tppId, CitizenConsent citizenConsent) {
         return tppConnector.get(tppId)
+                .onErrorMap(error -> exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, CitizenConstants.ExceptionMessage.TPP_NOT_FOUND))
                 .flatMap(tppResponse -> {
-                    if (isTppValid(tppResponse)) {
+                    if (Boolean.TRUE.equals(citizenConsent.getConsents().get(tppId).getTppState())) {
                         return citizenRepository.save(citizenConsent)
                                 .doOnSuccess(savedConsent -> {
-                                    log.info("[EMD][CREATE-CITIZEN-CONSENT] Created new citizen consent for fiscal code: {}",  Utils.createSHA256(fiscalCode));
+                                    log.info("[EMD][CREATE-CITIZEN-CONSENT] Created new citizen consent for fiscal code: {}", Utils.createSHA256(fiscalCode));
                                     bloomFilterService.add(fiscalCode);
                                 })
-                                .flatMap(savedConsent -> Mono.just(mapperToDTO.map(savedConsent)));
+                                .map(mapperToDTO::map);
                     } else {
-                        return Mono.error(exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, "TPP does not exist or is not active"));
+                        return Mono.error(exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, "TPP is not active or is invalid"));
                     }
                 });
     }
 
-    @Override
-    public boolean isTppValid(TppDTO tppResponse) {
-        return tppResponse != null && Boolean.TRUE.equals(tppResponse.getState());
-    }
 
     private Mono<CitizenConsentDTO> validateTppAndUpdateConsent(CitizenConsent existingConsent, String tppId, CitizenConsent citizenConsent) {
         return tppConnector.get(tppId)
+                .onErrorMap(error -> exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, CitizenConstants.ExceptionMessage.TPP_NOT_FOUND))
                 .flatMap(tppResponse -> {
-                    if (isTppValid(tppResponse)) {
                         existingConsent.getConsents().put(tppId, citizenConsent.getConsents().get(tppId));
                         return citizenRepository.save(existingConsent)
                                 .doOnSuccess(savedConsent -> log.info("[EMD][CREATE-CITIZEN-CONSENT] Updated citizen consent for TPP: {}", tppId))
                                 .flatMap(savedConsent -> Mono.just(mapperToDTO.map(savedConsent)));
-                    } else {
-                        return Mono.error(exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, "TPP does not exist or is not active"));
-                    }
                 });
     }
 }
