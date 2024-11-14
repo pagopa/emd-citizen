@@ -1,0 +1,19 @@
+extends:
+  - "spectral:oas"
+  - "spectral:asyncapi"
+  - "https://unpkg.com/@stoplight/spectral-owasp-ruleset/dist/ruleset.mjs"
+overrides:
+  - files:
+      - "src/main/resources/META-INF/openapi.yaml#/paths/~1token/post/security"
+    rules:
+      owasp:api2:2023-write-restricted: "off"
+  - files:
+      - "src/main/resources/META-INF/openapi.yaml#/paths/~1.well-known~1jwks.json/get/security"
+      - "src/main/resources/META-INF/openapi.yaml#/paths/~1.well-known~1openid-configuration/get/security"
+    rules:
+      owasp:api2:2023-read-restricted: "off"
+  - files:
+      - "src/main/resources/META-INF/openapi.yaml"
+    rules:
+        owasp:api3:2023-no-additionalProperties: "off"
+        owasp:api3:2023-constrained-additionalProperties: "off"

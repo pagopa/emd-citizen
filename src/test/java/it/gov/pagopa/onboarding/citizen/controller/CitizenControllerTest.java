@@ -1,7 +1,10 @@
 package it.gov.pagopa.onboarding.citizen.controller;
 
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentStateUpdateDTO;
 import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentDTOFaker;
+import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentStateUpdateDTOFaker;
+import it.gov.pagopa.onboarding.citizen.service.BloomFilterServiceImpl;
 import it.gov.pagopa.onboarding.citizen.service.CitizenServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -9,6 +12,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -21,12 +25,15 @@ class CitizenControllerTest {
     @MockBean
     private CitizenServiceImpl citizenService;
 
+    @MockBean
+    private BloomFilterServiceImpl bloomFilterService;
+
     @Autowired
     private WebTestClient webClient;
 
 
 
-    private static final String FISCAL_CODE = "fiscalCode";
+    private static final String FISCAL_CODE = "MLXHZZ43A70H203T";
     private static final String TPP_ID  = "tppId";
 
 
@@ -52,25 +59,27 @@ class CitizenControllerTest {
 
     @Test
     void stateUpdate_Ok() {
-        CitizenConsentDTO citizenConsentDTO = CitizenConsentDTOFaker.mockInstance(true);
+        CitizenConsentStateUpdateDTO citizenConsentStateUpdateDTO = CitizenConsentStateUpdateDTOFaker.mockInstance(true);
 
-        Mockito.when(citizenService.updateChannelState(
-                        citizenConsentDTO.getHashedFiscalCode(),
-                        citizenConsentDTO.getTppId(),
-                        citizenConsentDTO.getTppState()))
-                .thenReturn(Mono.just(citizenConsentDTO));
+        CitizenConsentDTO expectedResponseDTO = CitizenConsentDTOFaker.mockInstance(true);
+
+        Mockito.when(citizenService.updateTppState(
+                        citizenConsentStateUpdateDTO.getFiscalCode(),
+                        citizenConsentStateUpdateDTO.getTppId(),
+                        citizenConsentStateUpdateDTO.getTppState()))
+                .thenReturn(Mono.just(expectedResponseDTO));
 
         webClient.put()
                 .uri("/emd/citizen/stateUpdate")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(citizenConsentDTO)
+                .bodyValue(citizenConsentStateUpdateDTO)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(CitizenConsentDTO.class)
                 .consumeWith(response -> {
                     CitizenConsentDTO resultResponse = response.getResponseBody();
                     Assertions.assertNotNull(resultResponse);
-                    Assertions.assertEquals(citizenConsentDTO, resultResponse);
+                    Assertions.assertEquals(expectedResponseDTO, resultResponse);
                 });
     }
 
@@ -95,40 +104,73 @@ class CitizenControllerTest {
     }
 
     @Test
-    void getCitizenConsentsEnabled_Ok() {
-        List<CitizenConsentDTO> citizenConsentDTOList = List.of(CitizenConsentDTOFaker.mockInstance(true));
+    void getTppEnabledList_Ok() {
+        List<String> tppEnabledList = List.of("TPP1", "TPP2");
 
-        Mockito.when(citizenService.getListEnabledConsents(FISCAL_CODE))
-                .thenReturn(Mono.just(citizenConsentDTOList));
+        Mockito.when(citizenService.getTppEnabledList(FISCAL_CODE))
+                .thenReturn(Mono.just(tppEnabledList));
 
         webClient.get()
                 .uri("/emd/citizen/list/{fiscalCode}/enabled", FISCAL_CODE)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBodyList(CitizenConsentDTO.class)
+                .expectBody(new ParameterizedTypeReference<List<String>>() {})
                 .consumeWith(response -> {
-                    List<CitizenConsentDTO> resultResponse = response.getResponseBody();
+                    List<String> resultResponse = response.getResponseBody();
                     Assertions.assertNotNull(resultResponse);
-                    Assertions.assertEquals(citizenConsentDTOList.size(), resultResponse.size());
+                    Assertions.assertEquals(tppEnabledList.size(), resultResponse.size());
                 });
     }
 
     @Test
-    void getCitizenConsents_Ok() {
-        List<CitizenConsentDTO> citizenConsentDTOList = List.of(CitizenConsentDTOFaker.mockInstance(true));
+    void get_Ok() {
+        CitizenConsentDTO citizenConsentDTO = CitizenConsentDTOFaker.mockInstance(true);
 
-        Mockito.when(citizenService.getListAllConsents(FISCAL_CODE))
-                .thenReturn(Mono.just(citizenConsentDTOList));
+        Mockito.when(citizenService.get(FISCAL_CODE))
+                .thenReturn(Mono.just(citizenConsentDTO));
 
         webClient.get()
                 .uri("/emd/citizen/list/{fiscalCode}", FISCAL_CODE)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBodyList(CitizenConsentDTO.class)
+                .expectBody(CitizenConsentDTO.class)
                 .consumeWith(response -> {
-                    List<CitizenConsentDTO> resultResponse = response.getResponseBody();
+                    CitizenConsentDTO resultResponse = response.getResponseBody();
                     Assertions.assertNotNull(resultResponse);
-                    Assertions.assertEquals(citizenConsentDTOList.size(), resultResponse.size());
+                    Assertions.assertEquals(citizenConsentDTO, resultResponse);
+                });
+    }
+
+    @Test
+    void getAllFiscalCode_Ok() {
+        Mockito.when(bloomFilterService.mightContain(FISCAL_CODE))
+                .thenReturn(true);
+
+        webClient.get()
+                .uri("/emd/citizen/filter/{fiscalCode}", FISCAL_CODE)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(response -> {
+                    String resultResponse = response.getResponseBody();
+                    Assertions.assertNotNull(resultResponse);
+                    Assertions.assertEquals("OK", resultResponse);
+                });
+    }
+    @Test
+    void getAllFiscalCode_NoChannelsEnabled() {
+        Mockito.when(bloomFilterService.mightContain(FISCAL_CODE))
+                .thenReturn(false);
+
+        webClient.get()
+                .uri("/emd/citizen/filter/{fiscalCode}", FISCAL_CODE)
+                .exchange()
+                .expectStatus().isAccepted()
+                .expectBody(String.class)
+                .consumeWith(response -> {
+                    String resultResponse = response.getResponseBody();
+                    Assertions.assertNotNull(resultResponse);
+                    Assertions.assertEquals("NO CHANNELS ENABLED", resultResponse);
                 });
     }
 }

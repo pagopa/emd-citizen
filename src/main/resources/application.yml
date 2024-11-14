@@ -38,3 +38,6 @@ management:
       exposure.include: "*"
     web:
       exposure.include: info, health
+rest-client:
+  tpp:
+    baseUrl: ${EMD_TPP:http://emd-tpp}

@@ -26,6 +26,14 @@ public class ExceptionMap {
                         message
                 )
         );
+
+        exceptions.put(CitizenConstants.ExceptionName.TPP_NOT_FOUND, message ->
+                new ClientExceptionWithBody(
+                        HttpStatus.NOT_FOUND,
+                        CitizenConstants.ExceptionCode.TPP_NOT_FOUND,
+                        message
+                )
+        );
     }
 
     public RuntimeException throwException(String exceptionKey, String message) {

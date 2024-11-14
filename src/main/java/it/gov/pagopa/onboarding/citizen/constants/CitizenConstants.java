@@ -5,6 +5,8 @@ public class CitizenConstants {
 
         public static final String CITIZEN_NOT_ONBOARDED = "CITIZEN_NOT_ONBOARDED";
         public static final String GENERIC_ERROR = "GENERIC_ERROR";
+        public static final String TPP_NOT_FOUND = "TPP_NOT_FOUND";
+
         private ExceptionCode() {}
     }
 
@@ -12,6 +14,8 @@ public class CitizenConstants {
 
         public static final String CITIZEN_NOT_ONBOARDED = "CITIZEN_NOT_ONBOARDED";
         public static final String GENERIC_ERROR = "GENERIC_ERROR";
+        public static final String TPP_NOT_FOUND = "TPP does not exist or is not active";
+
         private ExceptionMessage() {}
     }
 
@@ -19,7 +23,16 @@ public class CitizenConstants {
 
         public static final String CITIZEN_NOT_ONBOARDED = "CITIZEN_NOT_ONBOARDED";
         public static final String GENERIC_ERROR = "GENERIC_ERROR";
+        public static final String TPP_NOT_FOUND = "TPP_NOT_FOUND";
+
         private ExceptionName() {}
+    }
+
+    public static final class ValidationRegex {
+
+        public static final String FISCAL_CODE_STRUCTURE_REGEX = "(^([A-Za-z]{6}[0-9lmnpqrstuvLMNPQRSTUV]{2}[abcdehlmprstABCDEHLMPRST][0-9lmnpqrstuvLMNPQRSTUV]{2}[A-Za-z][0-9lmnpqrstuvLMNPQRSTUV]{3}[A-Za-z])$)|(^(\\d{11})$)";
+
+        private ValidationRegex() {}
     }
 
 
