@@ -29,7 +29,7 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
                 Aggregation.project("fiscalCode","consents." + tppId)
         );
 
-        return mongoTemplate.aggregate(aggregation, CitizenConsent.class, CitizenConsent.class)
+        return mongoTemplate.aggregate(aggregation, "citizen_consents", CitizenConsent.class)
                 .next();
     }
 
