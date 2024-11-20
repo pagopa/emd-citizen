@@ -25,12 +25,14 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
 
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("fiscalCode").is(fiscalCode)),
-                Aggregation.match(Criteria.where("consents." + tppId).exists(true))
+                Aggregation.match(Criteria.where("consents." + tppId).exists(true)),
+                Aggregation.project("fiscalCode").and("consents." + tppId).as("consents")
         );
 
         return mongoTemplate.aggregate(aggregation, CitizenConsent.class, CitizenConsent.class)
                 .next();
     }
+
     @Data
     public static class ConsentKeyWrapper {
         private String k;
