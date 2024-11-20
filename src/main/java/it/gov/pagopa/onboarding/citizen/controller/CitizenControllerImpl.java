@@ -59,7 +59,8 @@ public class CitizenControllerImpl implements CitizenController {
 
     @Override
     public Mono<ResponseEntity<CitizenConsentDTO>> getCitizenConsentsListEnabled(String fiscalCode) {
-        return null;
+        return citizenService.getCitizenConsentsListEnabled(fiscalCode)
+                .map(ResponseEntity::ok);
     }
 
     @Override
