@@ -26,7 +26,7 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("fiscalCode").is(fiscalCode)),
                 Aggregation.match(Criteria.where("consents." + tppId).exists(true)),
-                Aggregation.project("fiscalCode").and("consents." + tppId).as("consents")
+                Aggregation.project("fiscalCode").and("consents." + tppId)
         );
 
         return mongoTemplate.aggregate(aggregation, CitizenConsent.class, CitizenConsent.class)
