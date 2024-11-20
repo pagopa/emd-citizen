@@ -55,6 +55,6 @@ public interface CitizenController {
     Mono<ResponseEntity<CitizenConsentDTO>> getCitizenConsentsListEnabled(@PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
 
     @GetMapping("/{tppId}")
-    Mono<ResponseEntity<List<CitizenConsentDTO>>> getCitizenEnabled(@PathVariable String fiscalCode);
+    Mono<ResponseEntity<List<CitizenConsentDTO>>> getCitizenEnabled(@PathVariable String tppId);
 
 }
