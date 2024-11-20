@@ -118,23 +118,18 @@ public class CitizenServiceImpl implements CitizenService {
     public Mono<CitizenConsentDTO> getCitizenConsentsListEnabled(String fiscalCode) {
          log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Received hashedFiscalCode: {}", Utils.createSHA256(fiscalCode));
 
-//        return citizenRepository.findByFiscalCode(fiscalCode)
-//                .switchIfEmpty(Mono.empty())
-//                .map(citizenConsent -> {
-//                    Map<String, ConsentDetails> filteredConsents = citizenConsent.getConsents().entrySet().stream()
-//                            .filter(tpp -> tpp.getValue().getTppState())
-//                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-//                    citizenConsent.setConsents(filteredConsents);
-//
-//                    return mapperToDTO.map(citizenConsent);
-//                })
-//                .doOnSuccess(citizenConsent -> log.info("EMD][CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Consents found:  {}", citizenConsent.getConsents().size()));
+        return citizenRepository.findByFiscalCode(fiscalCode)
+                .switchIfEmpty(Mono.empty())
+                .map(citizenConsent -> {
+                    Map<String, ConsentDetails> filteredConsents = citizenConsent.getConsents().entrySet().stream()
+                            .filter(tpp -> tpp.getValue().getTppState())
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                    citizenConsent.setConsents(filteredConsents);
 
-        return citizenRepository.findEnabledConsentsByFiscalCode(fiscalCode)
-                .switchIfEmpty(Mono.error(exceptionMap.throwException
-                        (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during get process ")))
-                .map(mapperToDTO::map)
-                .doOnSuccess(consent -> log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Consent found:  {}", consent));
+                    return mapperToDTO.map(citizenConsent);
+                })
+                .doOnSuccess(citizenConsent -> log.info("EMD][CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Consents found:  {}", citizenConsent.getConsents().size()));
+
 
     }
 
