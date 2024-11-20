@@ -23,10 +23,11 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
             return Mono.empty();
         }
 
+        String consent = "consents." + tppId;
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("fiscalCode").is(fiscalCode)),
-                Aggregation.match(Criteria.where("consents." + tppId).exists(true)),
-                Aggregation.project("fiscalCode","consents." + tppId)
+                Aggregation.match(Criteria.where(consent).exists(true)),
+                Aggregation.project("fiscalCode").and(consent).as(consent)
         );
 
         return mongoTemplate.aggregate(aggregation, "citizen_consents", CitizenConsent.class)
