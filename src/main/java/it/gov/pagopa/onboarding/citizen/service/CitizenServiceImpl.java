@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static it.gov.pagopa.common.utils.Utils.inputSanify;
 
@@ -82,7 +83,7 @@ public class CitizenServiceImpl implements CitizenService {
     }
 
     @Override
-    public Mono<CitizenConsentDTO> getConsentStatus(String fiscalCode, String tppId) {
+    public Mono<CitizenConsentDTO> getCitizenConsentStatus(String fiscalCode, String tppId) {
         log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Received hashedFiscalCode: {} and tppId: {}", Utils.createSHA256(fiscalCode), inputSanify(tppId));
         return citizenRepository.findByFiscalCodeAndTppId(fiscalCode, tppId)
                 .switchIfEmpty(Mono.error(exceptionMap.throwException
@@ -106,10 +107,22 @@ public class CitizenServiceImpl implements CitizenService {
     }
 
     @Override
-    public Mono<CitizenConsentDTO> get(String fiscalCode) {
+    public Mono<CitizenConsentDTO> getCitizenConsentsList(String fiscalCode) {
         log.info("[EMD-CITIZEN][FIND-ALL-CITIZEN-CONSENTS] Received hashedFiscalCode: {}", (Utils.createSHA256(fiscalCode)));
         return citizenRepository.findByFiscalCode(fiscalCode)
                 .map(mapperToDTO::map)
                 .doOnSuccess(consentList -> log.info("[EMD-CITIZEN][FIND-ALL-CITIZEN-CONSENTS] Consents found::  {}", consentList));
+    }
+
+    @Override
+    public Mono<CitizenConsentDTO> getCitizenConsentsListEnabled(String fiscalCode) {
+        return null;
+    }
+
+    @Override
+    public Mono<List<CitizenConsentDTO>> getCitizenEnabled(String tppId) {
+        return citizenRepository.findByTppIdEnabled(tppId)
+                .map(mapperToDTO::map)
+                .collectList();
     }
 }

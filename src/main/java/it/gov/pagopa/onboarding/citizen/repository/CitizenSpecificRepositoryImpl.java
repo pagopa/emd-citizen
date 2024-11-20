@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
@@ -32,6 +33,16 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
 
         return mongoTemplate.aggregate(aggregation, "citizen_consents", CitizenConsent.class)
                 .next();
+    }
+
+    public Flux<CitizenConsent> findByTppIdEnabled(String tppId) {
+        String consent = "consents." + tppId;
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where(consent).exists(true)),
+                Aggregation.project("fiscalCode").and(consent).as(consent)
+        );
+
+        return mongoTemplate.aggregate(aggregation, "citizen_consents", CitizenConsent.class);
     }
 
     @Data
