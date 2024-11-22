@@ -37,13 +37,16 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
 
     public Flux<CitizenConsent> findByTppIdEnabled(String tppId) {
         String consent = "consents." + tppId;
+        String tppStatePath = consent + ".tppState";
+
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where(consent).exists(true)),
+                Aggregation.match(Criteria.where(tppStatePath).is(true)),
                 Aggregation.project("fiscalCode").and(consent).as(consent)
         );
 
         return mongoTemplate.aggregate(aggregation, "citizen_consents", CitizenConsent.class);
     }
+
 
     @Data
     public static class ConsentKeyWrapper {
