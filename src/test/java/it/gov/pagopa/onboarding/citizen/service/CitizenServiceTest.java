@@ -24,6 +24,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -261,6 +262,71 @@ class CitizenServiceTest {
         assertNotNull(response);
 
         assertEquals(CITIZEN_CONSENT.getFiscalCode(), response.getFiscalCode());
+    }
+
+    @Test
+    void getCitizenConsentsListEnabled_Ok() {
+        Map<String, ConsentDetails> consents = new HashMap<>();
+        consents.put("Tpp1", ConsentDetails.builder().tppState(true).tcDate(LocalDateTime.now()).build());
+        consents.put("Tpp2", ConsentDetails.builder().tppState(false).tcDate(LocalDateTime.now()).build());
+
+        CitizenConsent citizenConsent = CitizenConsent.builder()
+                .fiscalCode(FISCAL_CODE)
+                .consents(consents)
+                .build();
+
+        CitizenConsentDTO expectedDTO = dtoMapper.map(citizenConsent);
+        expectedDTO.getConsents().remove("Tpp2"); // Filter out disabled TPP
+
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(citizenConsent));
+
+        CitizenConsentDTO response = citizenService.getCitizenConsentsListEnabled(FISCAL_CODE).block();
+
+        assertNotNull(response);
+        assertEquals(1, response.getConsents().size());
+        assertTrue(response.getConsents().containsKey("Tpp1"));
+        assertFalse(response.getConsents().containsKey("Tpp2"));
+    }
+
+    @Test
+    void getCitizenConsentsListEnabled_Empty() {
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.empty());
+
+        CitizenConsentDTO response = citizenService.getCitizenConsentsListEnabled(FISCAL_CODE).block();
+
+        assertNull(response);
+    }
+
+    @Test
+    void getCitizenEnabled_Ok() {
+        CitizenConsent citizenConsent1 = CitizenConsent.builder()
+                .fiscalCode("FiscalCode1")
+                .consents(Map.of(TPP_ID, ConsentDetails.builder().tppState(true).tcDate(LocalDateTime.now()).build()))
+                .build();
+
+        CitizenConsent citizenConsent2 = CitizenConsent.builder()
+                .fiscalCode("FiscalCode2")
+                .consents(Map.of(TPP_ID, ConsentDetails.builder().tppState(true).tcDate(LocalDateTime.now()).build()))
+                .build();
+
+        when(citizenRepository.findByTppIdEnabled(TPP_ID)).thenReturn(Flux.just(citizenConsent1, citizenConsent2));
+
+        List<CitizenConsentDTO> response = citizenService.getCitizenEnabled(TPP_ID).block();
+
+        assertNotNull(response);
+        assertEquals(2, response.size());
+        assertEquals("FiscalCode1", response.get(0).getFiscalCode());
+        assertEquals("FiscalCode2", response.get(1).getFiscalCode());
+    }
+
+    @Test
+    void getCitizenEnabled_Empty() {
+        when(citizenRepository.findByTppIdEnabled(TPP_ID)).thenReturn(Flux.empty());
+
+        List<CitizenConsentDTO> response = citizenService.getCitizenEnabled(TPP_ID).block();
+
+        assertNotNull(response);
+        assertTrue(response.isEmpty());
     }
 
 }

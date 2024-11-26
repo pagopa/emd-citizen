@@ -103,7 +103,13 @@ public class CitizenServiceImpl implements CitizenService {
                         .filter(tpp -> tpp.getValue().getTppState())
                         .map(Map.Entry::getKey)
                         .toList())
-                .doOnSuccess(tppIdList -> log.info("EMD][CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Consents found:  {}", (tppIdList.size())));
+                .doOnSuccess(tppIdList -> {
+                    if (tppIdList != null) {
+                        log.info("EMD][CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Consents found:  {}", (tppIdList.size()));
+                    } else {
+                        log.info("EMD][CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] No consents found.");
+                    }
+                });
     }
 
     @Override
@@ -128,7 +134,13 @@ public class CitizenServiceImpl implements CitizenService {
 
                     return mapperToDTO.map(citizenConsent);
                 })
-                .doOnSuccess(citizenConsent -> log.info("EMD][CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Consents found:  {}", citizenConsent.getConsents().size()));
+                .doOnSuccess(citizenConsent -> {
+                    if (citizenConsent != null && citizenConsent.getConsents() != null) {
+                        log.info("EMD][CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Consents found:  {}", citizenConsent.getConsents().size());
+                    } else {
+                        log.info("EMD][CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] No consents found.");
+                    }
+                });
 
 
     }
