@@ -16,11 +16,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -55,10 +55,6 @@ class CitizenConsentValidationServiceImplTest {
 
         when(dtoMapper.map(existingConsent)).thenReturn(CITIZEN_CONSENT_DTO);
 
-        when(citizenRepository.findAll()).thenReturn(Flux.just(CitizenConsentFaker.mockInstance(true)));
-
-        doNothing().when(bloomFilterService).add(anyString());
-
         CitizenConsentDTO result = validationService.handleExistingConsent(existingConsent, tppId, CITIZEN_CONSENT).block();
 
         assertNotNull(result);
@@ -75,10 +71,6 @@ class CitizenConsentValidationServiceImplTest {
         when(tppConnector.get(anyString())).thenReturn(Mono.just(activeTppDTO));
         when(citizenRepository.save(existingConsent)).thenReturn(Mono.just(existingConsent));
         when(dtoMapper.map(existingConsent)).thenReturn(CITIZEN_CONSENT_DTO);
-
-        when(citizenRepository.findAll()).thenReturn(Flux.just(CitizenConsentFaker.mockInstance(true)));
-
-        doNothing().when(bloomFilterService).add(anyString());
 
         CitizenConsentDTO result = validationService.handleExistingConsent(existingConsent, activeTppDTO.getTppId(), CITIZEN_CONSENT).block();
 
@@ -102,10 +94,6 @@ class CitizenConsentValidationServiceImplTest {
         when(tppConnector.get(anyString())).thenReturn(Mono.just(activeTppDTO));
         when(citizenRepository.save(CITIZEN_CONSENT)).thenReturn(Mono.just(CITIZEN_CONSENT));
         when(dtoMapper.map(CITIZEN_CONSENT)).thenReturn(CITIZEN_CONSENT_DTO);
-
-        when(citizenRepository.findAll()).thenReturn(Flux.just(CitizenConsentFaker.mockInstance(true)));
-
-        doNothing().when(bloomFilterService).add(anyString());
 
         CitizenConsentDTO result = validationService.validateTppAndSaveConsent(fiscalCode, activeTppDTO.getTppId(), CITIZEN_CONSENT).block();
 

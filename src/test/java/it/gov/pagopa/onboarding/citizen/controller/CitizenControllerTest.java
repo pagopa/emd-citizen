@@ -173,4 +173,41 @@ class CitizenControllerTest {
                     Assertions.assertEquals("NO CHANNELS ENABLED", resultResponse);
                 });
     }
+
+    @Test
+    void getCitizenConsentsListEnabled_ShouldReturnCitizenConsent() {
+        CitizenConsentDTO mockConsent = CitizenConsentDTOFaker.mockInstance(true);
+        Mockito.when(citizenService.getCitizenConsentsListEnabled(FISCAL_CODE))
+                .thenReturn(Mono.just(mockConsent));
+
+        webClient.get()
+                .uri("/emd/citizen/list/{fiscalCode}/enabled", FISCAL_CODE)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(CitizenConsentDTO.class)
+                .value(response -> {
+                    assert response != null;
+                    Assertions.assertEquals(response, mockConsent);
+                });
+
+    }
+
+    @Test
+    void getCitizenEnabled_ShouldReturnListOfCitizens() {
+        String tppId = "TPP123";
+        List<CitizenConsentDTO> mockConsents = List.of(CitizenConsentDTOFaker.mockInstance(true));
+        Mockito.when(citizenService.getCitizenEnabled(tppId))
+                .thenReturn(Mono.just(mockConsents));
+
+        webClient.get()
+                .uri("/emd/citizen/{tppId}", tppId)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(CitizenConsentDTO.class)
+                .value(response -> Assertions.assertEquals(1, response.size()));
+
+    }
+
 }
