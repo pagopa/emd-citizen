@@ -111,7 +111,7 @@ class CitizenControllerTest {
                 .thenReturn(Mono.just(tppEnabledList));
 
         webClient.get()
-                .uri("/emd/citizen/list/{fiscalCode}/enabled", FISCAL_CODE)
+                .uri("/emd/citizen/list/{fiscalCode}/enabled/tpp", FISCAL_CODE)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(new ParameterizedTypeReference<List<String>>() {})

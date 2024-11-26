@@ -29,7 +29,6 @@ public interface CitizenController {
     @GetMapping("/list/{fiscalCode}/enabled/tpp")
     Mono<ResponseEntity<List<String>>> getTppEnabledList(@PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
 
-
     /**
      * Get the consent status for a specific citizen and tpp.
      *

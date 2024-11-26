@@ -79,7 +79,7 @@ class ServiceExceptionHandlerTest {
                 .expectBody()
                 .json("{\"code\":\"DUMMY_CODE\",\"message\":\"DUMMY_MESSAGE\"}", false);
 
-        ErrorManagerTest.checkStackTraceSuppressedLog(memoryAppender, "HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE");
+        ErrorManagerTest.checkStackTraceSuppressedLog(memoryAppender, "A ServiceException occurred handling request GET /test: HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE at it.gov.pagopa.common.web.exception.ServiceExceptionHandlerTest\\$TestController.test\\(ServiceExceptionHandlerTest.java:[0-9]+\\)");
 
     }
 
@@ -95,7 +95,7 @@ class ServiceExceptionHandlerTest {
                 .json("{\"stringCode\":\"RESPONSE\",\"longCode\":0}", false);
 
         ErrorManagerTest.checkLog(memoryAppender,
-                "Something went wrong : HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE",
+                "Something went wrong handling request GET /test/customBody: HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE",
                 "it.gov.pagopa.common.web.exception.ServiceException: DUMMY_MESSAGE",
                 "it.gov.pagopa.common.web.exception.ServiceExceptionHandlerTest$TestController.testCustomBody"
 
