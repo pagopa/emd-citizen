@@ -128,4 +128,21 @@ class CitizenSpecificRepositoryImplTest {
 
         return citizenConsent;
     }
+
+    @Test
+    void testFindByTppIdEnabled_Success() {
+        String tppId = "tpp1";
+        CitizenConsent citizenConsent = createMockCitizenConsent("hashedCode", tppId);
+
+        when(mongoTemplate.aggregate(
+                Mockito.any(Aggregation.class),
+                Mockito.eq("citizen_consents"),
+                Mockito.eq(CitizenConsent.class)
+        )).thenReturn(Flux.just(citizenConsent));
+
+        StepVerifier.create(repository.findByTppIdEnabled(tppId))
+                .expectNextMatches(result -> result.getConsents().containsKey(tppId) && result.getConsents().get(tppId).getTppState())
+                .verifyComplete();
+
+    }
 }
