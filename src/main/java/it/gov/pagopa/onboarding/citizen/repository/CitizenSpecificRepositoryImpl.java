@@ -14,6 +14,8 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
 
     private final ReactiveMongoTemplate mongoTemplate;
 
+    private static final String FISCAL_CODE = "fiscalCode";
+
     public CitizenSpecificRepositoryImpl(ReactiveMongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }
@@ -26,9 +28,9 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
 
         String consent = "consents." + tppId;
         Aggregation aggregation = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("fiscalCode").is(fiscalCode)),
+                Aggregation.match(Criteria.where(FISCAL_CODE).is(fiscalCode)),
                 Aggregation.match(Criteria.where(consent).exists(true)),
-                Aggregation.project("fiscalCode").and(consent).as(consent)
+                Aggregation.project(FISCAL_CODE).and(consent).as(consent)
         );
 
         return mongoTemplate.aggregate(aggregation, "citizen_consents", CitizenConsent.class)
@@ -41,7 +43,7 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
 
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where(tppStatePath).is(true)),
-                Aggregation.project("fiscalCode").and(consent).as(consent)
+                Aggregation.project(FISCAL_CODE).and(consent).as(consent)
         );
 
         return mongoTemplate.aggregate(aggregation, "citizen_consents", CitizenConsent.class);
