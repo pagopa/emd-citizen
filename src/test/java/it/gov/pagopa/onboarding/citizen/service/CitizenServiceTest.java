@@ -205,7 +205,7 @@ class CitizenServiceTest {
         when(citizenRepository.findByFiscalCodeAndTppId(FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.just(CITIZEN_CONSENT));
 
-        CitizenConsentDTO response = citizenService.getConsentStatus(FISCAL_CODE, TPP_ID).block();
+        CitizenConsentDTO response = citizenService.getCitizenConsentStatus(FISCAL_CODE, TPP_ID).block();
         assertNotNull(response);
     }
 
@@ -215,7 +215,7 @@ class CitizenServiceTest {
         when(citizenRepository.findByFiscalCodeAndTppId(FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.empty());
 
-        Executable executable = () -> citizenService.getConsentStatus(FISCAL_CODE, TPP_ID).block();
+        Executable executable = () -> citizenService.getCitizenConsentStatus(FISCAL_CODE, TPP_ID).block();
         ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
 
         assertEquals("Citizen consent not founded during get process ", exception.getMessage());
@@ -256,7 +256,7 @@ class CitizenServiceTest {
         when(citizenRepository.findByFiscalCode(FISCAL_CODE))
                 .thenReturn(Mono.just(CITIZEN_CONSENT));
 
-        CitizenConsentDTO response = citizenService.get(FISCAL_CODE).block();
+        CitizenConsentDTO response = citizenService.getCitizenConsentsList(FISCAL_CODE).block();
 
         assertNotNull(response);
 

@@ -8,5 +8,4 @@ public interface CitizenRepository extends ReactiveMongoRepository<CitizenConsen
 
     Mono<CitizenConsent> findByFiscalCode(String fiscalCode);
 
-
 }

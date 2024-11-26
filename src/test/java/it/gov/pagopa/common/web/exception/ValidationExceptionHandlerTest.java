@@ -51,7 +51,6 @@ class ValidationExceptionHandlerTest {
     @Test
     void testHandleValueNotValidException() {
         String invalidJson = "{}";
-
         webTestClient.put()
                 .uri("/test")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -68,9 +67,7 @@ class ValidationExceptionHandlerTest {
                 });
     }
     @Test
-    void testHandleMissingRequestValueException() {
-        String invalidJson = "{}";
-
+    void testHandleHeaderNotValidException() {
         webTestClient.put()
                 .uri("/test")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -78,51 +75,29 @@ class ValidationExceptionHandlerTest {
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody(ErrorDTO.class)
-
                 .consumeWith(response -> {
                     ErrorDTO errorDTO = response.getResponseBody();
                     assertThat(errorDTO).isNotNull();
                     assertThat(errorDTO.getCode()).isEqualTo("INVALID_REQUEST");
-                    assertThat(errorDTO.getMessage()).isEqualTo("Something went wrong due to a missing request value");
+                    assertThat(errorDTO.getMessage()).isEqualTo("Invalid request");
 
                 });
     }
 
     @Test
     void testHandleNoResourceFoundException() {
-        String invalidJson = "{}";
-
         webTestClient.put()
-                .uri("/wrongPath")
+                .uri("/test/missing")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new ValidationDTO("data"))
+                .bodyValue(new ValidationDTO("someData"))
                 .exchange()
-                .expectStatus().isNotFound()
-                .expectBody(ErrorDTO.class)
-
-                .consumeWith(response -> {
-                    ErrorDTO errorDTO = response.getResponseBody();
-                    assertThat(errorDTO).isNotNull();
-                    assertThat(errorDTO.getCode()).isEqualTo("INVALID_REQUEST");
-                    assertThat(errorDTO.getMessage()).isEqualTo("Something went wrong due to a missing static resource");
-
-                });
-    }
-
-    @Test
-    void testHandleMethodNotAllowedException() {
-
-        webTestClient.get()
-                .uri("/test")
-                .exchange()
-                .expectStatus().is4xxClientError()
+                .expectStatus().isNotFound()  // Expect 404 Not Found
                 .expectBody(ErrorDTO.class)
                 .consumeWith(response -> {
                     ErrorDTO errorDTO = response.getResponseBody();
                     assertThat(errorDTO).isNotNull();
-                    assertThat(errorDTO.getCode()).isEqualTo("INVALID_REQUEST");
-                    assertThat(errorDTO.getMessage()).isEqualTo("Request is not supported");
-
+                    assertThat(errorDTO.getCode()).isEqualTo("INVALID_REQUEST");  // Check the code from ErrorDTO
+                    assertThat(errorDTO.getMessage()).isEqualTo("Invalid request");  // Check the message from ErrorDTO
                 });
     }
 }

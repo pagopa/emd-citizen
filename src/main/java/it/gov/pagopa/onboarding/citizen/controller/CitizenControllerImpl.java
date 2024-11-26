@@ -40,8 +40,8 @@ public class CitizenControllerImpl implements CitizenController {
     }
 
     @Override
-    public Mono<ResponseEntity<CitizenConsentDTO>> getConsentStatus(String fiscalCode, String tppId) {
-        return citizenService.getConsentStatus(fiscalCode, tppId)
+    public Mono<ResponseEntity<CitizenConsentDTO>> getCitizenConsentStatus(String fiscalCode, String tppId) {
+        return citizenService.getCitizenConsentStatus(fiscalCode, tppId)
                 .map(ResponseEntity::ok);
     }
 
@@ -52,13 +52,25 @@ public class CitizenControllerImpl implements CitizenController {
     }
 
     @Override
-    public Mono<ResponseEntity<CitizenConsentDTO>> get(String fiscalCode) {
-        return citizenService.get(fiscalCode)
+    public Mono<ResponseEntity<CitizenConsentDTO>> getCitizenConsentsList(String fiscalCode) {
+        return citizenService.getCitizenConsentsList(fiscalCode)
                 .map(ResponseEntity::ok);
     }
 
     @Override
-    public Mono<ResponseEntity<String>> getAllFiscalCode(String fiscalCode) {
+    public Mono<ResponseEntity<CitizenConsentDTO>> getCitizenConsentsListEnabled(String fiscalCode) {
+        return citizenService.getCitizenConsentsListEnabled(fiscalCode)
+                .map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<List<CitizenConsentDTO>>> getCitizenEnabled(String tppId) {
+        return citizenService.getCitizenEnabled(tppId)
+                .map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<String>> bloomFilterSearch(String fiscalCode) {
         return Mono.fromCallable(() ->
                 bloomFilterService.mightContain(fiscalCode) ?
                         ResponseEntity.ok("OK") :
