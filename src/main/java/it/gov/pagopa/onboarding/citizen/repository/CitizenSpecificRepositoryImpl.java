@@ -55,5 +55,4 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
         private String k;
     }
 
-
 }
