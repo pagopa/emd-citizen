@@ -38,7 +38,7 @@ public class CitizenConsentValidationServiceImpl implements CitizenConsentValida
     @Override
     public Mono<CitizenConsentDTO> handleExistingConsent(CitizenConsent existingConsent, String tppId, CitizenConsent citizenConsent) {
         if (existingConsent.getConsents().containsKey(tppId)) {
-            return Mono.just(mapperToDTO.map(existingConsent));
+            return Mono.just(mapperToDTO.map(citizenConsent));
         } else {
             return validateTppAndUpdateConsent(existingConsent, tppId, citizenConsent);
         }
@@ -55,7 +55,7 @@ public class CitizenConsentValidationServiceImpl implements CitizenConsentValida
                                     log.info("[EMD][CREATE-CITIZEN-CONSENT] Created new citizen consent for fiscal code: {}", Utils.createSHA256(fiscalCode));
                                     bloomFilterService.add(fiscalCode);
                                 })
-                                .map(mapperToDTO::map);
+                                .map(savedConsent -> mapperToDTO.map(citizenConsent));
                     } else {
                         return Mono.error(exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, "TPP is not active or is invalid"));
                     }
@@ -70,7 +70,7 @@ public class CitizenConsentValidationServiceImpl implements CitizenConsentValida
                         existingConsent.getConsents().put(tppId, citizenConsent.getConsents().get(tppId));
                         return citizenRepository.save(existingConsent)
                                 .doOnSuccess(savedConsent -> log.info("[EMD][CREATE-CITIZEN-CONSENT] Updated citizen consent for TPP: {}", tppId))
-                                .flatMap(savedConsent -> Mono.just(mapperToDTO.map(savedConsent)));
+                                .map(savedConsent -> mapperToDTO.map(citizenConsent));
                 });
     }
 }
