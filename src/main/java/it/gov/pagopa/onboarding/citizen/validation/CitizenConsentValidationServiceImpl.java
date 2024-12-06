@@ -38,7 +38,7 @@ public class CitizenConsentValidationServiceImpl implements CitizenConsentValida
     @Override
     public Mono<CitizenConsentDTO> handleExistingConsent(CitizenConsent existingConsent, String tppId, CitizenConsent citizenConsent) {
         if (existingConsent.getConsents().containsKey(tppId)) {
-            return Mono.just(mapperToDTO.map(existingConsent));
+            return Mono.just(mapperToDTO.map(citizenConsent));
         } else {
             return validateTppAndUpdateConsent(existingConsent, tppId, citizenConsent);
         }
