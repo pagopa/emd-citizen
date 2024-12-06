@@ -55,7 +55,7 @@ public class CitizenConsentValidationServiceImpl implements CitizenConsentValida
                                     log.info("[EMD][CREATE-CITIZEN-CONSENT] Created new citizen consent for fiscal code: {}", Utils.createSHA256(fiscalCode));
                                     bloomFilterService.add(fiscalCode);
                                 })
-                                .map(mapperToDTO::map);
+                                .map(savedConsent -> mapperToDTO.map(citizenConsent));
                     } else {
                         return Mono.error(exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, "TPP is not active or is invalid"));
                     }
