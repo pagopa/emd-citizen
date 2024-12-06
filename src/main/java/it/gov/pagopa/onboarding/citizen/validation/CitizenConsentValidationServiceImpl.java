@@ -70,7 +70,7 @@ public class CitizenConsentValidationServiceImpl implements CitizenConsentValida
                         existingConsent.getConsents().put(tppId, citizenConsent.getConsents().get(tppId));
                         return citizenRepository.save(existingConsent)
                                 .doOnSuccess(savedConsent -> log.info("[EMD][CREATE-CITIZEN-CONSENT] Updated citizen consent for TPP: {}", tppId))
-                                .flatMap(savedConsent -> Mono.just(mapperToDTO.map(savedConsent)));
+                                .map(savedConsent -> mapperToDTO.map(citizenConsent));
                 });
     }
 }
