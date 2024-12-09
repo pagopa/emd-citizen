@@ -5,4 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface TppConnector {
     Mono<TppDTO> get(String tppId);
+
 }
