@@ -54,11 +54,14 @@ public class CitizenServiceImpl implements CitizenService {
                 .flatMap(tppResponse -> citizenRepository.findByFiscalCode(fiscalCode)
                         .flatMap(citizenConsent -> {
                             if (!citizenConsent.getConsents().containsKey(tppId)) {
-                                citizenConsent.getConsents().put(tppId, ConsentDetails.builder()
+                                citizenConsent
+                                        .getConsents().put(tppId, ConsentDetails.builder()
                                         .tppState(true)
                                         .tcDate(LocalDateTime.now())
                                         .build());
-                                citizenRepository.save(citizenConsent);
+                                citizenRepository
+                                    .save(citizenConsent)
+                                    .doOnSuccess(savedConsent -> bloomFilterService.add(fiscalCode));
                             }
                             Map<String, ConsentDetails> consents = new HashMap<>();
                             consents.put(tppId, citizenConsent.getConsents().get(tppId));
@@ -77,9 +80,9 @@ public class CitizenServiceImpl implements CitizenService {
                                     .build();
                             return citizenRepository
                                     .save(citizenConsentToSave)
-                                    .map(mapperToDTO::map);
+                                    .map(mapperToDTO::map)
+                                    .doOnSuccess(savedConsent -> bloomFilterService.add(fiscalCode));
                         }))
-                        .doOnSuccess(savedConsent -> bloomFilterService.add(fiscalCode))
                 )
                 .doOnSuccess(savedConsent -> log.info("[EMD][CREATE-CITIZEN-CONSENT] Created new citizen consent for fiscal code: {}", Utils.createSHA256(fiscalCode)));
     }
