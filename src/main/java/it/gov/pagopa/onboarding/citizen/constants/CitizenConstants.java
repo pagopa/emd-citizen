@@ -32,6 +32,7 @@ public class CitizenConstants {
 
         public static final String FISCAL_CODE_STRUCTURE_REGEX = "(^([A-Za-z]{6}[0-9lmnpqrstuvLMNPQRSTUV]{2}[abcdehlmprstABCDEHLMPRST][0-9lmnpqrstuvLMNPQRSTUV]{2}[A-Za-z][0-9lmnpqrstuvLMNPQRSTUV]{3}[A-Za-z])$)|(^(\\d{11})$)";
 
+        public static final String TPP_STRUCTURE_REGEX = "(^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-\\d{13}$)";
         private ValidationRegex() {}
     }
 

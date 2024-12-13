@@ -6,22 +6,19 @@ import it.gov.pagopa.onboarding.citizen.connector.tpp.TppConnectorImpl;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.TppDTO;
 import it.gov.pagopa.onboarding.citizen.dto.mapper.CitizenConsentObjectToDTOMapper;
-import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentDTOFaker;
 import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentFaker;
 import it.gov.pagopa.onboarding.citizen.faker.TppDTOFaker;
 import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
 import it.gov.pagopa.onboarding.citizen.model.ConsentDetails;
 import it.gov.pagopa.onboarding.citizen.model.mapper.CitizenConsentDTOToObjectMapper;
 import it.gov.pagopa.onboarding.citizen.repository.CitizenRepository;
-import it.gov.pagopa.onboarding.citizen.validation.CitizenConsentValidationServiceImpl;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.function.Executable;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
@@ -41,7 +38,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith({SpringExtension.class, MockitoExtension.class})
 @ContextConfiguration(classes = {
         CitizenServiceImpl.class,
-        CitizenConsentValidationServiceImpl.class,
+        BloomFilterServiceImpl.class,
         CitizenConsentObjectToDTOMapper.class,
         CitizenConsentDTOToObjectMapper.class,
         ExceptionMap.class
@@ -52,7 +49,7 @@ class CitizenServiceTest {
     CitizenServiceImpl citizenService;
 
     @MockBean
-    CitizenConsentValidationServiceImpl validationService;
+    BloomFilterServiceImpl bloomFilterService;
 
     @MockBean
     CitizenRepository citizenRepository;
@@ -65,9 +62,10 @@ class CitizenServiceTest {
 
     private static final String FISCAL_CODE = "fiscalCode";
     private static final String TPP_ID = "tppId";
+    private static final String TPP_ID_2 = "tppId2";
     private static final boolean TPP_STATE = true;
     private static final CitizenConsent CITIZEN_CONSENT = CitizenConsentFaker.mockInstance(true);
-    private static final CitizenConsentDTO CITIZEN_CONSENT_DTO = CitizenConsentDTOFaker.mockInstance(true);
+    private static final CitizenConsent CITIZEN_CONSENT_2 = CitizenConsentFaker.mockInstance(true);
     private static final TppDTO TPP_DTO = TppDTOFaker.mockInstance();
 
     @Test
@@ -80,134 +78,117 @@ class CitizenServiceTest {
         when(tppConnector.get(anyString())).thenReturn(Mono.just(activeTppDTO));
         when(citizenRepository.save(Mockito.any())).thenReturn(Mono.just(CITIZEN_CONSENT));
         when(citizenRepository.findByFiscalCode(anyString())).thenReturn(Mono.empty());
-        when(validationService.validateTppAndSaveConsent(anyString(), anyString(), any(CitizenConsent.class)))
-                .thenReturn(Mono.just(expectedConsentDTO));
 
-        CitizenConsentDTO response = citizenService.createCitizenConsent(CITIZEN_CONSENT_DTO).block();
-        assertNotNull(response);
-        assertEquals(expectedConsentDTO, response);
+        StepVerifier.create(citizenService.createCitizenConsent(FISCAL_CODE, TPP_ID))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertEquals(expectedConsentDTO, response);
+                })
+                .verifyComplete();
     }
 
     @Test
     void createCitizenConsent_AlreadyExists() {
 
         CitizenConsentDTO expectedConsentDTO = dtoMapper.map(CITIZEN_CONSENT);
-        TppDTO activeTppDTO = TPP_DTO;
-        activeTppDTO.setState(true);
 
-        when(tppConnector.get(anyString())).thenReturn(Mono.just(activeTppDTO));
-
+        when(tppConnector.get(anyString())).thenReturn(Mono.just(TPP_DTO));
         when(citizenRepository.save(Mockito.any())).thenReturn(Mono.just(CITIZEN_CONSENT));
         when(citizenRepository.findByFiscalCode(anyString())).thenReturn(Mono.just(CITIZEN_CONSENT));
-        when(citizenRepository.findByFiscalCodeAndTppId(anyString(), anyString())).thenReturn(Mono.just(CITIZEN_CONSENT));
 
-        when(validationService.handleExistingConsent(any(), anyString(), any()))
-                .thenReturn(Mono.just(expectedConsentDTO));
-
-        when(validationService.validateTppAndSaveConsent(anyString(), anyString(), any(CitizenConsent.class)))
-                .thenReturn(Mono.just(expectedConsentDTO));
-
-        CitizenConsentDTO response = citizenService.createCitizenConsent(CITIZEN_CONSENT_DTO).block();
-
-        assertNotNull(response);
-        assertEquals(expectedConsentDTO, response);
+        StepVerifier.create(citizenService.createCitizenConsent(FISCAL_CODE, TPP_ID))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertEquals(expectedConsentDTO, response);
+                })
+                .verifyComplete();
     }
 
     @Test
-    void createCitizenConsent_Ko_TppNotProvided() {
+    void createCitizenConsent_AlreadyOnboardedOnAnotherTpp() {
+        CITIZEN_CONSENT_2.getConsents().put(TPP_ID_2, ConsentDetails.builder()
+                .tppState(true)
+                .tcDate(LocalDateTime.now())
+                .build());
+        CitizenConsentDTO expectedConsentDTO = dtoMapper.map(CITIZEN_CONSENT_2);
 
-        CitizenConsentDTO incompleteConsentDTO = CitizenConsentDTOFaker.mockInstance(true);
-        incompleteConsentDTO.getConsents().clear();
+        when(tppConnector.get(anyString())).thenReturn(Mono.just(TPP_DTO));
+        when(citizenRepository.save(Mockito.any())).thenReturn(Mono.just(CITIZEN_CONSENT_2));
+        when(citizenRepository.findByFiscalCode(anyString())).thenReturn(Mono.just(CITIZEN_CONSENT));
 
-        when(tppConnector.get(anyString())).thenReturn(Mono.empty());
-        when(citizenRepository.findByFiscalCodeAndTppId(anyString(), anyString())).thenReturn(Mono.empty());
+        StepVerifier.create(citizenService.createCitizenConsent(FISCAL_CODE, TPP_ID_2))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertEquals(expectedConsentDTO, response);
+                })
+                .verifyComplete();
 
-        when(validationService.validateTppAndSaveConsent(anyString(), anyString(), any(CitizenConsent.class)))
-                .thenReturn(Mono.error(new ClientExceptionWithBody(HttpStatus.BAD_REQUEST, "TPP_NOT_FOUND", "TPP does not exist or is not active")));
-
-        StepVerifier.create(citizenService.createCitizenConsent(incompleteConsentDTO))
-                .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
-                        "TPP does not exist or is not active".equals(throwable.getMessage()) &&
-                        "TPP_NOT_FOUND".equals(((ClientExceptionWithBody) throwable).getCode()))
-                .verify();
+        CITIZEN_CONSENT.getConsents().remove(TPP_ID_2);
     }
 
     @Test
-    void createCitizenConsent_Ko_TppInactive() {
+    void createCitizenConsent_Ko_TppNotFound() {
 
-        TppDTO inactiveTppDTO = TPP_DTO;
-        inactiveTppDTO.setState(false);
+        when(tppConnector.get(anyString())).thenReturn(Mono.error(new RuntimeException("TPP not found")));
 
-        when(tppConnector.get(anyString())).thenReturn(Mono.just(inactiveTppDTO));
-        when(citizenRepository.findByFiscalCodeAndTppId(anyString(), anyString())).thenReturn(Mono.empty());
-        when(citizenRepository.findByFiscalCode(anyString())).thenReturn(Mono.empty());
-
-        when(validationService.validateTppAndSaveConsent(anyString(), anyString(), any(CitizenConsent.class)))
-                .thenReturn(Mono.error(new ClientExceptionWithBody(HttpStatus.BAD_REQUEST, "TPP_NOT_FOUND", "TPP does not exist or is not active")));
-
-        CitizenConsentDTO citizenConsentDTO = dtoMapper.map(CITIZEN_CONSENT);
-
-        StepVerifier.create(citizenService.createCitizenConsent(citizenConsentDTO))
+        StepVerifier.create(citizenService.createCitizenConsent(FISCAL_CODE, TPP_ID))
                 .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
                         "TPP does not exist or is not active".equals(throwable.getMessage()) &&
                         "TPP_NOT_FOUND".equals(((ClientExceptionWithBody) throwable).getCode()))
                 .verify();
 
-        Mockito.verify(citizenRepository, Mockito.never()).save(Mockito.any());
     }
 
     @Test
     void updateChannelState_Ok() {
 
-        TppDTO mockTppDTO = TppDTOFaker.mockInstance();
-        mockTppDTO.setState(true);
-
-        when(tppConnector.get(anyString()))
-                .thenReturn(Mono.just(mockTppDTO));
-
-        when(citizenRepository.findByFiscalCodeAndTppId(FISCAL_CODE, TPP_ID))
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE))
                 .thenReturn(Mono.just(CITIZEN_CONSENT));
 
         when(citizenRepository.save(any()))
                 .thenReturn(Mono.just(CITIZEN_CONSENT));
 
+        StepVerifier.create(citizenService.switchState(FISCAL_CODE, TPP_ID))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertNotEquals(TPP_STATE, response.getConsents().get(TPP_ID).getTppState());
+                })
+                .verifyComplete();
+    }
 
-        CitizenConsentDTO response = citizenService.updateTppState(FISCAL_CODE, TPP_ID, TPP_STATE).block();
+    @Test
+    void updateChannelState_Ko_CitizenNotOnboardedOnTpp() {
 
-        assertNotNull(response);
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE))
+                .thenReturn(Mono.just(CITIZEN_CONSENT));
 
-        assertEquals(TPP_STATE, response.getConsents().get(TPP_ID).getTppState());
+        StepVerifier.create(citizenService.switchState(FISCAL_CODE, TPP_ID_2))
+                .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
+                        "Citizen consent not founded during update state process".equals(throwable.getMessage()))
+                .verify();
     }
 
     @Test
     void updateChannelState_Ko_CitizenNotOnboarded() {
 
-        TppDTO mockTppDTO = TppDTOFaker.mockInstance();
-        mockTppDTO.setState(true);
-
-        when(tppConnector.get(anyString()))
-                .thenReturn(Mono.just(mockTppDTO));
-
-        when(citizenRepository.findByFiscalCodeAndTppId(FISCAL_CODE, TPP_ID))
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE))
                 .thenReturn(Mono.empty());
 
-
-
-        Executable executable = () -> citizenService.updateTppState(FISCAL_CODE, TPP_ID, true).block();
-        ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
-
-        assertEquals("Citizen consent not founded during update state process", exception.getMessage());
+        StepVerifier.create(citizenService.switchState(FISCAL_CODE, TPP_ID))
+                .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
+                        "Citizen consent not founded during update state process".equals(throwable.getMessage()))
+                .verify();
     }
 
     @Test
     void getConsentStatus_Ok() {
 
-
         when(citizenRepository.findByFiscalCodeAndTppId(FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.just(CITIZEN_CONSENT));
 
-        CitizenConsentDTO response = citizenService.getCitizenConsentStatus(FISCAL_CODE, TPP_ID).block();
-        assertNotNull(response);
+        StepVerifier.create(citizenService.getCitizenConsentStatus(FISCAL_CODE, TPP_ID))
+                .assertNext(Assertions::assertNotNull)
+                .verifyComplete();
     }
 
     @Test
@@ -216,10 +197,10 @@ class CitizenServiceTest {
         when(citizenRepository.findByFiscalCodeAndTppId(FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.empty());
 
-        Executable executable = () -> citizenService.getCitizenConsentStatus(FISCAL_CODE, TPP_ID).block();
-        ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, executable);
-
-        assertEquals("Citizen consent not founded during get process ", exception.getMessage());
+        StepVerifier.create(citizenService.getCitizenConsentStatus(FISCAL_CODE, TPP_ID))
+                .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
+                        "Citizen consent not founded".equals(throwable.getMessage()))
+                .verify();
     }
 
     @Test
@@ -244,10 +225,17 @@ class CitizenServiceTest {
 
         when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(citizenConsent));
 
-        Mono<List<String>> result = citizenService.getTppEnabledList(FISCAL_CODE);
+        StepVerifier.create(citizenService.getTppEnabledList(FISCAL_CODE))
+                .assertNext(result -> assertEquals(List.of("Tpp1"), result))
+                .verifyComplete();
+    }
 
-        StepVerifier.create(result)
-                .expectNext(List.of("Tpp1"))
+    @Test
+    void testGetTppEnabledList_Empty() {
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.empty());
+
+        StepVerifier.create(citizenService.getTppEnabledList(FISCAL_CODE))
+                .expectNextCount(0)
                 .verifyComplete();
     }
 
@@ -257,11 +245,12 @@ class CitizenServiceTest {
         when(citizenRepository.findByFiscalCode(FISCAL_CODE))
                 .thenReturn(Mono.just(CITIZEN_CONSENT));
 
-        CitizenConsentDTO response = citizenService.getCitizenConsentsList(FISCAL_CODE).block();
-
-        assertNotNull(response);
-
-        assertEquals(CITIZEN_CONSENT.getFiscalCode(), response.getFiscalCode());
+        StepVerifier.create(citizenService.getCitizenConsentsList(FISCAL_CODE))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertEquals(CITIZEN_CONSENT.getFiscalCode(), response.getFiscalCode());
+                })
+                .verifyComplete();
     }
 
     @Test
@@ -280,21 +269,41 @@ class CitizenServiceTest {
 
         when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(citizenConsent));
 
-        CitizenConsentDTO response = citizenService.getCitizenConsentsListEnabled(FISCAL_CODE).block();
-
-        assertNotNull(response);
-        assertEquals(1, response.getConsents().size());
-        assertTrue(response.getConsents().containsKey("Tpp1"));
-        assertFalse(response.getConsents().containsKey("Tpp2"));
+        StepVerifier.create(citizenService.getCitizenConsentsListEnabled(FISCAL_CODE))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertEquals(1, response.getConsents().size());
+                    assertTrue(response.getConsents().containsKey("Tpp1"));
+                    assertFalse(response.getConsents().containsKey("Tpp2"));
+                })
+                .verifyComplete();
     }
-
     @Test
     void getCitizenConsentsListEnabled_Empty() {
+        CitizenConsent citizenConsent = CitizenConsent.builder()
+                .fiscalCode(FISCAL_CODE)
+                .consents(new HashMap<>())
+                .build();
+
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(citizenConsent));
+
+        StepVerifier.create(citizenService.getCitizenConsentsListEnabled(FISCAL_CODE))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertEquals(0, response.getConsents().size());
+                })
+                .verifyComplete();
+    }
+
+
+    @Test
+    void getCitizenConsentsListEnabled_NotOnboarded() {
         when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.empty());
 
-        CitizenConsentDTO response = citizenService.getCitizenConsentsListEnabled(FISCAL_CODE).block();
-
-        assertNull(response);
+        StepVerifier.create(citizenService.getCitizenConsentsListEnabled(FISCAL_CODE))
+                .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
+                        "Citizen consent not founded during get process ".equals(throwable.getMessage()))
+                .verify();
     }
 
     @Test
@@ -311,22 +320,26 @@ class CitizenServiceTest {
 
         when(citizenRepository.findByTppIdEnabled(TPP_ID)).thenReturn(Flux.just(citizenConsent1, citizenConsent2));
 
-        List<CitizenConsentDTO> response = citizenService.getCitizenEnabled(TPP_ID).block();
-
-        assertNotNull(response);
-        assertEquals(2, response.size());
-        assertEquals("FiscalCode1", response.get(0).getFiscalCode());
-        assertEquals("FiscalCode2", response.get(1).getFiscalCode());
+        StepVerifier.create(citizenService.getCitizenEnabled(TPP_ID))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertEquals(2, response.size());
+                    assertEquals("FiscalCode1", response.get(0).getFiscalCode());
+                    assertEquals("FiscalCode2", response.get(1).getFiscalCode());
+                })
+                .verifyComplete();
     }
 
     @Test
     void getCitizenEnabled_Empty() {
         when(citizenRepository.findByTppIdEnabled(TPP_ID)).thenReturn(Flux.empty());
 
-        List<CitizenConsentDTO> response = citizenService.getCitizenEnabled(TPP_ID).block();
-
-        assertNotNull(response);
-        assertTrue(response.isEmpty());
+        StepVerifier.create(citizenService.getCitizenEnabled(TPP_ID))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertTrue(response.isEmpty());
+                })
+                .verifyComplete();
     }
-
 }
+

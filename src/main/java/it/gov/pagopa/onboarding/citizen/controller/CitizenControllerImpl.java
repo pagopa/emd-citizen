@@ -1,10 +1,8 @@
 package it.gov.pagopa.onboarding.citizen.controller;
 
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
-import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentStateUpdateDTO;
 import it.gov.pagopa.onboarding.citizen.service.BloomFilterServiceImpl;
 import it.gov.pagopa.onboarding.citizen.service.CitizenServiceImpl;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,17 +23,14 @@ public class CitizenControllerImpl implements CitizenController {
     }
 
     @Override
-    public Mono<ResponseEntity<CitizenConsentDTO>> saveCitizenConsent(@Valid CitizenConsentDTO citizenConsentDTO) {
-        return citizenService.createCitizenConsent(citizenConsentDTO)
+    public Mono<ResponseEntity<CitizenConsentDTO>> saveCitizenConsent(String fiscalCode, String tppId) {
+        return citizenService.createCitizenConsent(fiscalCode, tppId)
                 .map(ResponseEntity::ok);
     }
 
     @Override
-    public Mono<ResponseEntity<CitizenConsentDTO>> stateUpdate(@Valid CitizenConsentStateUpdateDTO citizenConsentStateUpdateDTO) {
-        return citizenService.updateTppState(
-                        citizenConsentStateUpdateDTO.getFiscalCode(),
-                        citizenConsentStateUpdateDTO.getTppId(),
-                        citizenConsentStateUpdateDTO.getTppState())
+    public Mono<ResponseEntity<CitizenConsentDTO>> stateSwitch(String fiscalCode, String tppId) {
+        return citizenService.switchState(fiscalCode, tppId)
                 .map(ResponseEntity::ok);
     }
 
