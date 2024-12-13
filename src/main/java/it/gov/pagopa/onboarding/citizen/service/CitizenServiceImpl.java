@@ -59,7 +59,7 @@ public class CitizenServiceImpl implements CitizenService {
                                         .tcDate(LocalDateTime.now())
                                         .build());
                                 return citizenRepository.save(citizenConsent)
-                                        .map(mapperToDTO::map)
+                                        .map(savedConsent -> mapperToDTO.map(citizenConsent))
                                         .doOnSuccess(savedConsent -> bloomFilterService.add(fiscalCode));
                             } else {
                                 Map<String, ConsentDetails> consents = new HashMap<>();
