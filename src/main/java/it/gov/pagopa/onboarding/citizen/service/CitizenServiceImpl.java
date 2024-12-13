@@ -105,18 +105,16 @@ public class CitizenServiceImpl implements CitizenService {
                             if(!citizenConsent.getConsents().containsKey(tppId))
                                 return Mono.error(exceptionMap.throwException
                                         (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during update state process"));
-
                             ConsentDetails consentDetails = citizenConsent.getConsents().get(tppId);
                             consentDetails.setTppState(!consentDetails.getTppState());
-                            citizenRepository.save(citizenConsent);
-
-                            Map<String, ConsentDetails> consents = new HashMap<>();
-                            consents.put(tppId,citizenConsent.getConsents().get(tppId));
-                            citizenConsent.setConsents(consents);
-
-                            return Mono.just(citizenConsent);
+                            return citizenRepository.save(citizenConsent)
+                                    .flatMap(savedConsent -> {
+                                        Map<String, ConsentDetails> consents = new HashMap<>();
+                                        consents.put(tppId, citizenConsent.getConsents().get(tppId));
+                                        citizenConsent.setConsents(consents);
+                                        return Mono.just(mapperToDTO.map(citizenConsent));
+                                    });
                         })
-                        .map(mapperToDTO::map)
                         .doOnSuccess(savedConsent -> log.info("[EMD][CITIZEN][UPDATE-CHANNEL-STATE] Updated state"));
     }
 
