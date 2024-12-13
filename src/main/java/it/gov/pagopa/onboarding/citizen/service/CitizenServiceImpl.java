@@ -58,15 +58,15 @@ public class CitizenServiceImpl implements CitizenService {
                                         .tppState(true)
                                         .tcDate(LocalDateTime.now())
                                         .build());
-                                return citizenRepository.save(citizenConsent)
-                                        .map(savedConsent -> mapperToDTO.map(citizenConsent))
+                                citizenRepository.save(citizenConsent)
+                                        .map(mapperToDTO::map)
                                         .doOnSuccess(savedConsent -> bloomFilterService.add(fiscalCode));
                             } else {
                                 Map<String, ConsentDetails> consents = new HashMap<>();
                                 consents.put(tppId, citizenConsent.getConsents().get(tppId));
                                 citizenConsent.setConsents(consents);
-                                return Mono.just(mapperToDTO.map(citizenConsent));
                             }
+                            return Mono.just(mapperToDTO.map(citizenConsent));
                         })
                         .switchIfEmpty(Mono.defer(() -> {
                             Map<String, ConsentDetails> consents = new HashMap<>();
