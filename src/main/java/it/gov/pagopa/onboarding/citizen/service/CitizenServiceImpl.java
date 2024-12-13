@@ -61,11 +61,10 @@ public class CitizenServiceImpl implements CitizenService {
                                 citizenRepository.save(citizenConsent)
                                         .map(mapperToDTO::map)
                                         .doOnSuccess(savedConsent -> bloomFilterService.add(fiscalCode));
-                            } else {
-                                Map<String, ConsentDetails> consents = new HashMap<>();
-                                consents.put(tppId, citizenConsent.getConsents().get(tppId));
-                                citizenConsent.setConsents(consents);
                             }
+                            Map<String, ConsentDetails> consents = new HashMap<>();
+                            consents.put(tppId, citizenConsent.getConsents().get(tppId));
+                            citizenConsent.setConsents(consents);
                             return Mono.just(mapperToDTO.map(citizenConsent));
                         })
                         .switchIfEmpty(Mono.defer(() -> {
