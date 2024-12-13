@@ -59,7 +59,8 @@ public class CitizenServiceImpl implements CitizenService {
                                         .tppState(true)
                                         .tcDate(LocalDateTime.now())
                                         .build());
-                                citizenRepository.save(citizenConsent);
+                                return citizenRepository.save(citizenConsent)
+                                        .map(savedConsent -> mapperToDTO.map(citizenConsent));
                             }
                             Map<String, ConsentDetails> consents = new HashMap<>();
                             consents.put(tppId, citizenConsent.getConsents().get(tppId));
