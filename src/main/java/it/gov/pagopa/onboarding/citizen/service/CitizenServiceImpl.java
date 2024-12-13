@@ -60,7 +60,12 @@ public class CitizenServiceImpl implements CitizenService {
                                         .tcDate(LocalDateTime.now())
                                         .build());
                                 return citizenRepository.save(citizenConsent)
-                                        .flatMap(savedConsent -> Mono.just(mapperToDTO.map(citizenConsent)));
+                                        .flatMap(savedConsent ->{
+                                            Map<String, ConsentDetails> consents = new HashMap<>();
+                                            consents.put(tppId, citizenConsent.getConsents().get(tppId));
+                                            citizenConsent.setConsents(consents);
+                                            return Mono.just(mapperToDTO.map(citizenConsent));
+                                        });
                             }
                             Map<String, ConsentDetails> consents = new HashMap<>();
                             consents.put(tppId, citizenConsent.getConsents().get(tppId));
