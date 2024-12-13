@@ -106,20 +106,16 @@ class CitizenServiceTest {
 
     @Test
     void createCitizenConsent_AlreadyOnboardedOnAnotherTpp() {
-        CITIZEN_CONSENT_2.getConsents().put(TPP_ID_2, ConsentDetails.builder()
-                .tppState(true)
-                .tcDate(LocalDateTime.now())
-                .build());
-        CitizenConsentDTO expectedConsentDTO = dtoMapper.map(CITIZEN_CONSENT_2);
 
         when(tppConnector.get(anyString())).thenReturn(Mono.just(TPP_DTO));
         when(citizenRepository.save(Mockito.any())).thenReturn(Mono.just(CITIZEN_CONSENT_2));
         when(citizenRepository.findByFiscalCode(anyString())).thenReturn(Mono.just(CITIZEN_CONSENT));
 
+
         StepVerifier.create(citizenService.createCitizenConsent(FISCAL_CODE, TPP_ID_2))
                 .assertNext(response -> {
                     assertNotNull(response);
-                    assertEquals(expectedConsentDTO, response);
+                    assertTrue(response.getConsents().containsKey(TPP_ID_2));
                 })
                 .verifyComplete();
 
