@@ -59,9 +59,7 @@ public class CitizenServiceImpl implements CitizenService {
                                         .tppState(true)
                                         .tcDate(LocalDateTime.now())
                                         .build());
-                                citizenRepository
-                                    .save(citizenConsent)
-                                    .doOnSuccess(savedConsent -> bloomFilterService.add(fiscalCode));
+                                citizenRepository.save(citizenConsent);
                             }
                             Map<String, ConsentDetails> consents = new HashMap<>();
                             consents.put(tppId, citizenConsent.getConsents().get(tppId));
@@ -80,11 +78,13 @@ public class CitizenServiceImpl implements CitizenService {
                                     .build();
                             return citizenRepository
                                     .save(citizenConsentToSave)
-                                    .map(mapperToDTO::map)
-                                    .doOnSuccess(savedConsent -> bloomFilterService.add(fiscalCode));
+                                    .map(mapperToDTO::map);
                         }))
                 )
-                .doOnSuccess(savedConsent -> log.info("[EMD][CREATE-CITIZEN-CONSENT] Created new citizen consent for fiscal code: {}", Utils.createSHA256(fiscalCode)));
+                .doOnSuccess(savedConsent -> {
+                    log.info("[EMD][CREATE-CITIZEN-CONSENT] Created new citizen consent for fiscal code: {}", Utils.createSHA256(fiscalCode));
+                    bloomFilterService.add(fiscalCode);
+                });
     }
     @Override
     public Mono<CitizenConsentDTO> switchState(String fiscalCode, String tppId){
