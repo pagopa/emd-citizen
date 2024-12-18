@@ -7,8 +7,8 @@ import java.util.List;
 
 public interface CitizenService {
 
-    Mono<CitizenConsentDTO> createCitizenConsent(CitizenConsentDTO citizenConsent);
-    Mono<CitizenConsentDTO> updateTppState(String fiscalCode, String tppId, boolean tppState);
+    Mono<CitizenConsentDTO> createCitizenConsent(String fiscalCode, String tppId);
+    Mono<CitizenConsentDTO> switchState(String fiscalCode, String tppId);
     Mono<CitizenConsentDTO> getCitizenConsentStatus(String fiscalCode, String tppId);
     Mono<List<String>> getTppEnabledList(String fiscalCode);
     Mono<CitizenConsentDTO> getCitizenConsentsList(String fiscalCode);

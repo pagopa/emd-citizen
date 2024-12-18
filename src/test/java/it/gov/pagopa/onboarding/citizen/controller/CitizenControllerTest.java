@@ -32,19 +32,18 @@ class CitizenControllerTest {
     private WebTestClient webClient;
 
 
-
     private static final String FISCAL_CODE = "MLXHZZ43A70H203T";
-    private static final String TPP_ID  = "tppId";
+    private static final String TPP_ID  = "ae46399d-a3e4-a3d9-a2b8-a1c8fd5f5e40-1732202076421";
 
 
     @Test
     void saveCitizenConsent_Ok() {
         CitizenConsentDTO citizenConsentDTO = CitizenConsentDTOFaker.mockInstance(true);
 
-        Mockito.when(citizenService.createCitizenConsent(citizenConsentDTO)).thenReturn(Mono.just(citizenConsentDTO));
+        Mockito.when(citizenService.createCitizenConsent(FISCAL_CODE, TPP_ID)).thenReturn(Mono.just(citizenConsentDTO));
 
         webClient.post()
-                .uri("/emd/citizen")
+                .uri("/emd/citizen/{fiscalCode}/{tppId}", FISCAL_CODE, TPP_ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(citizenConsentDTO)
                 .exchange()
@@ -63,14 +62,11 @@ class CitizenControllerTest {
 
         CitizenConsentDTO expectedResponseDTO = CitizenConsentDTOFaker.mockInstance(true);
 
-        Mockito.when(citizenService.updateTppState(
-                        citizenConsentStateUpdateDTO.getFiscalCode(),
-                        citizenConsentStateUpdateDTO.getTppId(),
-                        citizenConsentStateUpdateDTO.getTppState()))
+        Mockito.when(citizenService.switchState(FISCAL_CODE, TPP_ID))
                 .thenReturn(Mono.just(expectedResponseDTO));
 
         webClient.put()
-                .uri("/emd/citizen/stateUpdate")
+                .uri("/emd/citizen/{fiscalCode}/{tppId}", FISCAL_CODE, TPP_ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(citizenConsentStateUpdateDTO)
                 .exchange()
@@ -195,13 +191,12 @@ class CitizenControllerTest {
 
     @Test
     void getCitizenEnabled_ShouldReturnListOfCitizens() {
-        String tppId = "TPP123";
-        List<CitizenConsentDTO> mockConsents = List.of(CitizenConsentDTOFaker.mockInstance(true));
-        Mockito.when(citizenService.getCitizenEnabled(tppId))
+            List<CitizenConsentDTO> mockConsents = List.of(CitizenConsentDTOFaker.mockInstance(true));
+        Mockito.when(citizenService.getCitizenEnabled(TPP_ID))
                 .thenReturn(Mono.just(mockConsents));
 
         webClient.get()
-                .uri("/emd/citizen/{tppId}", tppId)
+                .uri("/emd/citizen/{tppId}", TPP_ID)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
