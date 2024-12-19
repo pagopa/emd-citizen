@@ -9,14 +9,13 @@ import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.mapper.CitizenConsentObjectToDTOMapper;
 import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
 import it.gov.pagopa.onboarding.citizen.model.ConsentDetails;
-import it.gov.pagopa.onboarding.citizen.model.mapper.CitizenConsentDTOToObjectMapper;
 import it.gov.pagopa.onboarding.citizen.repository.CitizenRepository;
-import it.gov.pagopa.onboarding.citizen.validation.CitizenConsentValidationServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,57 +28,94 @@ public class CitizenServiceImpl implements CitizenService {
 
     private final CitizenRepository citizenRepository;
     private final CitizenConsentObjectToDTOMapper mapperToDTO;
-    private final CitizenConsentDTOToObjectMapper mapperToObject;
     private final ExceptionMap exceptionMap;
     private final TppConnectorImpl tppConnector;
-    private final CitizenConsentValidationServiceImpl validationService;
+    private final BloomFilterServiceImpl bloomFilterService;
 
-    public CitizenServiceImpl(CitizenRepository citizenRepository, CitizenConsentObjectToDTOMapper mapperToDTO, CitizenConsentDTOToObjectMapper mapperToObject, ExceptionMap exceptionMap, TppConnectorImpl tppConnector, CitizenConsentValidationServiceImpl validationService) {
+    public CitizenServiceImpl(CitizenRepository citizenRepository,
+                              CitizenConsentObjectToDTOMapper mapperToDTO,
+                              ExceptionMap exceptionMap,
+                              TppConnectorImpl tppConnector,
+                              BloomFilterServiceImpl bloomFilterService) {
         this.citizenRepository = citizenRepository;
         this.mapperToDTO = mapperToDTO;
-        this.mapperToObject = mapperToObject;
         this.exceptionMap = exceptionMap;
         this.tppConnector = tppConnector;
-        this.validationService = validationService;
+        this.bloomFilterService = bloomFilterService;
     }
 
     @Override
-    public Mono<CitizenConsentDTO> createCitizenConsent(CitizenConsentDTO citizenConsentDTO) {
-
-        CitizenConsent citizenConsent = mapperToObject.map(citizenConsentDTO);
-        String fiscalCode = citizenConsent.getFiscalCode();
-
-        citizenConsent.getConsents().forEach((tppId, consentDetails) -> consentDetails.setTcDate(LocalDateTime.now()));
-
-        log.info("[EMD-CITIZEN][CREATE] Received consent: {}", inputSanify(citizenConsent.toString()));
-
-        String tppId = citizenConsent.getConsents().keySet().stream().findFirst().orElse(null);
-        if (tppId == null) {
-            return Mono.error(exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, ExceptionMessage.TPP_NOT_FOUND));
-        }
-
-        return citizenRepository.findByFiscalCode(fiscalCode)
-                .flatMap(existingConsent -> validationService.handleExistingConsent(existingConsent, tppId, citizenConsent))
-                .switchIfEmpty(validationService.validateTppAndSaveConsent(fiscalCode, tppId, citizenConsent));
-    }
-
-    @Override
-    public Mono<CitizenConsentDTO> updateTppState(String fiscalCode, String tppId, boolean tppState) {
-        log.info("[EMD][CITIZEN][UPDATE-CHANNEL-STATE] Received hashedFiscalCode: {} and tppId: {} with state: {}",
-                Utils.createSHA256(fiscalCode), inputSanify(tppId), tppState);
+    public Mono<CitizenConsentDTO> createCitizenConsent(String fiscalCode, String tppId){
+        log.info("[EMD][CITIZEN][UPDATE-CHANNEL-STATE] Received hashedFiscalCode: {} and tppId: {}",
+                Utils.createSHA256(fiscalCode), inputSanify(tppId));
 
         return tppConnector.get(tppId)
-                .onErrorMap(error ->exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, ExceptionMessage.TPP_NOT_FOUND))
-                .flatMap(tppResponse -> citizenRepository.findByFiscalCodeAndTppId(fiscalCode, tppId)
-                        .switchIfEmpty(Mono.error(exceptionMap.throwException
-                                (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during update state process")))
+                .onErrorMap(error -> exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, ExceptionMessage.TPP_NOT_FOUND))
+                .flatMap(tppResponse -> citizenRepository.findByFiscalCode(fiscalCode)
                         .flatMap(citizenConsent -> {
-                            ConsentDetails consentDetails = citizenConsent.getConsents().get(tppId);
-                            consentDetails.setTppState(tppState);
-                            return citizenRepository.save(citizenConsent);
+                            if (!citizenConsent.getConsents().containsKey(tppId)) {
+                                citizenConsent
+                                        .getConsents().put(tppId, ConsentDetails.builder()
+                                        .tppState(true)
+                                        .tcDate(LocalDateTime.now())
+                                        .build());
+                                return citizenRepository.save(citizenConsent)
+                                        .flatMap(savedConsent ->{
+                                            Map<String, ConsentDetails> consents = new HashMap<>();
+                                            consents.put(tppId, citizenConsent.getConsents().get(tppId));
+                                            citizenConsent.setConsents(consents);
+                                            return Mono.just(mapperToDTO.map(citizenConsent));
+                                        });
+                            }
+                            Map<String, ConsentDetails> consents = new HashMap<>();
+                            consents.put(tppId, citizenConsent.getConsents().get(tppId));
+                            citizenConsent.setConsents(consents);
+                            return Mono.just(mapperToDTO.map(citizenConsent));
                         })
-                        .map(mapperToDTO::map)
-                        .doOnSuccess(savedConsent -> log.info("[EMD][CITIZEN][UPDATE-CHANNEL-STATE] Updated state")));
+                        .switchIfEmpty(Mono.defer(() -> {
+                            Map<String, ConsentDetails> consents = new HashMap<>();
+                            consents.put(tppId, ConsentDetails.builder()
+                                    .tppState(true)
+                                    .tcDate(LocalDateTime.now())
+                                    .build());
+                            CitizenConsent citizenConsentToSave = CitizenConsent.builder()
+                                    .fiscalCode(fiscalCode)
+                                    .consents(consents)
+                                    .build();
+                            return citizenRepository
+                                    .save(citizenConsentToSave)
+                                    .map(mapperToDTO::map);
+                        }))
+                )
+                .doOnSuccess(savedConsent -> {
+                    log.info("[EMD][CREATE-CITIZEN-CONSENT] Created new citizen consent for fiscal code: {}", Utils.createSHA256(fiscalCode));
+                    bloomFilterService.add(fiscalCode);
+                });
+    }
+    @Override
+    public Mono<CitizenConsentDTO> switchState(String fiscalCode, String tppId){
+        log.info("[EMD][CITIZEN][UPDATE-CHANNEL-STATE] Received hashedFiscalCode: {} and tppId: {}",
+                Utils.createSHA256(fiscalCode), inputSanify(tppId));
+
+        return citizenRepository.findByFiscalCode(fiscalCode)
+                        .switchIfEmpty(Mono.error(exceptionMap.throwException
+                                (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during update state process"))
+                        )
+                        .flatMap(citizenConsent -> {
+                            if(!citizenConsent.getConsents().containsKey(tppId))
+                                return Mono.error(exceptionMap.throwException
+                                        (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during update state process"));
+                            ConsentDetails consentDetails = citizenConsent.getConsents().get(tppId);
+                            consentDetails.setTppState(!consentDetails.getTppState());
+                            return citizenRepository.save(citizenConsent)
+                                    .flatMap(savedConsent -> {
+                                        Map<String, ConsentDetails> consents = new HashMap<>();
+                                        consents.put(tppId, citizenConsent.getConsents().get(tppId));
+                                        citizenConsent.setConsents(consents);
+                                        return Mono.just(mapperToDTO.map(citizenConsent));
+                                    });
+                        })
+                        .doOnSuccess(savedConsent -> log.info("[EMD][CITIZEN][UPDATE-CHANNEL-STATE] Updated state"));
     }
 
     @Override
@@ -87,9 +123,9 @@ public class CitizenServiceImpl implements CitizenService {
         log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Received hashedFiscalCode: {} and tppId: {}", Utils.createSHA256(fiscalCode), inputSanify(tppId));
         return citizenRepository.findByFiscalCodeAndTppId(fiscalCode, tppId)
                 .switchIfEmpty(Mono.error(exceptionMap.throwException
-                        (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during get process ")))
+                        (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded")))
                 .map(mapperToDTO::map)
-                .doOnSuccess(consent -> log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Consent consent found::  {}", consent));
+                .doOnSuccess(consent -> log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Consent consent found: {}", consent));
 
     }
 
@@ -104,7 +140,7 @@ public class CitizenServiceImpl implements CitizenService {
                         .map(Map.Entry::getKey)
                         .toList())
                 .doOnSuccess(tppIdList -> {
-                    if (tppIdList != null) {
+                    if (tppIdList != null){
                         log.info("EMD][CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Consents found:  {}", (tppIdList.size()));
                     } else {
                         log.info("EMD][CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] No consents found.");
@@ -116,6 +152,8 @@ public class CitizenServiceImpl implements CitizenService {
     public Mono<CitizenConsentDTO> getCitizenConsentsList(String fiscalCode) {
         log.info("[EMD-CITIZEN][FIND-ALL-CITIZEN-CONSENTS] Received hashedFiscalCode: {}", (Utils.createSHA256(fiscalCode)));
         return citizenRepository.findByFiscalCode(fiscalCode)
+                .switchIfEmpty(Mono.error(exceptionMap.throwException
+                        (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during get process ")))
                 .map(mapperToDTO::map)
                 .doOnSuccess(consentList -> log.info("[EMD-CITIZEN][FIND-ALL-CITIZEN-CONSENTS] Consents found:  {}", consentList));
     }
@@ -125,7 +163,8 @@ public class CitizenServiceImpl implements CitizenService {
          log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Received hashedFiscalCode: {}", Utils.createSHA256(fiscalCode));
 
         return citizenRepository.findByFiscalCode(fiscalCode)
-                .switchIfEmpty(Mono.empty())
+                .switchIfEmpty(Mono.error(exceptionMap.throwException
+                        (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during get process ")))
                 .map(citizenConsent -> {
                     Map<String, ConsentDetails> filteredConsents = citizenConsent.getConsents().entrySet().stream()
                             .filter(tpp -> tpp.getValue().getTppState())
@@ -135,7 +174,7 @@ public class CitizenServiceImpl implements CitizenService {
                     return mapperToDTO.map(citizenConsent);
                 })
                 .doOnSuccess(citizenConsent -> {
-                    if (citizenConsent != null && citizenConsent.getConsents() != null) {
+                    if (citizenConsent != null && !citizenConsent.getConsents().isEmpty()) {
                         log.info("EMD][CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Consents found:  {}", citizenConsent.getConsents().size());
                     } else {
                         log.info("EMD][CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] No consents found.");
