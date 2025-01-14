@@ -196,9 +196,9 @@ public class CitizenServiceImpl implements CitizenService {
         return citizenRepository.findByFiscalCode(fiscalCode)
                 .switchIfEmpty(Mono.error(exceptionMap.throwException
                         (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during delete process ")))
-                .map(citizenConsent -> {
-                    citizenRepository.deleteById(citizenConsent.getId());
-                    return mapperToDTO.map(citizenConsent);
-                });
+                .flatMap(citizenConsent ->
+                        citizenRepository.deleteById(citizenConsent.getId())
+                                .then(Mono.just(mapperToDTO.map(citizenConsent)))
+                );
     }
 }
