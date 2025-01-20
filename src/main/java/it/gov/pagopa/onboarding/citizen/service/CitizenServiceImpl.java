@@ -85,7 +85,8 @@ public class CitizenServiceImpl implements CitizenService {
                             return citizenRepository
                                     .save(citizenConsentToSave)
                                     .map(mapperToDTO::map)
-                                    .doOnSuccess(citizenConsentSaved -> bloomFilterService.add(fiscalCode));
+                                    .doOnSuccess(citizenConsentSaved -> bloomFilterService.add(fiscalCode)
+                                    );
                         }))
                 )
                 .doOnSuccess(savedConsent ->

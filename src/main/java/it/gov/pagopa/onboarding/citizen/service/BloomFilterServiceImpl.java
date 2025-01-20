@@ -50,11 +50,24 @@ public class BloomFilterServiceImpl implements BloomFilterService {
     }
 
     public void add(String value) {
-        bloomFilter.add(value);
+        bloomFilter.add(value).doOnSuccess(result -> {
+            if(result)
+                log.info("[BLOOM-FILTER-SERVICE] Fiscal Code added to bloom filter");
+            else
+                log.info("[BLOOM-FILTER-SERVICE] Fiscal Code not added to bloom filter");
+        })
+        .subscribe();
     }
 
-    public Mono<Boolean> mightContain(String value) {
-        return bloomFilter.contains(value);
+    public Mono<String> mightContain(String value) {
+        return bloomFilter.contains(value).map(result -> {
+            if (Boolean.TRUE.equals(result)) {
+                log.info("[BLOOM-FILTER-SERVICE] Fiscal Code found");
+                return "OK";
+            } else {
+                log.info("[BLOOM-FILTER-SERVICE] Fiscal Code not found");
+                return "NO CHANNELS ENABLED";
+            }
+        });
     }
-
 }

@@ -4,5 +4,5 @@ import reactor.core.publisher.Mono;
 
 public interface BloomFilterService {
 
-     Mono<Boolean> mightContain(String hashedFiscalCode);
+     Mono<String> mightContain(String hashedFiscalCode);
 }
