@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class RedissonConfig {
 
-    @Value("${redis.url}")
+    @Value("${spring.data.redis.url}")
     private String redisUrl;
     @Bean
     public RedissonReactiveClient redissonClient() {

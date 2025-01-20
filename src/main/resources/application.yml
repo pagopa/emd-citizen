@@ -21,10 +21,8 @@ spring:
           maxConnectionLifeTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_LIFE_MS:0}
           maxConnectionIdleTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_IDLE_MS:120000}
           maxConnecting: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTING:2}
-
-redis:
-  url: ${REDIS_CONNECTION_URL:test}
-
+    redis:
+      url: ${REDIS_CONNECTION_URL:redis://@localhost:6379}
 management:
   health:
     mongo.enabled: ${HEALTH_MONGO_ENABLED:false}
