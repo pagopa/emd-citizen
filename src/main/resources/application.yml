@@ -22,8 +22,11 @@ spring:
           maxConnectionIdleTimeMS: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTION_IDLE_MS:120000}
           maxConnecting: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTING:2}
     redis:
-      url: ${REDIS_CONNECTION_URL:redis://@localhost:6379}
-      password: ${REDIS_CONNECTION_PASSWORD:pluto}
+      host: ${REDIS_CONNECTION_HOSTNAME}
+      port: 6380
+      ssl: true
+      password: ${REDIS_CONNECTION_PASSWORD}
+
 management:
   health:
     mongo.enabled: ${HEALTH_MONGO_ENABLED:false}
