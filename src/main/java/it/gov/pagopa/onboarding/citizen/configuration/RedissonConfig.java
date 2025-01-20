@@ -16,6 +16,7 @@ public class RedissonConfig {
     private String redisUrl;
     @Bean
     public RedissonReactiveClient redissonClient() {
+        log.info("[REDISSON-CONFIG] {}",redisUrl);
         Config config = new Config();
         config.useSingleServer().setAddress(redisUrl);
         return Redisson.create(config).reactive();
