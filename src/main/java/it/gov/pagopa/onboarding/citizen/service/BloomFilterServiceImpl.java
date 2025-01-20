@@ -32,10 +32,11 @@ public class BloomFilterServiceImpl implements BloomFilterService {
                                             .doOnNext(fiscalCode ->  {
                                                 if (!fiscalCode.isEmpty()) this.bloomFilter.add(fiscalCode);
                                             })
+                                            .doFinally(filter -> this.bloomFilter.getSize()
+                                                                 .doOnNext(size -> log.info("[BLOOM-FILTER-SERVICE] Inizializzazione bloom filter eseguita, Dimensione {}",size))
+                                                                 .subscribe())
                                             .subscribe();
-                            this.bloomFilter.getSize()
-                                    .doOnNext(size -> log.info("[BLOOM-FILTER-SERVICE] Inizializzazione bloom filter eseguita, Dimensione {}",size))
-                                    .subscribe();
+
                         } finally {
                             lock.unlock();
                         }
@@ -62,6 +63,7 @@ public class BloomFilterServiceImpl implements BloomFilterService {
     }
 
     public Mono<String> mightContain(String value) {
+        log.info("[BLOOM-FILTER-SERVICE] Bloom filter search request arrived");
         return bloomFilter.contains(value).map(result -> {
             if (Boolean.TRUE.equals(result)) {
                 log.info("[BLOOM-FILTER-SERVICE] Fiscal Code found");
