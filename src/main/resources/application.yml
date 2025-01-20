@@ -23,7 +23,7 @@ spring:
           maxConnecting: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTING:2}
 
 redis:
-  url: ${REDIS_CONNECTION_URL}
+  url: ${REDIS_CONNECTION_URL:test}
 
 management:
   health:
