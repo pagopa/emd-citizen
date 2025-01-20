@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.*;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -18,24 +17,21 @@ public class BloomFilterServiceImpl implements BloomFilterService {
     RBloomFilterReactive<String> bloomFilter ;
     public BloomFilterServiceImpl(RedissonReactiveClient redissonClient) {
         RLockReactive lock = redissonClient.getLock(REDIS_LOCK_NAME);
-
-        try {
-            if (lock.tryLock(0, TimeUnit.SECONDS)) {
-                try {
-                    this.bloomFilter = initializeBloomFilter(redissonClient);
-                    // carico dati dal db
-                    log.info("[BLOOM-FILTER-SERVICE] Inizializzazione bloom filter eseguita");
-                } finally {
-                    lock.unlock();
-                }
-            } else {
-                this.bloomFilter = redissonClient.getBloomFilter(REDDIS_BF_NAME);
-                log.info("BLOOM-FILTER-SERVICE] Un'altra replica sta già eseguendo l'inizializzazione bloom filter ");
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Errore durante l'acquisizione del lock.", e);
-        }
+        lock.tryLock(0, TimeUnit.SECONDS)
+                .subscribe(lockAcquired -> {
+                    if (Boolean.TRUE.equals(lockAcquired)) {
+                        try {
+                            this.bloomFilter = initializeBloomFilter(redissonClient);
+                            // carico dati dal db
+                            log.info("[BLOOM-FILTER-SERVICE] Inizializzazione bloom filter eseguita");
+                        } finally {
+                            lock.unlock();
+                        }
+                    } else {
+                        this.bloomFilter = redissonClient.getBloomFilter(REDDIS_BF_NAME);
+                        log.info("BLOOM-FILTER-SERVICE] Un'altra replica sta già eseguendo l'inizializzazione bloom filter ");
+                    }
+                });
     }
     private RBloomFilterReactive<String> initializeBloomFilter(RedissonReactiveClient redissonClient) {
         RBloomFilterReactive<String> filter = redissonClient.getBloomFilter(REDDIS_BF_NAME);
@@ -51,5 +47,4 @@ public class BloomFilterServiceImpl implements BloomFilterService {
         return bloomFilter.contains(value);
     }
 
-    //Valutare re-inizializzaione temporizata per rimuovere eventuali elementi
 }

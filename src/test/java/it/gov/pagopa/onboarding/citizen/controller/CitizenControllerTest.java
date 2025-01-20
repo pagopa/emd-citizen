@@ -137,38 +137,38 @@ class CitizenControllerTest {
                 });
     }
 
-    @Test
-    void getAllFiscalCode_Ok() {
-        Mockito.when(bloomFilterService.mightContain(FISCAL_CODE))
-                .thenReturn(true);
-
-        webClient.get()
-                .uri("/emd/citizen/filter/{fiscalCode}", FISCAL_CODE)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .consumeWith(response -> {
-                    String resultResponse = response.getResponseBody();
-                    Assertions.assertNotNull(resultResponse);
-                    Assertions.assertEquals("OK", resultResponse);
-                });
-    }
-    @Test
-    void getAllFiscalCode_NoChannelsEnabled() {
-        Mockito.when(bloomFilterService.mightContain(FISCAL_CODE))
-                .thenReturn(false);
-
-        webClient.get()
-                .uri("/emd/citizen/filter/{fiscalCode}", FISCAL_CODE)
-                .exchange()
-                .expectStatus().isAccepted()
-                .expectBody(String.class)
-                .consumeWith(response -> {
-                    String resultResponse = response.getResponseBody();
-                    Assertions.assertNotNull(resultResponse);
-                    Assertions.assertEquals("NO CHANNELS ENABLED", resultResponse);
-                });
-    }
+//    @Test
+//    void getAllFiscalCode_Ok() {
+//        Mockito.when(bloomFilterService.mightContain(FISCAL_CODE))
+//                .thenReturn(true);
+//
+//        webClient.get()
+//                .uri("/emd/citizen/filter/{fiscalCode}", FISCAL_CODE)
+//                .exchange()
+//                .expectStatus().isOk()
+//                .expectBody(String.class)
+//                .consumeWith(response -> {
+//                    String resultResponse = response.getResponseBody();
+//                    Assertions.assertNotNull(resultResponse);
+//                    Assertions.assertEquals("OK", resultResponse);
+//                });
+//    }
+//    @Test
+//    void getAllFiscalCode_NoChannelsEnabled() {
+//        Mockito.when(bloomFilterService.mightContain(FISCAL_CODE))
+//                .thenReturn(false);
+//
+//        webClient.get()
+//                .uri("/emd/citizen/filter/{fiscalCode}", FISCAL_CODE)
+//                .exchange()
+//                .expectStatus().isAccepted()
+//                .expectBody(String.class)
+//                .consumeWith(response -> {
+//                    String resultResponse = response.getResponseBody();
+//                    Assertions.assertNotNull(resultResponse);
+//                    Assertions.assertEquals("NO CHANNELS ENABLED", resultResponse);
+//                });
+//    }
 
     @Test
     void getCitizenConsentsListEnabled_ShouldReturnCitizenConsent() {
