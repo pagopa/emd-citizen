@@ -1,52 +1,57 @@
 package it.gov.pagopa.onboarding.citizen.service;
 
 
-import com.azure.cosmos.implementation.guava25.hash.BloomFilter;
-import com.azure.cosmos.implementation.guava25.hash.Funnels;
-import it.gov.pagopa.onboarding.citizen.repository.CitizenRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.redisson.api.RLock;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.nio.charset.StandardCharsets;
+import org.redisson.api.RBloomFilter;
+import org.redisson.api.RedissonClient;
+
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
-public class BloomFilterServiceImpl implements BloomFilterService{
+public class BloomFilterServiceImpl implements BloomFilterService {
 
-    private final CitizenRepository citizenRepository;
+    private static final String REDDIS_BF_NAME = "emd-bloom-fiter";
+    private static final String REDIS_LOCK_NAME = "startup-task-lock";
 
-    private BloomFilter<String> bloomFilter;
+    RBloomFilter<String> bloomFilter ;
+    public BloomFilterServiceImpl(RedissonClient redissonClient) {
+        RLock lock = redissonClient.getLock(REDIS_LOCK_NAME);
 
-    public BloomFilterServiceImpl(CitizenRepository citizenRepository) {
-        this.citizenRepository = citizenRepository;
+        try {
+            if (lock.tryLock(0, TimeUnit.SECONDS)) {
+                try {
+                    this.bloomFilter = initializeBloomFilter(redissonClient);
+                    // carico dati dal db
+                    log.info("[BLOOM-FILTER-SERVICE] Inizializzazione bloom filter eseguita");
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                this.bloomFilter = redissonClient.getBloomFilter(REDDIS_BF_NAME);
+                log.info("BLOOM-FILTER-SERVICE] Un'altra replica sta già eseguendo l'inizializzazione bloom filter ");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Errore durante l'acquisizione del lock.", e);
+        }
+    }
+    private RBloomFilter<String> initializeBloomFilter(RedissonClient redissonClient) {
+        RBloomFilter<String> filter = redissonClient.getBloomFilter(REDDIS_BF_NAME);
+        filter.tryInit(1000000L, 0.01);
+        return filter;
     }
 
-
-    @PostConstruct
-    public void initializeBloomFilter() {
-        bloomFilter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 1000000, 0.01);
-
-        citizenRepository.findAll()
-                    .doOnNext(citizenConsent ->
-                        bloomFilter.put(citizenConsent.getFiscalCode()))
-                    .doOnComplete(() -> log.info("Bloom filter initialized"))
-                    .subscribe();
-    }
-    @Override
-
-    public boolean mightContain(String fiscalCode) {
-        return bloomFilter.mightContain(fiscalCode);
+    public void add(String value) {
+        bloomFilter.add(value);
     }
 
-
-    @Scheduled(fixedRate = 3600000)
-    public void update() {
-        this.initializeBloomFilter();
+    public boolean mightContain(String value) {
+        return bloomFilter.contains(value);
     }
 
-    public void add(String fiscalCode){
-        bloomFilter.put(fiscalCode);
-    }
+    //Valutare re-inizializzaione temporizata per rimuovere eventuali elementi
 }
