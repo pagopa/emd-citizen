@@ -23,43 +23,45 @@ public class BloomFilterServiceImpl implements BloomFilterService {
                 .subscribe(lockAcquired -> {
                     if (Boolean.TRUE.equals(lockAcquired)) {
                         try {
-                            this.bloomFilter = initializeBloomFilter(redissonClient);
-                            citizenRepository
-                                            .findAll()
-                                            .map(citizenConsent -> citizenConsent.getConsents().values().stream()
-                                                        .anyMatch(ConsentDetails::getTppState) ? citizenConsent.getFiscalCode() : ""
-                                            )
-                                            .doOnNext(fiscalCode ->  {
-                                                if (!fiscalCode.isEmpty()) this.bloomFilter.add(fiscalCode);
-                                            })
-                                            .doFinally(filter -> this.bloomFilter.getSize()
-                                                                 .doOnNext(size -> log.info("[BLOOM-FILTER-SERVICE] Inizializzazione bloom filter eseguita, Dimensione {}",size))
-                                                                 .subscribe())
-                                            .subscribe();
+                            this.bloomFilter = redissonClient.getBloomFilter(REDDIS_BF_NAME);
+                            this.bloomFilter.tryInit(1000L, 0.01)
+                                    .doOnSuccess(result ->
+                                        citizenRepository.findAll()
+                                                .map(citizenConsent -> citizenConsent.getConsents().values().stream()
+                                                        .anyMatch(ConsentDetails::getTppState) ? citizenConsent.getFiscalCode() : "")
+                                                .doOnNext(fiscalCode -> {
+                                                    if (!fiscalCode.isEmpty()) {
+                                                        this.bloomFilter.add(fiscalCode).subscribe();  // Aggiunta al Bloom filter asincrona
+                                                    }
+                                                })
+                                                .doFinally(filter -> this.bloomFilter.getSize()
+                                                        .doOnNext(size -> log.info("[BLOOM-FILTER-SERVICE] Inizializzazione bloom filter eseguita, Dimensione {}", size))
+                                                        .subscribe())
+                                                .subscribe()
+                                    )
+                                    .doOnError(error -> log.error("[BLOOM-FILTER-SERVICE] Bloom filter initialization failed", error))
+                                    .subscribe();
 
                         } finally {
                             lock.unlock();
                         }
-                    } else {
+                    }
+                    else {
                         this.bloomFilter = redissonClient.getBloomFilter(REDDIS_BF_NAME);
                         log.info("[BLOOM-FILTER-SERVICE] Un'altra replica sta già eseguendo l'inizializzazione del bloom filter ");
                     }
                 });
     }
-    private RBloomFilterReactive<String> initializeBloomFilter(RedissonReactiveClient redissonClient) {
-        RBloomFilterReactive<String> filter = redissonClient.getBloomFilter(REDDIS_BF_NAME);
-        filter.tryInit(1000000L, 0.01);
-        return filter;
-    }
 
     public void add(String value) {
-        bloomFilter.add(value).doOnSuccess(result -> {
+        bloomFilter.add(value)
+            .doOnSuccess(result -> {
             if(Boolean.TRUE.equals(result))
                 log.info("[BLOOM-FILTER-SERVICE] Fiscal Code added to bloom filter");
             else
                 log.info("[BLOOM-FILTER-SERVICE] Fiscal Code not added to bloom filter");
-        })
-        .subscribe();
+            })
+            .subscribe();
     }
 
     public Mono<String> mightContain(String value) {
