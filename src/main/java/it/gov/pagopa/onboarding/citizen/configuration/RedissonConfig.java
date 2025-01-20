@@ -14,11 +14,13 @@ public class RedissonConfig {
 
     @Value("${spring.data.redis.url}")
     private String redisUrl;
+
+    @Value("${redis.password}")
+    private String redisPassword;
     @Bean
     public RedissonReactiveClient redissonClient() {
-        log.info("[REDISSON-CONFIG] {}",redisUrl);
         Config config = new Config();
-        config.useSingleServer().setAddress(redisUrl);
+        config.useSingleServer().setAddress(redisUrl).setPassword(redisPassword);
         return Redisson.create(config).reactive();
     }
 }

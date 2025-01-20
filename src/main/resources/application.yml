@@ -23,6 +23,7 @@ spring:
           maxConnecting: ${MONGODB_CONNECTIONPOOL_MAX_CONNECTING:2}
     redis:
       url: ${REDIS_CONNECTION_URL:redis://@localhost:6379}
+      password: :  ${REDIS_CONNECTION_PASSWORD:pluto}
 management:
   health:
     mongo.enabled: ${HEALTH_MONGO_ENABLED:false}
