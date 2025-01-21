@@ -35,7 +35,7 @@ public class BloomFilterInitializer {
     public void initialize() {
         RLockReactive lock = redissonClient.getLock(REDIS_LOCK_NAME);
 
-        lock.tryLock(0, 10, TimeUnit.SECONDS)
+        lock.tryLock(0, TimeUnit.SECONDS)
                 .flatMap(lockAcquired -> {
                     if (Boolean.TRUE.equals(lockAcquired)) {
                         return bloomFilter.tryInit(1000L, 0.01)
