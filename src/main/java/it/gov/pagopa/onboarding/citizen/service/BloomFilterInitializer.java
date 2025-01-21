@@ -40,6 +40,7 @@ public class BloomFilterInitializer {
                     if (Boolean.TRUE.equals(lockAcquired)) {
                         return bloomFilter.tryInit(1000L, 0.01)
                                 .doOnSuccess(result -> log.info("[BLOOM-FILTER-INITIALIZER] Bloom filter created"))
+                                .doOnError(error -> log.error("[BLOOM-FILTER-INITIALIZER] Bloom filter non created", error))
                                 .thenMany(citizenRepository.findAll()
                                         .flatMap(citizenConsent -> {
                                             boolean hasTppState = citizenConsent.getConsents().values().stream()
