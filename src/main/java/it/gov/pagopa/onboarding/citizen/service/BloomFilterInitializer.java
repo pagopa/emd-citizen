@@ -35,11 +35,10 @@ public class BloomFilterInitializer {
     public void initializer() {
         RLockReactive lock = redissonClient.getLock(REDIS_LOCK_NAME);
 
-        lock.tryLock(0, TimeUnit.SECONDS)
+        lock.tryLock(0,60, TimeUnit.SECONDS)
                 .flatMap(lockAcquired -> {
                     if (Boolean.TRUE.equals(lockAcquired)) {
-                        return initializeBloomFilter()
-                                .doFinally(signal -> unlockLock(lock));
+                        return initializeBloomFilter();
                     } else {
                         log.info("[BLOOM-FILTER-INITIALIZER] Another instance is initializing the bloom filter.");
                         return Mono.empty();
@@ -65,13 +64,6 @@ public class BloomFilterInitializer {
                 .doOnComplete(() -> log.info("[BLOOM-FILTER-INITIALIZER] Bloom filter population complete"))
                 .doOnError(error -> log.error("[BLOOM-FILTER-INITIALIZER] Error populating bloom filter", error))
                 .then();
-    }
-
-    private void unlockLock(RLockReactive lock) {
-        lock.unlock()
-                .doOnSuccess(error -> log.error("[BLOOM-FILTER-INITIALIZER] Lock unlock"))
-                .doOnError(error -> log.error("[BLOOM-FILTER-INITIALIZER] Failed to unlock", error))
-                .subscribe();
     }
 }
 
