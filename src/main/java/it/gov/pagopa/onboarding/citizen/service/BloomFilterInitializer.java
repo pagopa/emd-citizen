@@ -32,38 +32,46 @@ public class BloomFilterInitializer {
     }
 
     @PostConstruct
-    public void initialize() {
+    public void initializer() {
         RLockReactive lock = redissonClient.getLock(REDIS_LOCK_NAME);
 
-        lock.tryLock(0, TimeUnit.SECONDS)
+        lock.tryLock(10, TimeUnit.SECONDS)
                 .flatMap(lockAcquired -> {
                     if (Boolean.TRUE.equals(lockAcquired)) {
-                        return bloomFilter.tryInit(1000L, 0.01)
-                                .doOnSuccess(result -> log.info("[BLOOM-FILTER-INITIALIZER] Bloom filter created"))
-                                .doOnError(error -> log.error("[BLOOM-FILTER-INITIALIZER] Bloom filter non created", error))
-                                .thenMany(citizenRepository.findAll()
-                                        .flatMap(citizenConsent -> {
-                                            boolean hasTppState = citizenConsent.getConsents().values().stream()
-                                                    .anyMatch(ConsentDetails::getTppState);
-                                            if (hasTppState) {
-                                                return bloomFilter.add(citizenConsent.getFiscalCode());
-                                            }
-                                            return Mono.empty();
-                                        })
-                                )
-                                .doFinally(signal ->
-                                    lock.unlock()
-                                            .doOnError(e -> log.error("[BLOOM-FILTER-INITIALIZER] Failed to unlock", e))
-                                            .subscribe()
-                                )
-                                .then();
+                        return initializeBloomFilter()
+                                .doOnTerminate(() -> unlockLock(lock))
+                                .doOnError(error -> log.error("[BLOOM-FILTER-INITIALIZER] Initialization failed", error));
                     } else {
-                        log.info("[BLOOM-FILTER-INITIALIZER] Another instance is initializing the Bloom Filter");
+                        log.info("[BLOOM-FILTER-INITIALIZER] Another instance is initializing the bloom filter.");
                         return Mono.empty();
                     }
                 })
-                .doOnError(error -> log.error("[BLOOM-FILTER-INITIALIZER] Initialization failed", error))
                 .subscribe();
     }
 
+    private Mono<Void> initializeBloomFilter() {
+        return bloomFilter.tryInit(1000L, 0.01)
+                .doOnSuccess(result -> log.info("[BLOOM-FILTER-INITIALIZER] Bloom filter created"))
+                .doOnError(result -> log.info("[BLOOM-FILTER-INITIALIZER] Bloom filter creation failed"))
+                .flatMap(result -> populateBloomFilter())
+                .then();
+    }
+
+    private Mono<Void> populateBloomFilter() {
+        return citizenRepository.findAll()
+                .map(citizen -> citizen.getConsents().values().stream()
+                        .anyMatch(ConsentDetails::getTppState) ? citizen.getFiscalCode() : "")
+                .filter(fiscalCode -> !fiscalCode.isEmpty())
+                .flatMap(fiscalCode -> bloomFilter.add(fiscalCode).then())
+                .doOnComplete(() -> log.info("[BLOOM-FILTER-INITIALIZER] Bloom filter population complete"))
+                .doOnError(error -> log.error("[BLOOM-FILTER-INITIALIZER] Error populating bloom filter", error))
+                .then();
+    }
+
+    private void unlockLock(RLockReactive lock) {
+        lock.unlock()
+                .doOnError(error -> log.error("[BLOOM-FILTER-INITIALIZER] Failed to unlock", error))
+                .subscribe();
+    }
 }
+
