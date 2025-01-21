@@ -35,16 +35,16 @@ public class BloomFilterInitializer {
     public void initializer() {
         RLockReactive lock = redissonClient.getLock(REDIS_LOCK_NAME);
 
-        lock.tryLock(10, TimeUnit.SECONDS)
+        lock.tryLock(0, TimeUnit.SECONDS)
                 .flatMap(lockAcquired -> {
                     if (Boolean.TRUE.equals(lockAcquired)) {
-                        return initializeBloomFilter();
+                        return initializeBloomFilter()
+                                .doFinally(signal -> unlockLock(lock));
                     } else {
                         log.info("[BLOOM-FILTER-INITIALIZER] Another instance is initializing the bloom filter.");
                         return Mono.empty();
                     }
                 })
-                .doFinally(signal -> unlockLock(lock))
                 .subscribe();
     }
 
