@@ -38,14 +38,13 @@ public class BloomFilterInitializer {
         lock.tryLock(10, TimeUnit.SECONDS)
                 .flatMap(lockAcquired -> {
                     if (Boolean.TRUE.equals(lockAcquired)) {
-                        return initializeBloomFilter()
-                                .doOnTerminate(() -> unlockLock(lock))
-                                .doOnError(error -> log.error("[BLOOM-FILTER-INITIALIZER] Initialization failed", error));
+                        return initializeBloomFilter();
                     } else {
                         log.info("[BLOOM-FILTER-INITIALIZER] Another instance is initializing the bloom filter.");
                         return Mono.empty();
                     }
                 })
+                .doFinally(signal -> unlockLock(lock))
                 .subscribe();
     }
 
@@ -70,6 +69,7 @@ public class BloomFilterInitializer {
 
     private void unlockLock(RLockReactive lock) {
         lock.unlock()
+                .doOnSuccess(error -> log.error("[BLOOM-FILTER-INITIALIZER] Lock unlock"))
                 .doOnError(error -> log.error("[BLOOM-FILTER-INITIALIZER] Failed to unlock", error))
                 .subscribe();
     }
