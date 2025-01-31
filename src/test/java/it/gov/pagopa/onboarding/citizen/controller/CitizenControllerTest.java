@@ -205,4 +205,19 @@ class CitizenControllerTest {
 
     }
 
+    @Test
+    void deleteCitizenConsent_OK() {
+        CitizenConsentDTO mockConsent = CitizenConsentDTOFaker.mockInstance(true);
+        Mockito.when(citizenService.deleteCitizenConsent(FISCAL_CODE))
+                .thenReturn(Mono.just(mockConsent));
+        webClient.delete()
+                .uri("/emd/citizen/test/{fiscalCode}", FISCAL_CODE)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(CitizenConsentDTO.class)
+                .value(response -> Assertions.assertEquals(1, response.size()));
+    }
+
+
 }

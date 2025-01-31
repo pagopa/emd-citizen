@@ -65,6 +65,12 @@ public class CitizenControllerImpl implements CitizenController {
     }
 
     @Override
+    public Mono<ResponseEntity<CitizenConsentDTO>> deleteCitizenConsent(String fiscalCode) {
+        return citizenService.deleteCitizenConsent(fiscalCode)
+                .map(ResponseEntity::ok);
+    }
+
+    @Override
     public Mono<ResponseEntity<String>> bloomFilterSearch(String fiscalCode) {
         return Mono.fromCallable(() ->
                 bloomFilterService.mightContain(fiscalCode) ?

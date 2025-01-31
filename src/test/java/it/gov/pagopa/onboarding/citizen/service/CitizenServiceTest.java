@@ -337,5 +337,35 @@ class CitizenServiceTest {
                 })
                 .verifyComplete();
     }
+
+
+    @Test
+    void deleteCitizenConsent_OK() {
+        CitizenConsent citizenConsent = CitizenConsent.builder()
+                .id(FISCAL_CODE)
+                .fiscalCode(FISCAL_CODE)
+                .consents(new HashMap<>())
+                .build();
+
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(citizenConsent));
+        when(citizenRepository.deleteById(FISCAL_CODE)).thenReturn(Mono.empty());
+        StepVerifier.create(citizenService.deleteCitizenConsent(FISCAL_CODE))
+                .assertNext(response -> {
+                    assertNotNull(response);
+                    assertEquals(0, response.getConsents().size());
+                })
+                .verifyComplete();
+    }
+
+
+    @Test
+    void deleteCitizenConsent_NotOnboarded() {
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.empty());
+
+        StepVerifier.create(citizenService.deleteCitizenConsent(FISCAL_CODE))
+                .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
+                        "Citizen consent not founded during delete process ".equals(throwable.getMessage()))
+                .verify();
+    }
 }
 
