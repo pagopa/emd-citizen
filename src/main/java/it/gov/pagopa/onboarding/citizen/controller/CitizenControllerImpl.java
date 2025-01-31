@@ -3,7 +3,6 @@ package it.gov.pagopa.onboarding.citizen.controller;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.service.BloomFilterServiceImpl;
 import it.gov.pagopa.onboarding.citizen.service.CitizenServiceImpl;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;

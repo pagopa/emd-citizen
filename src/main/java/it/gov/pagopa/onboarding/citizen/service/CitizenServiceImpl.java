@@ -31,6 +31,7 @@ public class CitizenServiceImpl implements CitizenService {
     private final ExceptionMap exceptionMap;
     private final TppConnectorImpl tppConnector;
     private final BloomFilterServiceImpl bloomFilterService;
+    private static final String CONSENT_NOT_FOUND = "[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] No consents found.";
 
     public CitizenServiceImpl(CitizenRepository citizenRepository,
                               CitizenConsentObjectToDTOMapper mapperToDTO,
@@ -144,7 +145,7 @@ public class CitizenServiceImpl implements CitizenService {
                     if (tppIdList != null){
                         log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Founded {} Consents for fiscal code: {}", tppIdList.size(),Utils.createSHA256(fiscalCode));
                     } else {
-                        log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] No consents found.");
+                        log.info(CONSENT_NOT_FOUND);
                     }
                 });
     }
@@ -178,7 +179,7 @@ public class CitizenServiceImpl implements CitizenService {
                     if (citizenConsent != null && !citizenConsent.getConsents().isEmpty()) {
                         log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Funded {} consents for fiscal code: {} ", citizenConsent.getConsents().size(), Utils.createSHA256(fiscalCode));
                     } else {
-                        log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] No consents found.");
+                        log.info(CONSENT_NOT_FOUND);
                     }
                 });
 
@@ -194,7 +195,7 @@ public class CitizenServiceImpl implements CitizenService {
                     if (citizenConsent != null && !citizenConsent.isEmpty()) {
                         log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Funded {} citizen for tpp: {} ", citizenConsent.size(), tppId);
                     } else {
-                        log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] No consents found.");
+                        log.info(CONSENT_NOT_FOUND);
                     }
                 });
     }
