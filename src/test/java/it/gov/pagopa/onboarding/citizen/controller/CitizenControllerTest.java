@@ -140,7 +140,7 @@ class CitizenControllerTest {
     @Test
     void getAllFiscalCode_Ok() {
         Mockito.when(bloomFilterService.mightContain(FISCAL_CODE))
-                .thenReturn(true);
+                .thenReturn(Mono.just("OK"));
 
         webClient.get()
                 .uri("/emd/citizen/filter/{fiscalCode}", FISCAL_CODE)
@@ -156,12 +156,12 @@ class CitizenControllerTest {
     @Test
     void getAllFiscalCode_NoChannelsEnabled() {
         Mockito.when(bloomFilterService.mightContain(FISCAL_CODE))
-                .thenReturn(false);
+                .thenReturn(Mono.just("NO CHANNELS ENABLED"));
 
         webClient.get()
                 .uri("/emd/citizen/filter/{fiscalCode}", FISCAL_CODE)
                 .exchange()
-                .expectStatus().isAccepted()
+                .expectStatus().isOk()
                 .expectBody(String.class)
                 .consumeWith(response -> {
                     String resultResponse = response.getResponseBody();

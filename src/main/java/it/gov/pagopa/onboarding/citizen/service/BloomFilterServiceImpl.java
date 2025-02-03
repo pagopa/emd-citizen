@@ -1,52 +1,45 @@
 package it.gov.pagopa.onboarding.citizen.service;
 
 
-import com.azure.cosmos.implementation.guava25.hash.BloomFilter;
-import com.azure.cosmos.implementation.guava25.hash.Funnels;
-import it.gov.pagopa.onboarding.citizen.repository.CitizenRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.redisson.api.RBloomFilterReactive;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
-import java.nio.charset.StandardCharsets;
+import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
-public class BloomFilterServiceImpl implements BloomFilterService{
+public class BloomFilterServiceImpl {
 
-    private final CitizenRepository citizenRepository;
+    private final RBloomFilterReactive<String> bloomFilter;
 
-    private BloomFilter<String> bloomFilter;
-
-    public BloomFilterServiceImpl(CitizenRepository citizenRepository) {
-        this.citizenRepository = citizenRepository;
+    public BloomFilterServiceImpl(BloomFilterInitializer bloomFilterInitializer) {
+        this.bloomFilter = bloomFilterInitializer.getBloomFilter();
     }
 
-
-    @PostConstruct
-    public void initializeBloomFilter() {
-        bloomFilter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 1000000, 0.01);
-
-        citizenRepository.findAll()
-                    .doOnNext(citizenConsent ->
-                        bloomFilter.put(citizenConsent.getFiscalCode()))
-                    .doOnComplete(() -> log.info("Bloom filter initialized"))
-                    .subscribe();
-    }
-    @Override
-
-    public boolean mightContain(String fiscalCode) {
-        return bloomFilter.mightContain(fiscalCode);
+    public void add(String value) {
+        bloomFilter.add(value)
+                .doOnSuccess(result -> {
+                    if (Boolean.TRUE.equals(result)) {
+                        log.info("[BLOOM-FILTER-SERVICE] Fiscal Code added to bloom filter");
+                    } else {
+                        log.info("[BLOOM-FILTER-SERVICE] Fiscal Code not added to bloom filter");
+                    }
+                })
+                .subscribe();
     }
 
-
-    @Scheduled(fixedRate = 3600000)
-    public void update() {
-        this.initializeBloomFilter();
-    }
-
-    public void add(String fiscalCode){
-        bloomFilter.put(fiscalCode);
+    public Mono<String> mightContain(String value) {
+        log.info("[BLOOM-FILTER-SERVICE] Bloom filter search request arrived");
+        return bloomFilter.contains(value)
+                .map(result -> {
+                    if (Boolean.TRUE.equals(result)) {
+                        log.info("[BLOOM-FILTER-SERVICE] Fiscal Code found");
+                        return "OK";
+                    } else {
+                        log.info("[BLOOM-FILTER-SERVICE] Fiscal Code not found");
+                        return "NO CHANNELS ENABLED";
+                    }
+                });
     }
 }
+

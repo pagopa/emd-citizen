@@ -3,7 +3,6 @@ package it.gov.pagopa.onboarding.citizen.controller;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.service.BloomFilterServiceImpl;
 import it.gov.pagopa.onboarding.citizen.service.CitizenServiceImpl;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -72,12 +71,8 @@ public class CitizenControllerImpl implements CitizenController {
 
     @Override
     public Mono<ResponseEntity<String>> bloomFilterSearch(String fiscalCode) {
-        return Mono.fromCallable(() ->
-                bloomFilterService.mightContain(fiscalCode) ?
-                        ResponseEntity.ok("OK") :
-                        ResponseEntity.status(HttpStatus.ACCEPTED).body("NO CHANNELS ENABLED")
-        );
-
+        return bloomFilterService.mightContain(fiscalCode)
+                .map(result -> ResponseEntity.ok().body(result));
     }
 
 }
