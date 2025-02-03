@@ -110,7 +110,7 @@ public class CitizenServiceImpl implements CitizenService {
                             consentDetails.setTppState(!consentDetails.getTppState());
                             return citizenRepository.save(citizenConsent)
                                     .flatMap(savedConsent -> {
-
+                                      
                                         Map<String, ConsentDetails> consents = new HashMap<>();
                                         consents.put(tppId, citizenConsent.getConsents().get(tppId));
                                         citizenConsent.setConsents(consents);
@@ -128,7 +128,7 @@ public class CitizenServiceImpl implements CitizenService {
                         (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded")))
                 .map(mapperToDTO::map)
                 .doOnSuccess(consent -> log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Consent consent found for fiscal code: {}", Utils.createSHA256(fiscalCode)));
-
+      
     }
 
     @Override

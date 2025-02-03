@@ -74,5 +74,4 @@ public class CitizenControllerImpl implements CitizenController {
         return bloomFilterService.mightContain(fiscalCode)
                 .map(result -> ResponseEntity.ok().body(result));
     }
-
 }
