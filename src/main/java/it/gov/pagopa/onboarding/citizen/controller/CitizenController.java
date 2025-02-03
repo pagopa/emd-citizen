@@ -58,4 +58,7 @@ public interface CitizenController {
     @GetMapping("/{tppId}")
     Mono<ResponseEntity<List<CitizenConsentDTO>>> getCitizenEnabled(@PathVariable @Pattern(regexp = TPP_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
 
+    @DeleteMapping("/test/{fiscalCode}")
+    Mono<ResponseEntity<CitizenConsentDTO>> deleteCitizenConsent(@PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
+
 }
