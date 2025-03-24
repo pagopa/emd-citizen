@@ -61,5 +61,4 @@ public interface CitizenController {
     @DeleteMapping("/test/delete/{fiscalCode}")
     Mono<ResponseEntity<CitizenConsentDTO>> deleteCitizenConsent(@PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
 
-
 }

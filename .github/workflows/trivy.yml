@@ -31,9 +31,11 @@ jobs:
         uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
 
       - name: Build an image from Dockerfile
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         run: |
           docker build \
-          --build-arg GITHUB_TOKEN=${secrets.GITHUB_TOKEN} \
+          --build-arg GITHUB_TOKEN=$GITHUB_TOKEN \
           -t docker.io/my-organization/my-app:${{ github.sha }} .
 
       - name: Run Trivy vulnerability scanner
