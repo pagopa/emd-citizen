@@ -1,22 +1,43 @@
 #
 # Build
 #
-FROM maven:3.9.6-amazoncorretto-17-al2023@sha256:459be099faa25a32c06cd45ed1ef2bc9dbbf8a5414da4e72349459a1bb4d6166 AS buildtime
+FROM maven:3.9.6-amazoncorretto-21-al2023@sha256:8d653ed25358201bdb352ce0d24e4be2f1e34ddf372d3381d22876f9c483cfa1 AS buildtime
 
 WORKDIR /build
-COPY . .
 
-RUN mvn clean package -DskipTests
+COPY pom.xml .
+COPY src ./src
+COPY dep-sha256.json .
+
+# Setting ENV variables for GITHUB_TOKEN
+ARG GITHUB_TOKEN
+ENV GITHUB_TOKEN=${GITHUB_TOKEN}
+
+# settings.xml file creation with GitHub token
+RUN echo '<?xml version="1.0" encoding="UTF-8"?>' > settings.xml && \
+    echo '<settings>' >> settings.xml && \
+    echo '  <servers>' >> settings.xml && \
+    echo '    <server>' >> settings.xml && \
+    echo '      <id>github</id>' >> settings.xml && \
+    echo '      <username></username>' >> settings.xml && \
+    echo "      <password>${GITHUB_TOKEN}</password>" >> settings.xml && \
+    echo '    </server>' >> settings.xml && \
+    echo '  </servers>' >> settings.xml && \
+    echo '</settings>' >> settings.xml
+
+
+# Maven build with settings.xml file
+RUN mvn --global-settings settings.xml clean package -DskipTests && rm settings.xml
 
 #
 # Docker RUNTIME
 #
-FROM amazoncorretto:17-alpine3.20@sha256:1b1d0653d890ff313a1f7afadd1fd81f5ea742c9c48670d483b1bbccef98bb8b AS runtime
+FROM amazoncorretto:21-alpine3.20@sha256:d35e44aa90121164411d3f647e116d6c4c42461ba67dabc7c5ca6e460d380c12 AS runtime
 
-RUN apk --no-cache add shadow
+RUN apk add --no-cache shadow vim curl net-tools bind-tools netcat-openbsd wget
+
 RUN useradd --uid 10000 runner
 
-VOLUME /tmp
 WORKDIR /app
 
 COPY --from=buildtime /build/target/*.jar /app/app.jar
