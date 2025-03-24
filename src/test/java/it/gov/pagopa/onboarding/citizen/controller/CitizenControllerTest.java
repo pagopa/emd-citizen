@@ -211,7 +211,7 @@ class CitizenControllerTest {
         Mockito.when(citizenService.deleteCitizenConsent(FISCAL_CODE))
                 .thenReturn(Mono.just(mockConsent));
         webClient.delete()
-                .uri("/emd/citizen/test/{fiscalCode}", FISCAL_CODE)
+                .uri("/emd/citizen/test/delete/{fiscalCode}", FISCAL_CODE)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
