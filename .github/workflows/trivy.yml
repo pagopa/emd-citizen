@@ -32,7 +32,9 @@ jobs:
 
       - name: Build an image from Dockerfile
         run: |
-          docker build -t docker.io/my-organization/my-app:${{ github.sha }} .
+          docker build \
+          --build-arg GITHUB_TOKEN=${secrets.GITHUB_TOKEN} \
+          -t docker.io/my-organization/my-app:${{ github.sha }} .
 
       - name: Run Trivy vulnerability scanner
         # from https://github.com/aquasecurity/trivy-action/commits/master
