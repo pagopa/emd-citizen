@@ -219,5 +219,4 @@ class CitizenControllerTest {
                 .value(response -> Assertions.assertEquals(1, response.size()));
     }
 
-
 }
