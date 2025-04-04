@@ -1,2 +1,2 @@
 # emd-citizen
-Messaggi di Cortesia - Gestione dei Cittadini
+Service that manages the activation/deactivation operations of citizens'consents on third-party apps.
