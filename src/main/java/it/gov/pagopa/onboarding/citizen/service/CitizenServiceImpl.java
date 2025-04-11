@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static it.gov.pagopa.common.utils.Utils.inputSanify;
 
 @Service
 @Slf4j
@@ -48,7 +47,7 @@ public class CitizenServiceImpl implements CitizenService {
     @Override
     public Mono<CitizenConsentDTO> createCitizenConsent(String fiscalCode, String tppId){
         log.info("[EMD-CITIZEN][CREATE-CITIZEN-CONSENT] Received hashedFiscalCode: {} and tppId: {}",
-                Utils.createSHA256(fiscalCode), inputSanify(tppId));
+                Utils.createSHA256(fiscalCode), tppId);
 
         return tppConnector.get(tppId)
                 .onErrorMap(error -> exceptionMap.throwException(ExceptionName.TPP_NOT_FOUND, ExceptionMessage.TPP_NOT_FOUND))
@@ -96,7 +95,7 @@ public class CitizenServiceImpl implements CitizenService {
     @Override
     public Mono<CitizenConsentDTO> switchState(String fiscalCode, String tppId){
         log.info("[EMD-CITIZEN][UPDATE-CHANNEL-STATE] Received hashedFiscalCode: {} and tppId: {}",
-                Utils.createSHA256(fiscalCode), inputSanify(tppId));
+                Utils.createSHA256(fiscalCode), tppId);
 
         return citizenRepository.findByFiscalCode(fiscalCode)
                         .switchIfEmpty(Mono.error(exceptionMap.throwException
@@ -122,7 +121,7 @@ public class CitizenServiceImpl implements CitizenService {
 
     @Override
     public Mono<CitizenConsentDTO> getCitizenConsentStatus(String fiscalCode, String tppId) {
-        log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Received hashedFiscalCode: {} and tppId: {}", Utils.createSHA256(fiscalCode), inputSanify(tppId));
+        log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Received hashedFiscalCode: {} and tppId: {}", Utils.createSHA256(fiscalCode), tppId);
         return citizenRepository.findByFiscalCodeAndTppId(fiscalCode, tppId)
                 .switchIfEmpty(Mono.error(exceptionMap.throwException
                         (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded")))
