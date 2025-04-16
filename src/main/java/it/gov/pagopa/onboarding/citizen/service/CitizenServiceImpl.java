@@ -107,6 +107,7 @@ public class CitizenServiceImpl implements CitizenService {
                                         (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during update state process"));
                             ConsentDetails consentDetails = citizenConsent.getConsents().get(tppId);
                             consentDetails.setTppState(!consentDetails.getTppState());
+                            consentDetails.setTcDate(LocalDateTime.now());
                             return citizenRepository.save(citizenConsent)
                                     .flatMap(savedConsent -> {
                                       
