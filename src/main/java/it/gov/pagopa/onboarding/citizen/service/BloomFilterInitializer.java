@@ -30,9 +30,11 @@ public class BloomFilterInitializer {
     private final CitizenRepository citizenRepository;
 
     @Value("${app.bloomFilter.expectedInsertions}")
+    @Getter
     private long expectedInsertions;
 
     @Value("${app.bloomFilter.falseProbability}")
+    @Getter
     private double falseProbability;
 
     public BloomFilterInitializer(RedissonReactiveClient redissonClient, CitizenRepository citizenRepository) {
