@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilterReactive;
 import org.redisson.api.RedissonReactiveClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -27,6 +28,14 @@ public class BloomFilterInitializer {
     private final RBloomFilterReactive<String> bloomFilter;
     private final RedissonReactiveClient redissonClient;
     private final CitizenRepository citizenRepository;
+
+    @Value("${app.bloomFilter.expectedInsertions}")
+    @Getter
+    private long expectedInsertions;
+
+    @Value("${app.bloomFilter.falseProbability}")
+    @Getter
+    private double falseProbability;
 
     public BloomFilterInitializer(RedissonReactiveClient redissonClient, CitizenRepository citizenRepository) {
         this.redissonClient = redissonClient;
@@ -60,8 +69,8 @@ public class BloomFilterInitializer {
     }
 
     private Mono<Void> initializeBloomFilter() {
-        return bloomFilter.tryInit(1000L, 0.01)
-                .doOnSuccess(result -> log.info("[BLOOM-FILTER-INITIALIZER] Bloom filter created"))
+        return bloomFilter.tryInit(expectedInsertions, falseProbability)
+                .doOnSuccess(result -> log.info("[BLOOM-FILTER-INITIALIZER] Bloom filter created with {} expected insertions and {} false probability", expectedInsertions, falseProbability))
                 .onErrorResume(error -> {
                     log.error("[BLOOM-FILTER-INITIALIZER] Initialization failed", error);
                     return Mono.empty();
