@@ -52,6 +52,50 @@ class CitizenSpecificRepositoryImplTest {
     }
 
     @Test
+    void testFindByFiscalCodeWithAtLeastOneConsent() {
+        String fiscalCode = "hashedCode";
+        CitizenConsent citizenConsent = createMockCitizenConsent(fiscalCode, "tpp1");
+
+        when(mongoTemplate.aggregate(
+                Mockito.any(Aggregation.class),
+                Mockito.eq("citizen_consents"),
+                Mockito.eq(CitizenConsent.class)
+        )).thenReturn(Flux.just(citizenConsent));
+
+        StepVerifier.create(repository.findByFiscalCodeWithAtLeastOneConsent(fiscalCode))
+                .expectNextMatches(result -> result.getFiscalCode().equals(fiscalCode))
+                .verifyComplete();
+
+        Mockito.verify(mongoTemplate).aggregate(
+                Mockito.any(Aggregation.class),
+                Mockito.eq("citizen_consents"),
+                Mockito.eq(CitizenConsent.class)
+        );
+    }
+
+    @Test
+    void testFindByFiscalCodeWithAtLeastOneConsent_NoConsent() {
+        String fiscalCode = "hashedCode";
+        CitizenConsent citizenConsent = createMockCitizenNoConsent(fiscalCode, "tpp1");
+
+        when(mongoTemplate.aggregate(
+                Mockito.any(Aggregation.class),
+                Mockito.eq("citizen_consents"),
+                Mockito.eq(CitizenConsent.class)
+        )).thenReturn(Flux.empty());
+
+        StepVerifier.create(repository.findByFiscalCodeWithAtLeastOneConsent(fiscalCode))
+                .expectComplete()
+                .verify();
+
+        Mockito.verify(mongoTemplate).aggregate(
+                Mockito.any(Aggregation.class),
+                Mockito.eq("citizen_consents"),
+                Mockito.eq(CitizenConsent.class)
+        );
+    }
+
+    @Test
     void testFindByFiscalCodeAndTppId_TppIdNull() {
         String hashedFiscalCode = "hashedCode";
         String tppId = null;
@@ -123,6 +167,20 @@ class CitizenSpecificRepositoryImplTest {
         Map<String, ConsentDetails> consents = new HashMap<>();
         ConsentDetails consentDetails = new ConsentDetails();
         consentDetails.setTppState(true);
+        consents.put(tppId, consentDetails);
+        citizenConsent.setConsents(consents);
+
+        return citizenConsent;
+    }
+
+    private CitizenConsent createMockCitizenNoConsent(String hashedFiscalCode, String tppId) {
+        CitizenConsent citizenConsent = new CitizenConsent();
+        citizenConsent.setId("1");
+        citizenConsent.setFiscalCode(hashedFiscalCode);
+
+        Map<String, ConsentDetails> consents = new HashMap<>();
+        ConsentDetails consentDetails = new ConsentDetails();
+        consentDetails.setTppState(false);
         consents.put(tppId, consentDetails);
         citizenConsent.setConsents(consents);
 
