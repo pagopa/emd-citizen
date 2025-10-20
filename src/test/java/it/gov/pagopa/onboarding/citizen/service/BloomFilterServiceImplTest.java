@@ -61,5 +61,25 @@ class BloomFilterServiceImplTest {
                 .verifyComplete();
         verify(bloomFilter).contains("12345");
     }
+
+    @Test
+    void testContainsFound() {
+        when(bloomFilter.contains(anyString())).thenReturn(Mono.just(true));
+        Mono<Boolean> result = bloomFilterService.contains("12345");
+        StepVerifier.create(result)
+                .expectNext(true)
+                .verifyComplete();
+        verify(bloomFilter).contains("12345");
+    }
+
+    @Test
+    void testContainsNotFound() {
+        when(bloomFilter.contains(anyString())).thenReturn(Mono.just(false));
+        Mono<Boolean> result = bloomFilterService.contains("12345");
+        StepVerifier.create(result)
+                .expectNext(false)
+                .verifyComplete();
+        verify(bloomFilter).contains("12345");
+    }
 }
 

@@ -15,4 +15,5 @@ public interface CitizenService {
     Mono<CitizenConsentDTO> getCitizenConsentsListEnabled(String fiscalCode);
     Mono<List<CitizenConsentDTO>> getCitizenEnabled(String tppId);
     Mono<CitizenConsentDTO> deleteCitizenConsent(String fiscalCode);
+    Mono<Boolean> getCitizenInBloomFilter(String fiscalCode);
 }

@@ -20,6 +20,22 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
         this.mongoTemplate = mongoTemplate;
     }
 
+    /**
+     * Find citizen by fiscal code with at least one consent enabled
+     * @param fiscalCode the fiscal code of the citizen
+     * @return the citizen consent
+     */
+    public Mono<CitizenConsent> findByFiscalCodeWithAtLeastOneConsent(String fiscalCode) {
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where(FISCAL_CODE).is(fiscalCode)),
+                Aggregation.project(FISCAL_CODE)
+                        .andExpression("{ $objectToArray: \"$consents\" }").as("consentsArray"),
+                Aggregation.match(Criteria.where("consentsArray.v.tppState").is(true))
+        );
+
+        return mongoTemplate.aggregate(aggregation, "citizen_consents", CitizenConsent.class)
+                .next();
+    }
 
     public Mono<CitizenConsent> findByFiscalCodeAndTppId(String fiscalCode, String tppId) {
         if (tppId == null) {
