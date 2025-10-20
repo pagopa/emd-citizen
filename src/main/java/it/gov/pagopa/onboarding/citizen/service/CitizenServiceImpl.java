@@ -210,4 +210,34 @@ public class CitizenServiceImpl implements CitizenService {
                 );
     }
 
+    /**
+     * Check if a citizen is present in the bloom filter and has at least one consent.
+     * @param fiscalCode the fiscal code of the citizen
+     * @return Mono<Boolean> indicating if the citizen is present and has at least one consent.
+     */
+    @Override
+    public Mono<Boolean> getCitizenInBloomFilter(String fiscalCode) {
+        log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] Start search for hashedFiscalCode: {}", Utils.createSHA256(fiscalCode));
+        return bloomFilterService.contains(fiscalCode)
+                .flatMap(isPresent -> {
+                    String hashedFiscalCode = Utils.createSHA256(fiscalCode);
+                    if (!isPresent) {
+                        log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] Fiscal Code {} NOT found in bloom filter", hashedFiscalCode);
+                        return Mono.just(false);
+                    }
+                    log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] Fiscal Code {} found in bloom filter. Checking consents in DB...", hashedFiscalCode);
+                    return citizenRepository.findByFiscalCodeWithAtLeastOneConsent(fiscalCode)
+                            .map(citizenConsent -> {
+                                log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] At least one consent found for Fiscal Code {}", hashedFiscalCode);
+                                return true;
+                            })
+                            .defaultIfEmpty(false)
+                            .doOnNext(found -> {
+                                if (!found) {
+                                    log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] No consents enabled found for Fiscal Code {}", hashedFiscalCode);
+                                }
+                            });
+                });
+    }
+
 }

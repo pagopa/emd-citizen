@@ -41,5 +41,15 @@ public class BloomFilterServiceImpl {
                     }
                 });
     }
+
+    /**
+     * Check if the value is contained in the bloom filter
+     * @param value the value to check
+     * @return Mono<Boolean> true if the value is contained, false otherwise
+     */
+    public Mono<Boolean> contains(String value) {
+        log.info("[BLOOM-FILTER-SERVICE] Bloom filter search request arrived");
+        return bloomFilter.contains(value);
+    }
 }
 

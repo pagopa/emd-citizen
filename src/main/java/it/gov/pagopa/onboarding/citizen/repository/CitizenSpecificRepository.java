@@ -10,4 +10,6 @@ public interface CitizenSpecificRepository {
     Mono<CitizenConsent> findByFiscalCodeAndTppId(String fiscalCode, String tppId);
 
     Flux<CitizenConsent> findByTppIdEnabled(String tppId);
+
+    Mono<CitizenConsent> findByFiscalCodeWithAtLeastOneConsent(String fiscalCode);
 }
