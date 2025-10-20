@@ -73,7 +73,14 @@ public class CitizenControllerImpl implements CitizenController {
 
     @Override
     public Mono<ResponseEntity<String>> bloomFilterSearch(String fiscalCode) {
-        return bloomFilterService.mightContain(inputSanitization(fiscalCode))
+        return citizenService.getCitizenInBloomFilter(inputSanitization(fiscalCode))
+                .map(result -> {
+                    if (Boolean.TRUE.equals(result)) {
+                        return "OK";
+                    } else {
+                        return "NO CHANNELS ENABLED";
+                    }
+                })
                 .map(result -> ResponseEntity.ok().body(result));
     }
 }

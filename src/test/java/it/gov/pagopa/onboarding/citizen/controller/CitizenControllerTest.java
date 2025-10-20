@@ -139,8 +139,9 @@ class CitizenControllerTest {
 
     @Test
     void getAllFiscalCode_Ok() {
-        Mockito.when(bloomFilterService.mightContain(FISCAL_CODE))
-                .thenReturn(Mono.just("OK"));
+        CitizenConsentDTO mockConsent = CitizenConsentDTOFaker.mockInstance(true);
+        Mockito.when(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
+                .thenReturn(Mono.just(true));
 
         webClient.get()
                 .uri("/emd/citizen/filter/{fiscalCode}", FISCAL_CODE)
@@ -155,8 +156,9 @@ class CitizenControllerTest {
     }
     @Test
     void getAllFiscalCode_NoChannelsEnabled() {
-        Mockito.when(bloomFilterService.mightContain(FISCAL_CODE))
-                .thenReturn(Mono.just("NO CHANNELS ENABLED"));
+        CitizenConsentDTO mockConsent = CitizenConsentDTOFaker.mockInstance(true);
+        Mockito.when(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
+                .thenReturn(Mono.just(false));
 
         webClient.get()
                 .uri("/emd/citizen/filter/{fiscalCode}", FISCAL_CODE)
