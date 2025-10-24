@@ -22,8 +22,7 @@ public class BloomFilterServiceImpl {
      */
     public Mono<Void> add(String value) {
         return bloomFilter.add(value)
-                .map(added -> added ? "added" : "not added")
-                .doOnNext(status -> log.info("[BLOOM-FILTER-SERVICE] Fiscal code {} {} to bloom filter.", value, status))
+                .doOnNext(r -> log.info("[BLOOM-FILTER-SERVICE] Fiscal code {} {} to bloom filter.", value, Boolean.TRUE.equals(r) ? "added" : "not added"))
                 .then();
     }
 
