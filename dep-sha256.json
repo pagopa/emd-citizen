@@ -1378,20 +1378,6 @@
       "groupId": "org.testcontainers",
       "version": "1.21.3",
       "sha256": "lXk-RQKuDz7fvf3BuhCdstUFGQTOtCy3MOwSRWOwMhY="
-    },
-    {
-      "id": "com.redis:testcontainers-redis:jar:2.2.2",
-      "artifactId": "testcontainers-redis",
-      "groupId": "com.redis",
-      "version": "2.2.2",
-      "sha256": "sFZdoXE_K2l_GVIOWj0kSYnX_0yOtFl108eYyzX5VLs="
-    },
-    {
-      "id": "com.redis:testcontainers-redis-common:jar:2.2.2",
-      "artifactId": "testcontainers-redis-common",
-      "groupId": "com.redis",
-      "version": "2.2.2",
-      "sha256": "kQkN9giCT9LQMnzyWFZlHzxXXWnL8Fxwu6PAng9_AuQ="
     }
   ]
 }
