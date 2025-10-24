@@ -1,6 +1,7 @@
 package it.gov.pagopa.onboarding.citizen.service;
 
 
+import it.gov.pagopa.common.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilterReactive;
 import org.springframework.stereotype.Service;
@@ -16,18 +17,27 @@ public class BloomFilterServiceImpl {
         this.bloomFilter = bloomFilterInitializer.getBloomFilter();
     }
 
-    public void add(String value) {
-        bloomFilter.add(value)
-                .doOnSuccess(result -> {
+    /** Add a value to the bloom filter
+     * @param value the value to add
+     * @return Mono<Void>
+     */
+    public Mono<Void> add(String value) {
+        return bloomFilter.add(value)
+                .doOnNext(result -> {
                     if (Boolean.TRUE.equals(result)) {
-                        log.info("[BLOOM-FILTER-SERVICE] Fiscal Code added to bloom filter");
+                        log.info("[BLOOM-FILTER-SERVICE] Fiscal Code {} added to bloom filter", Utils.createSHA256(value));
                     } else {
-                        log.info("[BLOOM-FILTER-SERVICE] Fiscal Code not added to bloom filter");
+                        log.info("[BLOOM-FILTER-SERVICE] Fiscal Code {} not added to bloom filter", Utils.createSHA256(value));
                     }
                 })
-                .subscribe();
+                .then();
     }
 
+    /**
+     * Check if the value is contained in the bloom filter and return a string response
+     * @param value the value to check
+     * @return Mono<String> "OK" if the value is contained, "NO CHANNELS ENABLED" otherwise
+     */
     public Mono<String> mightContain(String value) {
         log.info("[BLOOM-FILTER-SERVICE] Bloom filter search request arrived");
         return bloomFilter.contains(value)
