@@ -1,6 +1,7 @@
 package it.gov.pagopa.onboarding.citizen.service;
 
 
+import it.gov.pagopa.common.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilterReactive;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,13 @@ public class BloomFilterServiceImpl {
      */
     public Mono<Void> add(String value) {
         return bloomFilter.add(value)
-                .doOnNext(r -> log.info("[BLOOM-FILTER-SERVICE] Fiscal code {} {} to bloom filter.", value, Boolean.TRUE.equals(r) ? "added" : "not added"))
+                .doOnNext(result -> {
+                    if (Boolean.TRUE.equals(result)) {
+                        log.info("[BLOOM-FILTER-SERVICE] Fiscal Code {} added to bloom filter", Utils.createSHA256(value));
+                    } else {
+                        log.info("[BLOOM-FILTER-SERVICE] Fiscal Code {} not added to bloom filter", Utils.createSHA256(value));
+                    }
+                })
                 .then();
     }
 
