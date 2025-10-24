@@ -57,12 +57,11 @@ public class CitizenSpecificRepositoryImplIT extends BaseIT {
 
     /**
      * Test scenario:
-     * Arrange: mock TPP connector to return a fake DTO.
-     * Act: verify absent in Bloom Filter, perform POST consent creation, verify presence.
-     * Assert: contains() transitions from false to true.
+     * Act: verify absent in Bloom Filter, create consent via REST call, verify presence.
+     * Assert: contains() transitions from false to true after consent creation.
      */
     @Test
-    void testBloomFilterAddAndContains() {
+    void testBloomFilterWebClientAddAndContains() {
         // Mock TPP response
         TppDTO tppDTOFaker = TppDTOFaker.mockInstance();
         when(tppConnector.get(anyString())).thenReturn(Mono.just(tppDTOFaker));
@@ -80,6 +79,28 @@ public class CitizenSpecificRepositoryImplIT extends BaseIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().is2xxSuccessful();
+
+        // Post-condition: now contained
+        StepVerifier.create(bloomFilterService.contains(testCF))
+                .expectNext(true)
+                .verifyComplete();
+    }
+    /**
+     * Test scenario:
+     * Act: verify absent in Bloom Filter, directly add fiscal code, verify presence.
+     * Assert: contains() transitions from false to true.
+     */
+    @Test
+    void testBloomFilterAddAndContains() {
+        String testCF = "HHHHHH00D00B000Y";
+
+        // Pre-condition: not contained
+        StepVerifier.create(bloomFilterService.contains(testCF))
+                .expectNext(false)
+                .verifyComplete();
+
+        StepVerifier.create(bloomFilterService.add(testCF))
+                .verifyComplete();
 
         // Post-condition: now contained
         StepVerifier.create(bloomFilterService.contains(testCF))
