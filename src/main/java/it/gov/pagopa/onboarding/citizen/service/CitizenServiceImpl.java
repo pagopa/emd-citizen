@@ -20,7 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-
+/**
+ * <p>Implementation of {@link CitizenService}.</p>
+ */
 @Service
 @Slf4j
 public class CitizenServiceImpl implements CitizenService {
@@ -44,6 +46,29 @@ public class CitizenServiceImpl implements CitizenService {
         this.bloomFilterService = bloomFilterService;
     }
 
+    /**
+     * <p>Creates or reuses a consent for the given fiscal code and TPP id.</p>
+     *
+     * <p>Flow:</p>
+     * <ol>
+     *   <li>Log input (hashed fiscal code, tppId).</li>
+     *   <li>Validate TPP existence (remote call).</li>
+     *   <li>Load existing citizen aggregate.</li>
+     *   <li>If present and missing the consent, add enabled consent and persist.</li>
+     *   <li>If absent, create aggregate, persist, add to Bloom filter.</li>
+     *   <li>Reduce map to the requested TPP and return DTO.</li>
+     * </ol>
+     *
+     * <p>Errors:</p>
+     * <ul>
+     *   <li>{@code TPP_NOT_FOUND} if remote TPP is missing.</li>
+     *   <li>Repository errors propagate.</li>
+     * </ul>
+     *
+     * @param fiscalCode plain fiscal code (hashed only in logs)
+     * @param tppId TPP identifier
+     * @return {@code Mono<CitizenConsentDTO>} DTO limited to the requested consent
+     */
     @Override
     public Mono<CitizenConsentDTO> createCitizenConsent(String fiscalCode, String tppId){
         log.info("[EMD-CITIZEN][CREATE-CITIZEN-CONSENT] Received hashedFiscalCode: {} and tppId: {}",
@@ -92,6 +117,28 @@ public class CitizenServiceImpl implements CitizenService {
                     log.info("[EMD-CITIZEN][CREATE-CITIZEN-CONSENT] Created new citizen consent for fiscal code: {}", Utils.createSHA256(fiscalCode))
                 );
     }
+
+    /**
+     * <p>Toggles the consent state for the specified TPP.</p>
+     *
+     * <p>Flow:</p>
+     * <ol>
+     *   <li>Log input.</li>
+     *   <li>Load aggregate or error.</li>
+     *   <li>Validate consent presence.</li>
+     *   <li>Flip state, update timestamp, persist.</li>
+     *   <li>Return DTO with only toggled consent.</li>
+     * </ol>
+     *
+     * <p>Errors:</p>
+     * <ul>
+     *   <li>{@code CITIZEN_NOT_ONBOARDED} if aggregate or consent is missing.</li>
+     * </ul>
+     *
+     * @param fiscalCode plain fiscal code
+     * @param tppId TPP identifier
+     * @return {@code Mono<CitizenConsentDTO>} DTO containing toggled consent
+     */
     @Override
     public Mono<CitizenConsentDTO> switchState(String fiscalCode, String tppId){
         log.info("[EMD-CITIZEN][UPDATE-CHANNEL-STATE] Received hashedFiscalCode: {} and tppId: {}",
@@ -110,7 +157,7 @@ public class CitizenServiceImpl implements CitizenService {
                             consentDetails.setTcDate(LocalDateTime.now());
                             return citizenRepository.save(citizenConsent)
                                     .flatMap(savedConsent -> {
-                                      
+
                                         Map<String, ConsentDetails> consents = new HashMap<>();
                                         consents.put(tppId, citizenConsent.getConsents().get(tppId));
                                         citizenConsent.setConsents(consents);
@@ -120,6 +167,18 @@ public class CitizenServiceImpl implements CitizenService {
                         .doOnSuccess(savedConsent -> log.info("[EMD-CITIZEN][UPDATE-CHANNEL-STATE] Updated state for fiscal code: {}", Utils.createSHA256(fiscalCode)));
     }
 
+    /**
+     * <p>Retrieves consent status for a fiscal code and TPP id.</p>
+     *
+     * <p>Errors:</p>
+     * <ul>
+     *   <li>{@code CITIZEN_NOT_ONBOARDED} if consent is missing.</li>
+     * </ul>
+     *
+     * @param fiscalCode plain fiscal code
+     * @param tppId TPP identifier
+     * @return {@code Mono<CitizenConsentDTO>} consent DTO
+     */
     @Override
     public Mono<CitizenConsentDTO> getCitizenConsentStatus(String fiscalCode, String tppId) {
         log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Received hashedFiscalCode: {} and tppId: {}", Utils.createSHA256(fiscalCode), tppId);
@@ -128,9 +187,26 @@ public class CitizenServiceImpl implements CitizenService {
                         (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded")))
                 .map(mapperToDTO::map)
                 .doOnSuccess(consent -> log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Consent consent found for fiscal code: {}", Utils.createSHA256(fiscalCode)));
-      
+
     }
 
+    /**
+     * <p>Retrieves enabled TPP ids for a fiscal code (empty if citizen missing).</p>
+     * <p>Flow:</p>
+     * <ol>
+     *   <li>Log start.</li>
+     *   <li>Fetch aggregate (empty completion if absent).</li>
+     *   <li>Filter enabled consents.</li>
+     *   <li>Collect TPP ids.</li>
+     * </ol>
+     * <p>Errors:</p>
+     * <ul>
+     *   <li>No mapped errors; missing citizen -> empty.</li>
+     * </ul>
+     *
+     * @param fiscalCode plain fiscal code
+     * @return {@code Mono<List<String>>} list of enabled TPP ids (may be empty)
+     */
     @Override
     public Mono<List<String>> getTppEnabledList(String fiscalCode) {
         log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Received hashedFiscalCode: {}", Utils.createSHA256(fiscalCode));
@@ -150,6 +226,22 @@ public class CitizenServiceImpl implements CitizenService {
                 });
     }
 
+    /**
+     * <p>Retrieves all consents for a fiscal code.</p>
+     * <p>Flow:</p>
+     * <ol>
+     *   <li>Log start.</li>
+     *   <li>Fetch aggregate; if absent -> error.</li>
+     *   <li>Map to DTO.</li>
+     * </ol>
+     * <p>Errors:</p>
+     * <ul>
+     *   <li>Missing citizen - {@code CITIZEN_NOT_ONBOARDED}.</li>
+     * </ul>
+     *
+     * @param fiscalCode plain fiscal code
+     * @return {@code Mono<CitizenConsentDTO>} full consent DTO
+     */
     @Override
     public Mono<CitizenConsentDTO> getCitizenConsentsList(String fiscalCode) {
         log.info("[EMD-CITIZEN][FIND-ALL-CITIZEN-CONSENTS] Received hashedFiscalCode: {}", (Utils.createSHA256(fiscalCode)));
@@ -160,6 +252,23 @@ public class CitizenServiceImpl implements CitizenService {
                 .doOnSuccess(consentList -> log.info("[EMD-CITIZEN][FIND-ALL-CITIZEN-CONSENTS] Consents for fiscal code: {}", Utils.createSHA256(fiscalCode)));
     }
 
+    /**
+     * <p>Retrieves only enabled consents for a fiscal code.</p>
+     * <p>Flow:</p>
+     * <ol>
+     *   <li>Log start.</li>
+     *   <li>Fetch aggregate; if absent -> error.</li>
+     *   <li>Filter enabled consents.</li>
+     *   <li>Map to DTO.</li>
+     * </ol>
+     * <p>Errors:</p>
+     * <ul>
+     *   <li>Missing citizen - {@code CITIZEN_NOT_ONBOARDED}.</li>
+     * </ul>
+     *
+     * @param fiscalCode plain fiscal code
+     * @return {@code Mono<CitizenConsentDTO>} DTO with only enabled consents
+     */
     @Override
     public Mono<CitizenConsentDTO> getCitizenConsentsListEnabled(String fiscalCode) {
          log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Received hashedFiscalCode: {}", Utils.createSHA256(fiscalCode));
@@ -186,6 +295,22 @@ public class CitizenServiceImpl implements CitizenService {
 
     }
 
+    /**
+     * <p>Retrieves citizens with an enabled consent for a TPP id.</p>
+     * <p>Flow:</p>
+     * <ol>
+     *   <li>Stream citizens with enabled consent for tppId.</li>
+     *   <li>Map each to DTO.</li>
+     *   <li>Collect into list.</li>
+     * </ol>
+     * <p>Errors:</p>
+     * <ul>
+     *   <li>Repository errors propagate.</li>
+     * </ul>
+     *
+     * @param tppId TPP identifier
+     * @return {@code Mono<List<CitizenConsentDTO>>} list (possibly empty)
+     */
     @Override
     public Mono<List<CitizenConsentDTO>> getCitizenEnabled(String tppId) {
         return citizenRepository.findByTppIdEnabled(tppId)
@@ -199,6 +324,23 @@ public class CitizenServiceImpl implements CitizenService {
                     }
                 });
     }
+
+    /**
+     * <p>Deletes the citizen consent aggregate by fiscal code.</p>
+     * <p>Flow:</p>
+     * <ol>
+     *   <li>Fetch aggregate; if absent -> error.</li>
+     *   <li>Delete by id.</li>
+     *   <li>Return DTO snapshot.</li>
+     * </ol>
+     * <p>Errors:</p>
+     * <ul>
+     *   <li>Missing citizen - {@code CITIZEN_NOT_ONBOARDED}.</li>
+     * </ul>
+     *
+     * @param fiscalCode plain fiscal code
+     * @return {@code Mono<CitizenConsentDTO>} deleted consent DTO
+     */
     @Override
     public Mono<CitizenConsentDTO> deleteCitizenConsent(String fiscalCode) {
         return citizenRepository.findByFiscalCode(fiscalCode)
@@ -211,9 +353,20 @@ public class CitizenServiceImpl implements CitizenService {
     }
 
     /**
-     * Check if a citizen is present in the bloom filter and has at least one consent.
-     * @param fiscalCode the fiscal code of the citizen
-     * @return Mono<Boolean> indicating if the citizen is present and has at least one consent.
+     * <p>Checks if a fiscal code is in the Bloom filter and has at least one enabled consent.</p>
+     * <p>Flow:</p>
+     * <ol>
+     *   <li>Check Bloom filter membership (false if absent).</li>
+     *   <li>If present, query for at least one enabled consent.</li>
+     *   <li>Emit boolean result.</li>
+     * </ol>
+     * <p>Errors:</p>
+     * <ul>
+     *   <li>Repository errors propagate.</li>
+     * </ul>
+     *
+     * @param fiscalCode plain fiscal code
+     * @return {@code Mono<Boolean>} {@code true} if present and at least one enabled consent exists
      */
     @Override
     public Mono<Boolean> getCitizenInBloomFilter(String fiscalCode) {
