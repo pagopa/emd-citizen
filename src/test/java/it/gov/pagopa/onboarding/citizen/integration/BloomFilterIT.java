@@ -27,8 +27,8 @@ import static org.mockito.Mockito.when;
  *
  * The test asserts reactive behavior with StepVerifier.
  */
-public class CitizenSpecificRepositoryImplIT extends BaseIT {
-    private static final Logger log = LoggerFactory.getLogger(CitizenSpecificRepositoryImplIT.class);
+public class BloomFilterIT extends BaseIT {
+    private static final Logger log = LoggerFactory.getLogger(BloomFilterIT.class);
 
     // Deterministic TPP UUID used for test requests
     private static final String TPP_TEST = "e441825b-ddf2-4067-9b00-33a74aa1bba0-1744118452678";
