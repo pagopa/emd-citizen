@@ -8,9 +8,25 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * <p>Mapper service converting domain {@link CitizenConsent} aggregates into transport {@link CitizenConsentDTO}.</p>
+ *
+ * <p>Performs a deep copy of the consents map, transforming each domain {@code Consent} into a {@link ConsentDTO}.</p>
+ *
+ * <p>Inverse operation of {@code CitizenConsentDTOToObjectMapper}.</p>
+ * */
 @Service
 public class CitizenConsentObjectToDTOMapper {
 
+    /**
+     * <p>Converts a domain {@link CitizenConsent} into a {@link CitizenConsentDTO}.</p>
+     *
+     * <p>Maps the entire consents map: {@code Map<String, Consent>} → {@code Map<String, ConsentDTO>}.</p>
+     *
+     * @param citizenConsent source domain aggregate (must not be {@code null})
+     * @return DTO with fiscal code and mapped consent details
+     * @throws NullPointerException if {@code citizenConsent} or {@code consents} map is {@code null}
+     */
     public CitizenConsentDTO map(CitizenConsent citizenConsent) {
         Map<String, ConsentDTO> consentsDTO = new HashMap<>();
 

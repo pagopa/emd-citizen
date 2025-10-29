@@ -81,6 +81,7 @@ class CitizenServiceTest {
         when(tppConnector.get(anyString())).thenReturn(Mono.just(activeTppDTO));
         when(citizenRepository.save(Mockito.any())).thenReturn(Mono.just(CITIZEN_CONSENT));
         when(citizenRepository.findByFiscalCode(anyString())).thenReturn(Mono.empty());
+        when(bloomFilterService.add(anyString())).thenReturn(Mono.empty());
 
         StepVerifier.create(citizenService.createCitizenConsent(FISCAL_CODE, TPP_ID))
                 .assertNext(response -> {
