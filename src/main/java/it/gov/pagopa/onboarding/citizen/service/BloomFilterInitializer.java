@@ -27,14 +27,14 @@ import java.util.concurrent.TimeUnit;
  *   <li><b>Distributed locking:</b> Ensures only one instance performs initialization/reset in clustered deployments</li>
  * </ul>
  *
- * <h3>Bloom Filter Configuration</h3>
+ * <b>Bloom Filter Configuration</b>
  * <p>The filter is configured via application properties:</p>
  * <ul>
  *   <li><code>app.bloomFilter.expectedInsertions</code>: Expected number of fiscal codes (default sizing)</li>
  *   <li><code>app.bloomFilter.falseProbability</code>: Target false positive rate (e.g., 0.01 = 1%)</li>
  * </ul>
  *
- * <h3>Workflow</h3>
+ * <b>Workflow</b>
  * <pre>
  * 1. Acquire distributed lock (60s timeout)
  * 2. Check if Bloom Filter exists in Redis
@@ -43,14 +43,14 @@ import java.util.concurrent.TimeUnit;
  * 3. Release lock
  * </pre>
  *
- * <h3>Data Source Query</h3>
+ * <b>Data Source Query</b>
  * <p>Uses {@link CitizenRepository#findAll()} which executes:</p>
  * <pre>
  * db.citizen_consents.find({})
  * </pre>
  * <p>Filters in-memory for citizens with at least one consent where {@code tppState = true}.</p>
  *
- * <h3>Performance Considerations</h3>
+ * <b>Performance Considerations</b>
  * <ul>
  *   <li><b>Batch processing:</b> Fiscal codes are added in batches of 100 to reduce Redis round-trips</li>
  *   <li><b>Memory usage:</b> Bloom Filter memory = {@code -n*ln(p) / (ln(2)^2)} where n=expectedInsertions, p=falseProbability</li>

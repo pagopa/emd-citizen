@@ -25,6 +25,7 @@ public interface CitizenController {
     /**
      * <p>Creates or reuses a consent for the specified TPP.</p>
      * <p>Delegates to {@link CitizenService#createCitizenConsent(String, String)}.</p>
+     * <p><b>Endpoint:</b> {@code POST /emd/citizen/{fiscalCode}/{tppId}}</p>
      *
      * @param fiscalCode plain fiscal code (regex validated)
      * @param tppId TPP identifier (regex validated)
@@ -38,6 +39,7 @@ public interface CitizenController {
     /**
      * <p>Toggles the consent state for the specified TPP.</p>
      * <p>Delegates to {@link CitizenService#switchState(String, String)}.</p>
+     * <p><b>Endpoint:</b> {@code PUT /emd/citizen/{fiscalCode}/{tppId}}</p>
      *
      * @param fiscalCode plain fiscal code (regex validated)
      * @param tppId TPP identifier (regex validated)
@@ -51,6 +53,7 @@ public interface CitizenController {
     /**
      * <p>Lists enabled TPP identifiers for the citizen.</p>
      * <p>Delegates to {@link CitizenService#getTppEnabledList(String)}.</p>
+     * <p><b>Endpoint:</b> {@code GET /emd/citizen/list/{fiscalCode}/enabled/tpp}</p>
      *
      * @param fiscalCode plain fiscal code (regex validated)
      * @return {@code Mono<ResponseEntity<List<String>>>} 200 OK with enabled TPP ids (possibly empty)
@@ -62,6 +65,7 @@ public interface CitizenController {
     /**
      * <p>Retrieves consent status for the given TPP.</p>
      * <p>Delegates to {@link CitizenService#getCitizenConsentStatus(String, String)}.</p>
+     * <p><b>Endpoint:</b> {@code GET /emd/citizen/{fiscalCode}/{tppId}}</p>
      *
      * @param fiscalCode plain fiscal code (regex validated)
      * @param tppId TPP identifier (regex validated)
@@ -75,6 +79,7 @@ public interface CitizenController {
     /**
      * <p>Retrieves all consents for the citizen.</p>
      * <p>Delegates to {@link CitizenService#getCitizenConsentsList(String)}.</p>
+     * <p><b>Endpoint:</b> {@code GET /emd/citizen/list/{fiscalCode}}</p>
      *
      * @param fiscalCode plain fiscal code (regex validated)
      * @return {@code Mono<ResponseEntity<CitizenConsentDTO>>} 200 OK with full consents DTO
@@ -86,6 +91,7 @@ public interface CitizenController {
     /**
      * <p>Retrieves only enabled consents for the citizen.</p>
      * <p>Delegates to {@link CitizenService#getCitizenConsentsListEnabled(String)}.</p>
+     * <p><b>Endpoint:</b> {@code GET /emd/citizen/list/{fiscalCode}/enabled}</p>
      *
      * @param fiscalCode plain fiscal code (regex validated)
      * @return {@code Mono<ResponseEntity<CitizenConsentDTO>>} 200 OK with filtered DTO
@@ -97,6 +103,7 @@ public interface CitizenController {
     /**
      * <p>Retrieves citizens with an enabled consent for a TPP id.</p>
      * <p>Delegates to {@link CitizenService#getCitizenEnabled(String)}.</p>
+     * <p><b>Endpoint:</b> {@code GET /emd/citizen/{tppId}}</p>
      *
      * @param tppId TPP identifier (regex validated)
      * @return {@code Mono<ResponseEntity<List<CitizenConsentDTO>>>} 200 OK with list (possibly empty)
@@ -108,6 +115,7 @@ public interface CitizenController {
     /**
      * <p>Deletes the citizen consent aggregate.</p>
      * <p>Delegates to {@link CitizenService#deleteCitizenConsent(String)}.</p>
+     * <p><b>Endpoint:</b> {@code DELETE /emd/citizen/test/delete/{fiscalCode}}</p>
      *
      * @param fiscalCode plain fiscal code (regex validated)
      * @return {@code Mono<ResponseEntity<CitizenConsentDTO>>} 200 OK with deleted snapshot DTO
@@ -119,6 +127,7 @@ public interface CitizenController {
     /**
      * <p>Checks Bloom filter membership and enabled consent existence.</p>
      * <p>Delegates to {@link CitizenService#getCitizenInBloomFilter(String)}; maps boolean to textual status.</p>
+     * <p><b>Endpoint:</b> {@code GET /emd/citizen/filter/{fiscalCode}}</p>
      *
      * @param fiscalCode plain fiscal code (regex validated)
      * @return {@code Mono<ResponseEntity<String>>} 200 OK with status ("OK" or "NO CHANNELS ENABLED")
