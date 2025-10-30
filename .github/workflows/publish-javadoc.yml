@@ -24,8 +24,21 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Setup Maven Settings
+        run: |
+          mkdir -p ~/.m2
+          echo '<settings><servers><server><id>github</id><username></username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>' > ~/.m2/settings.xml
+
       - name: Genera Javadoc con Maven
-        run: mvn javadoc:javadoc
+        run: mvn clean javadoc:javadoc
 
       - name: Carica artifact per GitHub Pages
         uses: actions/upload-pages-artifact@v3
