@@ -29,6 +29,11 @@ spring:
         enabled: true
       password: ${REDIS_CONNECTION_PASSWORD}
 
+app:
+  bloomFilter:
+    expectedInsertions: ${CITIZEN_BLOOMFILTER_EXPECTED_INSERTIONS:10000000}
+    falseProbability: ${CITIZEN_BLOOMFILTER_FALSE_PROBABILITY:0.01}
+
 management:
   health:
     mongo.enabled: ${HEALTH_MONGO_ENABLED:false}

@@ -1,0 +1,148 @@
+package it.gov.pagopa.onboarding.citizen.integration;
+
+import it.gov.pagopa.onboarding.citizen.connector.tpp.TppConnectorImpl;
+import it.gov.pagopa.onboarding.citizen.dto.TppDTO;
+import it.gov.pagopa.onboarding.citizen.faker.TppDTOFaker;
+import it.gov.pagopa.onboarding.citizen.repository.CitizenSpecificRepositoryImpl;
+import it.gov.pagopa.onboarding.citizen.service.BloomFilterServiceImpl;
+import it.gov.pagopa.onboarding.citizen.service.BloomFilterInitializer;
+import java.util.Objects;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.redisson.api.RBloomFilterReactive;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
+/**
+ * Integration test verifying Bloom Filter update flow:
+ * 1. Given a fiscal code not yet added, Bloom Filter returns false.
+ * 2. After POST consent creation, the fiscal code is inserted.
+ * 3. External TPP connector is mocked to isolate test.
+ *
+ * The test asserts reactive behavior with StepVerifier.
+ */
+@TestPropertySource(properties = {
+    "app.bloomFilter.expectedInsertions=12345",
+    "app.bloomFilter.falseProbability=0.01"
+})
+public class BloomFilterIT extends BaseIT {
+    private static final Logger log = LoggerFactory.getLogger(BloomFilterIT.class);
+
+    // Deterministic TPP UUID used for test requests
+    private static final String TPP_TEST = "e441825b-ddf2-4067-9b00-33a74aa1bba0-1744118452678";
+
+    @Autowired
+    ReactiveMongoTemplate mongoTemplate;
+    @Autowired
+    CitizenSpecificRepositoryImpl repository;
+    @Autowired
+    BloomFilterServiceImpl bloomFilterService;
+    @Autowired
+    BloomFilterInitializer bloomFilterInitializer;
+
+    @MockBean
+    private TppConnectorImpl tppConnector;
+
+    /**
+     * Drops the collection before each test to ensure isolation.
+     * onErrorResume prevents failures if the collection does not exist yet.
+     */
+    @BeforeEach
+    void clean() {
+        StepVerifier.create(
+                mongoTemplate.dropCollection("citizen_consents")
+                        .onErrorResume(e -> Mono.empty())
+        ).verifyComplete();
+    }
+
+    /**
+     * Test scenario:
+     * Act: load Bloom Filter properties from application configuration.
+     * Assert: expectedInsertions and falseProbability match configured values.
+     */
+    @Test
+    void testBloomFilterPropertiesLoaded() {
+        StepVerifier.create(bloomFilterService.getBloomFilter().getExpectedInsertions())
+                .expectNext(12345L)
+                .verifyComplete();
+
+        StepVerifier.create(bloomFilterService.getBloomFilter().getFalseProbability())
+                .expectNext(0.01)
+                .verifyComplete();
+    }
+
+    /**
+     * Test scenario:
+     * Act: retrieve Bloom Filter instance from initializer.
+     * Assert: instance is non-null.
+     */
+    @Test
+    void testBloomFilterInitializerGetter() {
+        StepVerifier.create(Mono.fromSupplier(() -> bloomFilterInitializer.getBloomFilter()))
+            .expectNextMatches(Objects::nonNull)
+            .verifyComplete();
+    }
+
+    /**
+     * Test scenario:
+     * Act: verify absent in Bloom Filter, create consent via REST call, verify presence.
+     * Assert: contains() transitions from false to true after consent creation.
+     */
+    @Test
+    void testBloomFilterWebClientAddAndContains() {
+        // Mock TPP response
+        TppDTO tppDTOFaker = TppDTOFaker.mockInstance();
+        when(tppConnector.get(anyString())).thenReturn(Mono.just(tppDTOFaker));
+
+        String testCF = "KKKKKK00D00B000Y";
+
+        // Pre-condition: not contained
+        StepVerifier.create(bloomFilterService.contains(testCF))
+                .expectNext(false)
+                .verifyComplete();
+
+        // REST call that triggers consent creation and Bloom Filter insertion
+        webTestClient.post()
+                .uri("/emd/citizen/{fiscalCode}/{tppId}", testCF, TPP_TEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().is2xxSuccessful();
+
+        // Post-condition: now contained
+        StepVerifier.create(bloomFilterService.contains(testCF))
+                .expectNext(true)
+                .verifyComplete();
+    }
+    /**
+     * Test scenario:
+     * Act: verify absent in Bloom Filter, directly add fiscal code, verify presence.
+     * Assert: contains() transitions from false to true.
+     */
+    @Test
+    void testBloomFilterAddAndContains() {
+        String testCF = "HHHHHH00D00B000Y";
+
+        // Pre-condition: not contained
+        StepVerifier.create(bloomFilterService.contains(testCF))
+                .expectNext(false)
+                .verifyComplete();
+
+        StepVerifier.create(bloomFilterService.add(testCF))
+                .verifyComplete();
+
+        // Post-condition: now contained
+        StepVerifier.create(bloomFilterService.contains(testCF))
+                .expectNext(true)
+                .verifyComplete();
+    }
+}

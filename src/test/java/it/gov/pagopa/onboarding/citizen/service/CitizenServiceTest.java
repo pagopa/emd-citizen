@@ -13,10 +13,14 @@ import it.gov.pagopa.onboarding.citizen.model.ConsentDetails;
 import it.gov.pagopa.onboarding.citizen.model.mapper.CitizenConsentDTOToObjectMapper;
 import it.gov.pagopa.onboarding.citizen.repository.CitizenRepository;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.redisson.api.RBloomFilterReactive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -44,7 +48,6 @@ import static org.mockito.Mockito.when;
         ExceptionMap.class
 })
 class CitizenServiceTest {
-
     @Autowired
     CitizenServiceImpl citizenService;
 
@@ -78,6 +81,7 @@ class CitizenServiceTest {
         when(tppConnector.get(anyString())).thenReturn(Mono.just(activeTppDTO));
         when(citizenRepository.save(Mockito.any())).thenReturn(Mono.just(CITIZEN_CONSENT));
         when(citizenRepository.findByFiscalCode(anyString())).thenReturn(Mono.empty());
+        when(bloomFilterService.add(anyString())).thenReturn(Mono.empty());
 
         StepVerifier.create(citizenService.createCitizenConsent(FISCAL_CODE, TPP_ID))
                 .assertNext(response -> {
@@ -366,6 +370,37 @@ class CitizenServiceTest {
                 .expectErrorMatches(throwable -> throwable instanceof ClientExceptionWithBody &&
                         "Citizen consent not founded during delete process ".equals(throwable.getMessage()))
                 .verify();
+    }
+
+    @Test
+    void getCitizenInBloomFilter_NotPresentInBloomFilter() {
+        when(bloomFilterService.contains(FISCAL_CODE)).thenReturn(Mono.just(false));
+
+        StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
+                .expectNext(false)
+                .verifyComplete();
+    }
+
+    @Test
+    void getCitizenInBloomFilter_PresentInBloomFilter_ConsentExists() {
+        when(bloomFilterService.contains(FISCAL_CODE)).thenReturn(Mono.just(true));
+        when(citizenRepository.findByFiscalCodeWithAtLeastOneConsent(FISCAL_CODE))
+                .thenReturn(Mono.just(CITIZEN_CONSENT));
+
+        StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
+                .expectNext(true)
+                .verifyComplete();
+    }
+
+    @Test
+    void getCitizenInBloomFilter_PresentInBloomFilter_NoConsent() {
+        when(bloomFilterService.contains(FISCAL_CODE)).thenReturn(Mono.just(true));
+        when(citizenRepository.findByFiscalCodeWithAtLeastOneConsent(FISCAL_CODE))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
+                .expectNext(false)
+                .verifyComplete();
     }
 }
 

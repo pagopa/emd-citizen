@@ -708,13 +708,6 @@
       "sha256": "38QcgX-_p2BXr2_-Q3nbympeFrjoffi92iPzcXVsLQk="
     },
     {
-      "id": "net.java.dev.jna:jna:jar:5.13.0",
-      "artifactId": "jna",
-      "groupId": "net.java.dev.jna",
-      "version": "5.13.0",
-      "sha256": "ZtT4GaBipRodVie__CP6xV0Wd_Dgof66FEqr3WcKZLs="
-    },
-    {
       "id": "net.java.dev.jna:jna-platform:jar:5.6.0",
       "artifactId": "jna-platform",
       "groupId": "net.java.dev.jna",
@@ -881,104 +874,6 @@
       "groupId": "org.apache.commons",
       "version": "3.14.0",
       "sha256": "e5a_PuaJSau1vEZVWawnDgVRWW-jRSP934kOxBjd4Tw="
-    },
-    {
-      "id": "org.springframework.cloud:spring-cloud-stream-test-support:jar:4.1.2",
-      "artifactId": "spring-cloud-stream-test-support",
-      "groupId": "org.springframework.cloud",
-      "version": "4.1.2",
-      "sha256": "XEYXFrHSKxWX7E3QY6K-luZkP5_ifQMZbb4Qo8-LEdw="
-    },
-    {
-      "id": "org.springframework.integration:spring-integration-test:jar:6.3.3",
-      "artifactId": "spring-integration-test",
-      "groupId": "org.springframework.integration",
-      "version": "6.3.3",
-      "sha256": "AaM9P7jA7GBDNzjwWYCmTE7LBMY_OYd3spQbNigc9IA="
-    },
-    {
-      "id": "org.springframework.integration:spring-integration-core:jar:6.3.3",
-      "artifactId": "spring-integration-core",
-      "groupId": "org.springframework.integration",
-      "version": "6.3.3",
-      "sha256": "R6993fbBp2X4CqRNRv4kD8TaCh9f3cfSU85wRby5Aks="
-    },
-    {
-      "id": "org.springframework.integration:spring-integration-test-support:jar:6.3.3",
-      "artifactId": "spring-integration-test-support",
-      "groupId": "org.springframework.integration",
-      "version": "6.3.3",
-      "sha256": "Ld-J-H9yUJAbwnfsNg4B79JJYW6bPaQEtCQ-mHdCZEE="
-    },
-    {
-      "id": "org.hamcrest:hamcrest-library:jar:2.2",
-      "artifactId": "hamcrest-library",
-      "groupId": "org.hamcrest",
-      "version": "2.2",
-      "sha256": "OFFSOiAaDUglwlphpu3FBxKCWjm9PQM5G5jEjKPLOWw="
-    },
-    {
-      "id": "com.fasterxml.jackson.core:jackson-databind:jar:2.17.2",
-      "artifactId": "jackson-databind",
-      "groupId": "com.fasterxml.jackson.core",
-      "version": "2.17.2",
-      "sha256": "wEmT8zwPhFNCZTeE8U84Nz0AUoDmNZ21-AhwHPrnPAw="
-    },
-    {
-      "id": "org.springframework.cloud:spring-cloud-stream:jar:4.1.2",
-      "artifactId": "spring-cloud-stream",
-      "groupId": "org.springframework.cloud",
-      "version": "4.1.2",
-      "sha256": "bvIXmjiRHAvg-is0Th7Is4P7znk4y1dIfgTsO1aLu7M="
-    },
-    {
-      "id": "org.springframework:spring-messaging:jar:6.1.12",
-      "artifactId": "spring-messaging",
-      "groupId": "org.springframework",
-      "version": "6.1.12",
-      "sha256": "T-GxtDlGekTPhhgRUpcdBRUFw7NlG0WTh3xKhZV2FGs="
-    },
-    {
-      "id": "org.springframework.integration:spring-integration-jmx:jar:6.3.3",
-      "artifactId": "spring-integration-jmx",
-      "groupId": "org.springframework.integration",
-      "version": "6.3.3",
-      "sha256": "DwA5GqZKFtA8ifNmqlR2TBivo-VEITiwdq147cz9C8o="
-    },
-    {
-      "id": "org.springframework.retry:spring-retry:jar:2.0.8",
-      "artifactId": "spring-retry",
-      "groupId": "org.springframework.retry",
-      "version": "2.0.8",
-      "sha256": "bOnsdjH39xsfCLYGRbIamL-5P0AiLR927Xmv8ioOuOI="
-    },
-    {
-      "id": "org.springframework.cloud:spring-cloud-function-context:jar:4.1.2",
-      "artifactId": "spring-cloud-function-context",
-      "groupId": "org.springframework.cloud",
-      "version": "4.1.2",
-      "sha256": "QizpLjZSSNY77XBzLJa45U4W9veOnBxivQx0jLR3ODE="
-    },
-    {
-      "id": "net.jodah:typetools:jar:0.6.2",
-      "artifactId": "typetools",
-      "groupId": "net.jodah",
-      "version": "0.6.2",
-      "sha256": "ZFglOhbU3O9HSYYOYbopWQFOOdWvnTKGvJuDGNK6QEc="
-    },
-    {
-      "id": "org.springframework.cloud:spring-cloud-function-core:jar:4.1.2",
-      "artifactId": "spring-cloud-function-core",
-      "groupId": "org.springframework.cloud",
-      "version": "4.1.2",
-      "sha256": "nnzek3_L7bjkXCZM9fWM690HprlNUlw4KO-sbZqL-KM="
-    },
-    {
-      "id": "org.json:json:jar:20240303",
-      "artifactId": "json",
-      "groupId": "org.json",
-      "version": "20240303",
-      "sha256": "PPbNaJLjLitMHDng9S9SSKL1s3ZG_fu3mma0a2GEFO0="
     },
     {
       "id": "org.springframework.cloud:spring-cloud-starter-stream-kafka:jar:4.1.2",
@@ -1322,6 +1217,167 @@
       "groupId": "org.hamcrest",
       "version": "2.2",
       "sha256": "CU9dkrS32ciiv1PMadNWJDronDSZRXvLS5L37Tv5WHk="
+    },
+    {
+      "id": "org.springframework.cloud:spring-cloud-stream-test-support:jar:4.1.2",
+      "artifactId": "spring-cloud-stream-test-support",
+      "groupId": "org.springframework.cloud",
+      "version": "4.1.2",
+      "sha256": "XEYXFrHSKxWX7E3QY6K-luZkP5_ifQMZbb4Qo8-LEdw="
+    },
+    {
+      "id": "org.springframework.integration:spring-integration-test:jar:6.3.3",
+      "artifactId": "spring-integration-test",
+      "groupId": "org.springframework.integration",
+      "version": "6.3.3",
+      "sha256": "AaM9P7jA7GBDNzjwWYCmTE7LBMY_OYd3spQbNigc9IA="
+    },
+    {
+      "id": "org.springframework.integration:spring-integration-core:jar:6.3.3",
+      "artifactId": "spring-integration-core",
+      "groupId": "org.springframework.integration",
+      "version": "6.3.3",
+      "sha256": "R6993fbBp2X4CqRNRv4kD8TaCh9f3cfSU85wRby5Aks="
+    },
+    {
+      "id": "org.springframework.integration:spring-integration-test-support:jar:6.3.3",
+      "artifactId": "spring-integration-test-support",
+      "groupId": "org.springframework.integration",
+      "version": "6.3.3",
+      "sha256": "Ld-J-H9yUJAbwnfsNg4B79JJYW6bPaQEtCQ-mHdCZEE="
+    },
+    {
+      "id": "org.hamcrest:hamcrest-library:jar:2.2",
+      "artifactId": "hamcrest-library",
+      "groupId": "org.hamcrest",
+      "version": "2.2",
+      "sha256": "OFFSOiAaDUglwlphpu3FBxKCWjm9PQM5G5jEjKPLOWw="
+    },
+    {
+      "id": "com.fasterxml.jackson.core:jackson-databind:jar:2.17.2",
+      "artifactId": "jackson-databind",
+      "groupId": "com.fasterxml.jackson.core",
+      "version": "2.17.2",
+      "sha256": "wEmT8zwPhFNCZTeE8U84Nz0AUoDmNZ21-AhwHPrnPAw="
+    },
+    {
+      "id": "org.springframework.cloud:spring-cloud-stream:jar:4.1.2",
+      "artifactId": "spring-cloud-stream",
+      "groupId": "org.springframework.cloud",
+      "version": "4.1.2",
+      "sha256": "bvIXmjiRHAvg-is0Th7Is4P7znk4y1dIfgTsO1aLu7M="
+    },
+    {
+      "id": "org.springframework:spring-messaging:jar:6.1.12",
+      "artifactId": "spring-messaging",
+      "groupId": "org.springframework",
+      "version": "6.1.12",
+      "sha256": "T-GxtDlGekTPhhgRUpcdBRUFw7NlG0WTh3xKhZV2FGs="
+    },
+    {
+      "id": "org.springframework.integration:spring-integration-jmx:jar:6.3.3",
+      "artifactId": "spring-integration-jmx",
+      "groupId": "org.springframework.integration",
+      "version": "6.3.3",
+      "sha256": "DwA5GqZKFtA8ifNmqlR2TBivo-VEITiwdq147cz9C8o="
+    },
+    {
+      "id": "org.springframework.retry:spring-retry:jar:2.0.8",
+      "artifactId": "spring-retry",
+      "groupId": "org.springframework.retry",
+      "version": "2.0.8",
+      "sha256": "bOnsdjH39xsfCLYGRbIamL-5P0AiLR927Xmv8ioOuOI="
+    },
+    {
+      "id": "org.springframework.cloud:spring-cloud-function-context:jar:4.1.2",
+      "artifactId": "spring-cloud-function-context",
+      "groupId": "org.springframework.cloud",
+      "version": "4.1.2",
+      "sha256": "QizpLjZSSNY77XBzLJa45U4W9veOnBxivQx0jLR3ODE="
+    },
+    {
+      "id": "net.jodah:typetools:jar:0.6.2",
+      "artifactId": "typetools",
+      "groupId": "net.jodah",
+      "version": "0.6.2",
+      "sha256": "ZFglOhbU3O9HSYYOYbopWQFOOdWvnTKGvJuDGNK6QEc="
+    },
+    {
+      "id": "org.springframework.cloud:spring-cloud-function-core:jar:4.1.2",
+      "artifactId": "spring-cloud-function-core",
+      "groupId": "org.springframework.cloud",
+      "version": "4.1.2",
+      "sha256": "nnzek3_L7bjkXCZM9fWM690HprlNUlw4KO-sbZqL-KM="
+    },
+    {
+      "id": "org.json:json:jar:20240303",
+      "artifactId": "json",
+      "groupId": "org.json",
+      "version": "20240303",
+      "sha256": "PPbNaJLjLitMHDng9S9SSKL1s3ZG_fu3mma0a2GEFO0="
+    },
+    {
+      "id": "org.testcontainers:junit-jupiter:jar:1.21.3",
+      "artifactId": "junit-jupiter",
+      "groupId": "org.testcontainers",
+      "version": "1.21.3",
+      "sha256": "Q2Mqrndt7Otwf-WlziVpGOvxLCKC8W3VEM1TVzVszdA="
+    },
+    {
+      "id": "org.testcontainers:testcontainers:jar:1.21.3",
+      "artifactId": "testcontainers",
+      "groupId": "org.testcontainers",
+      "version": "1.21.3",
+      "sha256": "75NN2sb0J1nXHDA6KERUSlbPOBszQ3FJlV09jJkr7F0="
+    },
+    {
+      "id": "org.apache.commons:commons-compress:jar:1.24.0",
+      "artifactId": "commons-compress",
+      "groupId": "org.apache.commons",
+      "version": "1.24.0",
+      "sha256": "-_LF0nXlE8CPTk-1OXJtvzrCFCr5VrqT77mDJE8MNr0="
+    },
+    {
+      "id": "org.rnorth.duct-tape:duct-tape:jar:1.0.8",
+      "artifactId": "duct-tape",
+      "groupId": "org.rnorth.duct-tape",
+      "version": "1.0.8",
+      "sha256": "Mc7xLd7JedH4bXz3CMQaF9pSPQXGhf1mQunQsq3bckA="
+    },
+    {
+      "id": "com.github.docker-java:docker-java-api:jar:3.4.2",
+      "artifactId": "docker-java-api",
+      "groupId": "com.github.docker-java",
+      "version": "3.4.2",
+      "sha256": "Z4nWj5WQTPJ0pkEP38xVMJdryUGXyFaQlFm7jGTbVXs="
+    },
+    {
+      "id": "com.github.docker-java:docker-java-transport-zerodep:jar:3.4.2",
+      "artifactId": "docker-java-transport-zerodep",
+      "groupId": "com.github.docker-java",
+      "version": "3.4.2",
+      "sha256": "WCt3LgxS-p0kcQYX72EGVUZe3ZopMLDbdfyGZ9ao0Cs="
+    },
+    {
+      "id": "com.github.docker-java:docker-java-transport:jar:3.4.2",
+      "artifactId": "docker-java-transport",
+      "groupId": "com.github.docker-java",
+      "version": "3.4.2",
+      "sha256": "vJmBIk_cLUcmVm_HI0cGAc6xQ3gmXIZbTCAxRqTjl2U="
+    },
+    {
+      "id": "net.java.dev.jna:jna:jar:5.13.0",
+      "artifactId": "jna",
+      "groupId": "net.java.dev.jna",
+      "version": "5.13.0",
+      "sha256": "ZtT4GaBipRodVie__CP6xV0Wd_Dgof66FEqr3WcKZLs="
+    },
+    {
+      "id": "org.testcontainers:mongodb:jar:1.21.3",
+      "artifactId": "mongodb",
+      "groupId": "org.testcontainers",
+      "version": "1.21.3",
+      "sha256": "lXk-RQKuDz7fvf3BuhCdstUFGQTOtCy3MOwSRWOwMhY="
     }
   ]
 }
