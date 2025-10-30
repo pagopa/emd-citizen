@@ -29,12 +29,6 @@ class BloomFilterServiceImplTest {
     }
 
     @Test
-    void testGet() {
-        when(bloomFilterService.getBloomFilter()).thenReturn(bloomFilter);
-        verify(bloomFilterService.getBloomFilter()).equals(bloomFilter);
-    }
-
-    @Test
     void testAdd() {
         when(bloomFilter.add(anyString())).thenReturn(Mono.just(true));
         bloomFilterService.add("12345");
