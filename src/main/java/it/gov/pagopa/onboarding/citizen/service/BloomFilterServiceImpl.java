@@ -2,6 +2,7 @@ package it.gov.pagopa.onboarding.citizen.service;
 
 
 import it.gov.pagopa.common.utils.Utils;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilterReactive;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class BloomFilterServiceImpl implements BloomFilterService {
 
+    @Getter
     private final RBloomFilterReactive<String> bloomFilter;
 
     public BloomFilterServiceImpl(BloomFilterInitializer bloomFilterInitializer) {
