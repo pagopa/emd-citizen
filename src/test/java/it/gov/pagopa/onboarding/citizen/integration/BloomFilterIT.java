@@ -5,14 +5,18 @@ import it.gov.pagopa.onboarding.citizen.dto.TppDTO;
 import it.gov.pagopa.onboarding.citizen.faker.TppDTOFaker;
 import it.gov.pagopa.onboarding.citizen.repository.CitizenSpecificRepositoryImpl;
 import it.gov.pagopa.onboarding.citizen.service.BloomFilterServiceImpl;
+import it.gov.pagopa.onboarding.citizen.service.BloomFilterInitializer;
+import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.redisson.api.RBloomFilterReactive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -27,6 +31,10 @@ import static org.mockito.Mockito.when;
  *
  * The test asserts reactive behavior with StepVerifier.
  */
+@TestPropertySource(properties = {
+    "app.bloomFilter.expectedInsertions=12345",
+    "app.bloomFilter.falseProbability=0.01"
+})
 public class BloomFilterIT extends BaseIT {
     private static final Logger log = LoggerFactory.getLogger(BloomFilterIT.class);
 
@@ -39,6 +47,8 @@ public class BloomFilterIT extends BaseIT {
     CitizenSpecificRepositoryImpl repository;
     @Autowired
     BloomFilterServiceImpl bloomFilterService;
+    @Autowired
+    BloomFilterInitializer bloomFilterInitializer;
 
     @MockBean
     private TppConnectorImpl tppConnector;
@@ -53,6 +63,34 @@ public class BloomFilterIT extends BaseIT {
                 mongoTemplate.dropCollection("citizen_consents")
                         .onErrorResume(e -> Mono.empty())
         ).verifyComplete();
+    }
+
+    /**
+     * Test scenario:
+     * Act: load Bloom Filter properties from application configuration.
+     * Assert: expectedInsertions and falseProbability match configured values.
+     */
+    @Test
+    void testBloomFilterPropertiesLoaded() {
+        StepVerifier.create(bloomFilterService.getBloomFilter().getExpectedInsertions())
+                .expectNext(12345L)
+                .verifyComplete();
+
+        StepVerifier.create(bloomFilterService.getBloomFilter().getFalseProbability())
+                .expectNext(0.01)
+                .verifyComplete();
+    }
+
+    /**
+     * Test scenario:
+     * Act: retrieve Bloom Filter instance from initializer.
+     * Assert: instance is non-null.
+     */
+    @Test
+    void testBloomFilterInitializerGetter() {
+        StepVerifier.create(Mono.fromSupplier(() -> bloomFilterInitializer.getBloomFilter()))
+            .expectNextMatches(Objects::nonNull)
+            .verifyComplete();
     }
 
     /**
