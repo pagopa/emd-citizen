@@ -18,8 +18,6 @@ public interface BloomFilterService {
     /**
      * <p>Checks if a fiscal code might be present in the Bloom Filter.</p>
      *
-     * <p><b>Note:</b> False negatives are impossible, false positives occur with ~1% probability.
-     *
      * @param fiscalCode plain fiscal code
      * @return {@code "true"} if might exist (requires DB check), {@code "false"} if definitely absent
      */
