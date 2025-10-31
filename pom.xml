@@ -12,7 +12,7 @@
 	<artifactId>emd-citizen</artifactId>
 	<name>emd-citizen</name>
 	<description>Citizen Microservice</description>
-	<version>1.0.4</version>
+	<version>1.0.5-SNAPSHOT</version>
 
 	<properties>
 		<java.version>21</java.version>
