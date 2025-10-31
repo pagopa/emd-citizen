@@ -50,13 +50,6 @@ import java.util.concurrent.TimeUnit;
  * </pre>
  * <p>Filters in-memory for citizens with at least one consent where {@code tppState = true}.</p>
  *
- * <b>Performance Considerations</b>
- * <ul>
- *   <li><b>Batch processing:</b> Fiscal codes are added in batches of 100 to reduce Redis round-trips</li>
- *   <li><b>Memory usage:</b> Bloom Filter memory = {@code -n*ln(p) / (ln(2)^2)} where n=expectedInsertions, p=falseProbability</li>
- *   <li><b>Scheduled reset:</b> Prevents filter degradation as new citizens are added over time</li>
- * </ul>
- *
  * @see RBloomFilterReactive
  * @see CitizenRepository
  */
