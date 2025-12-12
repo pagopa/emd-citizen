@@ -26,7 +26,10 @@ import static it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.Valida
  *
  * <p>Error semantics and domain flows are documented in the service layer; controller focuses on HTTP contract.</p>
  */
-@Tag(name = "Citizen Consent Management", description = "Reactive REST contract exposing citizen consent operations.")
+@Tag(
+    name = "Citizen Management", 
+    description = "API per la gestione del ciclo di vita dei consensi del cittadino."
+)
 @RequestMapping("/emd/citizen")
 public interface CitizenController {
 
