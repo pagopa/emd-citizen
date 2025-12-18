@@ -6,6 +6,7 @@ import it.gov.pagopa.onboarding.citizen.connector.tpp.TppConnectorImpl;
 import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.ExceptionMessage;
 import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.ExceptionName;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.TppIdList;
 import it.gov.pagopa.onboarding.citizen.dto.mapper.CitizenConsentObjectToDTOMapper;
 import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
 import it.gov.pagopa.onboarding.citizen.model.ConsentDetails;
@@ -353,43 +354,53 @@ public class CitizenServiceImpl implements CitizenService {
     }
 
     /**
-     * <p>Checks if a fiscal code is in the Bloom filter and has at least one enabled consent.</p>
+     * <p>Checks if a fiscal code is in the Bloom filter and has at least one enabled consent with an active TPP.</p>
      * <p>Flow:</p>
      * <ol>
      *   <li>Check Bloom filter membership (false if absent).</li>
-     *   <li>If present, query for at least one enabled consent.</li>
-     *   <li>Emit boolean result.</li>
+     *   <li>If present, query DB for citizen consents.</li>
+     *   <li>Filter consents with tppState = true.</li>
+     *   <li>Call TPP service to verify which TPPs are still active.</li>
+     *   <li>Return true if at least one active TPP exists.</li>
      * </ol>
      * <p>Errors:</p>
      * <ul>
-     *   <li>Repository errors propagate.</li>
+     *   <li>Repository and TPP connector errors propagate.</li>
      * </ul>
      *
      * @param fiscalCode plain fiscal code
-     * @return {@code Mono<Boolean>} {@code true} if present and at least one enabled consent exists
+     * @return {@code Mono<Boolean>} {@code true} if present in Bloom filter and at least one enabled consent with active TPP exists
      */
     @Override
     public Mono<Boolean> getCitizenInBloomFilter(String fiscalCode) {
-        log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] Start search for hashedFiscalCode: {}", Utils.createSHA256(fiscalCode));
+        String hashedFiscalCode = Utils.createSHA256(fiscalCode);
+        log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] Start search for hashedFiscalCode: {}", hashedFiscalCode);
         return bloomFilterService.contains(fiscalCode)
                 .flatMap(isPresent -> {
-                    String hashedFiscalCode = Utils.createSHA256(fiscalCode);
                     if (!isPresent) {
                         log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] Fiscal Code {} NOT found in bloom filter", hashedFiscalCode);
                         return Mono.just(false);
                     }
                     log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] Fiscal Code {} found in bloom filter. Checking consents in DB...", hashedFiscalCode);
-                    return citizenRepository.findByFiscalCodeWithAtLeastOneConsent(fiscalCode)
-                            .map(citizenConsent -> {
-                                log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] At least one consent found for Fiscal Code {}", hashedFiscalCode);
-                                return true;
-                            })
-                            .defaultIfEmpty(false)
-                            .doOnNext(found -> {
-                                if (!found) {
-                                    log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] No consents enabled found for Fiscal Code {}", hashedFiscalCode);
-                                }
-                            });
+
+                    return citizenRepository.findByFiscalCode(fiscalCode)
+                        .flatMap(citizenConsent -> {
+                            List<String> list = citizenConsent.getConsents().entrySet().stream()
+                                    .filter(tpp -> tpp.getValue().getTppState())
+                                    .map(Map.Entry::getKey)
+                                    .toList();
+                            // check for tpp with state = true
+                            return tppConnector.getTppsEnabled(new TppIdList(list));
+                        })
+                        .map(listTpp -> !listTpp.isEmpty())
+                        .defaultIfEmpty(false)
+                        .doOnSuccess(hasActiveConsent -> {
+                            if (hasActiveConsent){
+                                log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] Found consents for fiscal code: {}", hashedFiscalCode);
+                            } else {
+                                log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] No consents enabled found for Fiscal Code {}", hashedFiscalCode);
+                            }
+                        });
                 });
     }
 
