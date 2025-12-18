@@ -50,8 +50,7 @@ public class TppConnectorImpl implements TppConnector {
     /**
      * {@inheritDoc}
      *
-     * @param tppIdList the list of TPP IDs to filter
-     * @return {@code Mono<List<TppDTO>>} list of enabled TPPs from emd-tpp service
+     * <p>Performs a reactive HTTP POST to {@code /emd/tpp/list} with the provided TPP IDs.</p>
      */
     @Override
     public Mono<List<TppDTO>> getTppsEnabled(TppIdList tppIdList) {
