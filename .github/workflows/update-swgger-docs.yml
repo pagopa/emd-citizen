@@ -1,8 +1,6 @@
-name: Update Swagger in Docs Repo
+name: Manual update Swagger in Docs Repo
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
 
 jobs:
@@ -77,7 +75,7 @@ jobs:
           # Commit e Push
           if [[ -n $(git status -s) ]]; then
             git add .
-            git commit -m "docs: update openapi from service release ${{ github.event.release.tag_name || 'manual' }}"
+            git commit -m "fix: manual update ${{github.event.repository.name}} openapi from service release"
             git push
             echo "✅ Swagger aggiornato con successo."
           else
