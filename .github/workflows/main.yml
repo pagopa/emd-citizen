@@ -1,0 +1,85 @@
+name: Update Swagger in Docs Repo
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  generate-send-openapi-to-emd-docs:
+    name: 📚 Generate OpenAPI and send to emd-docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          path: service-code
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Setup Maven Settings
+        run: |
+          mkdir -p ~/.m2
+          echo '<settings><servers><server><id>github</id><username></username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>' > ~/.m2/settings.xml
+
+      - name: Generate OpenAPI File via Maven
+        run: |
+          cd service-code
+          mvn clean test -Dtest=OpenApiGenerationTest
+
+      - name: Verify file generation
+        run: |
+          if [ ! -f "service-code/target/openapi.yaml" ]; then
+            echo "Errore: Il file openapi.yaml non è stato generato in target!"
+            exit 1
+          fi
+
+      # 4. Checkout del codice del repo DOCS
+      - name: Checkout Docs Repo
+        uses: actions/checkout@v4
+        with:
+          repository: pagopa/emd-docs
+          path: emd-docs
+          token: ${{ secrets.DOCS_REPO_TOKEN }}
+
+      # 5. Sposta il file, Commit e Push
+      - name: Push to Docs Repo
+        run: |
+          # Definisci i percorsi
+          SOURCE_FILE="service-code/target/openapi.yaml"
+          DEST_FILE="emd-docs/docs/internal/citizen/openapi.citizen.yml"
+          
+          # Crea la cartella di destinazione se non esiste
+          mkdir -p $(dirname $DEST_FILE)
+
+          # Copia il file
+          cp $SOURCE_FILE $DEST_FILE
+          
+          # Entra nella cartella docs
+          cd emd-docs
+          
+          # Configura git
+          git config user.name "Swagger Bot"
+          git config user.email "bot@pagopa.it"
+          
+          # Commit e Push
+          if [[ -n $(git status -s) ]]; then
+            git add .
+            git commit -m "docs: update openapi from service release ${{ github.event.release.tag_name || 'manual' }}"
+            git push
+            echo "✅ Swagger aggiornato con successo."
+          else
+            echo "⚠️ Nessun cambiamento rilevato nello Swagger. Skip push."
+          fi
