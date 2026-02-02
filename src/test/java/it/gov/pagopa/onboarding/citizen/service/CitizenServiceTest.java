@@ -5,6 +5,7 @@ import it.gov.pagopa.onboarding.citizen.configuration.ExceptionMap;
 import it.gov.pagopa.onboarding.citizen.connector.tpp.TppConnectorImpl;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.TppDTO;
+import it.gov.pagopa.onboarding.citizen.dto.TppIdList;
 import it.gov.pagopa.onboarding.citizen.dto.mapper.CitizenConsentObjectToDTOMapper;
 import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentFaker;
 import it.gov.pagopa.onboarding.citizen.faker.TppDTOFaker;
@@ -382,10 +383,10 @@ class CitizenServiceTest {
     }
 
     @Test
-    void getCitizenInBloomFilter_PresentInBloomFilter_ConsentExists() {
+    void getCitizenInBloomFilter_PresentInBloomFilter_ConsentExistsWithActiveTpp() {
         when(bloomFilterService.contains(FISCAL_CODE)).thenReturn(Mono.just(true));
-        when(citizenRepository.findByFiscalCodeWithAtLeastOneConsent(FISCAL_CODE))
-                .thenReturn(Mono.just(CITIZEN_CONSENT));
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(CITIZEN_CONSENT));
+        when(tppConnector.getTppsEnabled(any(TppIdList.class))).thenReturn(Mono.just(List.of(TPP_DTO)));
 
         StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
                 .expectNext(true)
@@ -393,10 +394,20 @@ class CitizenServiceTest {
     }
 
     @Test
-    void getCitizenInBloomFilter_PresentInBloomFilter_NoConsent() {
+    void getCitizenInBloomFilter_PresentInBloomFilter_ConsentExistsButNoActiveTpp() {
         when(bloomFilterService.contains(FISCAL_CODE)).thenReturn(Mono.just(true));
-        when(citizenRepository.findByFiscalCodeWithAtLeastOneConsent(FISCAL_CODE))
-                .thenReturn(Mono.empty());
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(CITIZEN_CONSENT));
+        when(tppConnector.getTppsEnabled(any(TppIdList.class))).thenReturn(Mono.just(List.of()));
+
+        StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
+                .expectNext(false)
+                .verifyComplete();
+    }
+
+    @Test
+    void getCitizenInBloomFilter_PresentInBloomFilter_NoCitizenConsent() {
+        when(bloomFilterService.contains(FISCAL_CODE)).thenReturn(Mono.just(true));
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.empty());
 
         StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
                 .expectNext(false)
