@@ -115,7 +115,7 @@ public class CitizenServiceImpl implements CitizenService {
                         }))
                 )
                 .doOnSuccess(savedConsent ->
-                    log.info("[EMD-CITIZEN][CREATE-CITIZEN-CONSENT] Created new citizen consent for fiscal code: {}", Utils.createSHA256(fiscalCode))
+                    log.info("[EMD-CITIZEN][CREATE-CITIZEN-CONSENT] Created new citizen consent for fiscal code: {} and tppId: {}", Utils.createSHA256(fiscalCode), tppId)
                 );
     }
 
@@ -165,7 +165,12 @@ public class CitizenServiceImpl implements CitizenService {
                                         return Mono.just(mapperToDTO.map(citizenConsent));
                                     });
                         })
-                        .doOnSuccess(savedConsent -> log.info("[EMD-CITIZEN][UPDATE-CHANNEL-STATE] Updated state for fiscal code: {}", Utils.createSHA256(fiscalCode)));
+                        .doOnSuccess(savedConsent -> {
+                          Boolean state = savedConsent.getConsents().get(tppId).getTppState();
+                          log.info(
+                              "[EMD-CITIZEN][UPDATE-CHANNEL-STATE] Updated state for fiscal code: {} for tppId: {} to {}",
+                              Utils.createSHA256(fiscalCode), tppId, state);
+                        });
     }
 
     /**
@@ -187,7 +192,7 @@ public class CitizenServiceImpl implements CitizenService {
                 .switchIfEmpty(Mono.error(exceptionMap.throwException
                         (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded")))
                 .map(mapperToDTO::map)
-                .doOnSuccess(consent -> log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Consent consent found for fiscal code: {}", Utils.createSHA256(fiscalCode)));
+                .doOnSuccess(consent -> log.info("[EMD-CITIZEN][GET-CONSENT-STATUS] Consent found for fiscal code:{} on tppId: {}", Utils.createSHA256(fiscalCode), tppId));
 
     }
 
