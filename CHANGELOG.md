@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.6](https://github.com/pagopa/emd-citizen/compare/v1.0.5...v1.0.6) (2026-02-10)
+
+
+### Bug Fixes
+
+* trigger release for add more details on logs ([3f19fca](https://github.com/pagopa/emd-citizen/commit/3f19fcabd93df3559992dd45ad503980d0f5194f))
+
 ## [1.0.5](https://github.com/pagopa/emd-citizen/compare/v1.0.4...v1.0.5) (2025-12-18)
 
 
