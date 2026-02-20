@@ -16,9 +16,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-import static it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.ValidationRegex.FISCAL_CODE_STRUCTURE_REGEX;
-import static it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.ValidationRegex.TPP_STRUCTURE_REGEX;
-
 /**
  * <p>Reactive REST contract exposing citizen consent operations.</p>
  *
@@ -54,10 +51,10 @@ public interface CitizenController {
     @PostMapping("/{fiscalCode}/{tppId}")
     Mono<ResponseEntity<CitizenConsentDTO>> saveCitizenConsent(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S", required = true)
-        @PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode,
+        @PathVariable String fiscalCode,
 
         @Parameter(description = "TPP identifier", example = "TPP_XYZ_123", required = true)
-        @PathVariable @Pattern(regexp = TPP_STRUCTURE_REGEX, message = "Invalid tpp format") String tppId);
+        @PathVariable String tppId);
 
     /**
      * <p>Toggles the consent state for the specified TPP.</p>
@@ -79,10 +76,10 @@ public interface CitizenController {
     @PutMapping("/{fiscalCode}/{tppId}")
     Mono<ResponseEntity<CitizenConsentDTO>> stateSwitch(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode,
+        @PathVariable String fiscalCode,
 
         @Parameter(description = "TPP identifier", example = "TPP_XYZ_123")
-        @PathVariable @Pattern(regexp = TPP_STRUCTURE_REGEX, message = "Invalid tpp format") String tppId);
+        @PathVariable String tppId);
 
     /**
      * <p>Lists enabled TPP identifiers for the citizen.</p>
@@ -99,7 +96,7 @@ public interface CitizenController {
     @GetMapping("/list/{fiscalCode}/enabled/tpp")
     Mono<ResponseEntity<List<String>>> getTppEnabledList(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
+        @PathVariable String fiscalCode);
 
     /**
      * <p>Retrieves consent status for the given TPP.</p>
@@ -117,10 +114,10 @@ public interface CitizenController {
     @GetMapping("/{fiscalCode}/{tppId}")
     Mono<ResponseEntity<CitizenConsentDTO>> getCitizenConsentStatus(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode,
+        @PathVariable String fiscalCode,
 
         @Parameter(description = "TPP identifier", example = "TPP_XYZ_123")
-        @PathVariable @Pattern(regexp = TPP_STRUCTURE_REGEX, message = "Invalid tpp format") String tppId);
+        @PathVariable String tppId);
 
     /**
      * <p>Retrieves all consents for the citizen.</p>
@@ -137,7 +134,7 @@ public interface CitizenController {
     @GetMapping("/list/{fiscalCode}")
     Mono<ResponseEntity<CitizenConsentDTO>> getCitizenConsentsList(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
+        @PathVariable String fiscalCode);
 
     /**
      * <p>Retrieves only enabled consents for the citizen.</p>
@@ -154,7 +151,7 @@ public interface CitizenController {
     @GetMapping("/list/{fiscalCode}/enabled")
     Mono<ResponseEntity<CitizenConsentDTO>> getCitizenConsentsListEnabled(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
+        @PathVariable String fiscalCode);
 
     /**
      * <p>Retrieves citizens with an enabled consent for a TPP id.</p>
@@ -171,7 +168,7 @@ public interface CitizenController {
     @GetMapping("/{tppId}")
     Mono<ResponseEntity<List<CitizenConsentDTO>>> getCitizenEnabled(
         @Parameter(description = "TPP identifier", example = "TPP_XYZ_123")
-        @PathVariable @Pattern(regexp = TPP_STRUCTURE_REGEX, message = "Invalid tpp format") String tppId);
+        @PathVariable String tppId);
 
     /**
      * <p>Deletes the citizen consent aggregate.</p>
@@ -188,7 +185,7 @@ public interface CitizenController {
     @DeleteMapping("/test/delete/{fiscalCode}")
     Mono<ResponseEntity<CitizenConsentDTO>> deleteCitizenConsent(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
+        @PathVariable String fiscalCode);
 
     /**
      * <p>Checks Bloom filter membership and enabled consent existence.</p>
@@ -208,6 +205,6 @@ public interface CitizenController {
     @GetMapping("/filter/{fiscalCode}")
     Mono<ResponseEntity<String>> bloomFilterSearch(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
+        @PathVariable String fiscalCode);
 
 }

@@ -11,8 +11,6 @@ import lombok.experimental.SuperBuilder;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import static it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.ValidationRegex.FISCAL_CODE_STRUCTURE_REGEX;
-
 @Data
 @SuperBuilder
 @AllArgsConstructor
@@ -20,8 +18,6 @@ import static it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.Valida
 public class CitizenConsentDTO {
     @JsonAlias("fiscalCode")
     @NotBlank(message = "Fiscal Code must not be blank")
-    @Pattern(regexp = FISCAL_CODE_STRUCTURE_REGEX,
-            message = "Fiscal Code must be 11 digits or up to 16 alphanumeric characters")
     private String fiscalCode;
     private Map<String, ConsentDTO> consents;
 
