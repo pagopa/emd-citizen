@@ -4,6 +4,7 @@ import it.gov.pagopa.common.utils.Utils;
 import it.gov.pagopa.onboarding.citizen.configuration.ExceptionMap;
 import it.gov.pagopa.onboarding.citizen.connector.tpp.TppConnectorImpl;
 import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.ExceptionMessage;
+import it.gov.pagopa.onboarding.citizen.dto.TppDTO;
 import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.ExceptionName;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.TppIdList;
@@ -219,10 +220,15 @@ public class CitizenServiceImpl implements CitizenService {
 
         return citizenRepository.findByFiscalCode(fiscalCode)
                 .switchIfEmpty(Mono.empty())
-                .map(citizenConsent -> citizenConsent.getConsents().entrySet().stream()
-                        .filter(tpp -> tpp.getValue().getTppState())
-                        .map(Map.Entry::getKey)
-                        .toList())
+                .flatMap(citizenConsent -> {
+                    List<String> list = citizenConsent.getConsents().entrySet().stream()
+                            .filter(tpp -> tpp.getValue().getTppState())
+                            .map(Map.Entry::getKey)
+                            .toList();
+
+                    return tppConnector.getTppsEnabledOrWhitelisted(new TppIdList(list), fiscalCode)
+                            .map(tppList -> tppList.stream().map(TppDTO::getTppId).toList());
+                })
                 .doOnSuccess(tppIdList -> {
                     if (tppIdList != null){
                         log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Founded {} Consents for fiscal code: {}", tppIdList.size(),Utils.createSHA256(fiscalCode));
@@ -282,13 +288,21 @@ public class CitizenServiceImpl implements CitizenService {
         return citizenRepository.findByFiscalCode(fiscalCode)
                 .switchIfEmpty(Mono.error(exceptionMap.throwException
                         (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during get process ")))
-                .map(citizenConsent -> {
-                    Map<String, ConsentDetails> filteredConsents = citizenConsent.getConsents().entrySet().stream()
+                .flatMap(citizenConsent -> {
+                    List<String> list = citizenConsent.getConsents().entrySet().stream()
                             .filter(tpp -> tpp.getValue().getTppState())
-                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                    citizenConsent.setConsents(filteredConsents);
+                            .map(Map.Entry::getKey)
+                            .toList();
 
-                    return mapperToDTO.map(citizenConsent);
+                    return tppConnector.getTppsEnabledOrWhitelisted(new TppIdList(list), fiscalCode)
+                            .map(tppList -> {
+                                List<String> enabledTppIds = tppList.stream().map(TppDTO::getTppId).toList();
+                                Map<String, ConsentDetails> filteredConsents = citizenConsent.getConsents().entrySet().stream()
+                                        .filter(tpp -> enabledTppIds.contains(tpp.getKey()))
+                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                                citizenConsent.setConsents(filteredConsents);
+                                return mapperToDTO.map(citizenConsent);
+                            });
                 })
                 .doOnSuccess(citizenConsent -> {
                     if (citizenConsent != null && !citizenConsent.getConsents().isEmpty()) {
@@ -394,8 +408,8 @@ public class CitizenServiceImpl implements CitizenService {
                                     .filter(tpp -> tpp.getValue().getTppState())
                                     .map(Map.Entry::getKey)
                                     .toList();
-                            // check for tpp with state = true
-                            return tppConnector.getTppsEnabled(new TppIdList(list));
+                            // check for tpp with state = true or whitelisted for this citizen
+                            return tppConnector.getTppsEnabledOrWhitelisted(new TppIdList(list), fiscalCode);
                         })
                         .map(listTpp -> !listTpp.isEmpty())
                         .defaultIfEmpty(false)

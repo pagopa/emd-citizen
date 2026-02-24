@@ -225,6 +225,7 @@ class CitizenServiceTest {
                 .build();
 
         when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(citizenConsent));
+        when(tppConnector.getTppsEnabledOrWhitelisted(any(TppIdList.class), anyString())).thenReturn(Mono.just(List.of(TppDTO.builder().tppId("Tpp1").build())));
 
         StepVerifier.create(citizenService.getTppEnabledList(FISCAL_CODE))
                 .assertNext(result -> assertEquals(List.of("Tpp1"), result))
@@ -265,10 +266,8 @@ class CitizenServiceTest {
                 .consents(consents)
                 .build();
 
-        CitizenConsentDTO expectedDTO = dtoMapper.map(citizenConsent);
-        expectedDTO.getConsents().remove("Tpp2"); // Filter out disabled TPP
-
         when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(citizenConsent));
+        when(tppConnector.getTppsEnabledOrWhitelisted(any(TppIdList.class), anyString())).thenReturn(Mono.just(List.of(TppDTO.builder().tppId("Tpp1").build())));
 
         StepVerifier.create(citizenService.getCitizenConsentsListEnabled(FISCAL_CODE))
                 .assertNext(response -> {
@@ -286,7 +285,8 @@ class CitizenServiceTest {
                 .consents(new HashMap<>())
                 .build();
 
-        when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(citizenConsent));
+        when(citizenRepository.findByFiscalCode(anyString())).thenReturn(Mono.just(citizenConsent));
+        when(tppConnector.getTppsEnabledOrWhitelisted(any(TppIdList.class), anyString())).thenReturn(Mono.just(List.of()));
 
         StepVerifier.create(citizenService.getCitizenConsentsListEnabled(FISCAL_CODE))
                 .assertNext(response -> {
@@ -386,7 +386,7 @@ class CitizenServiceTest {
     void getCitizenInBloomFilter_PresentInBloomFilter_ConsentExistsWithActiveTpp() {
         when(bloomFilterService.contains(FISCAL_CODE)).thenReturn(Mono.just(true));
         when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(CITIZEN_CONSENT));
-        when(tppConnector.getTppsEnabled(any(TppIdList.class))).thenReturn(Mono.just(List.of(TPP_DTO)));
+        when(tppConnector.getTppsEnabledOrWhitelisted(any(TppIdList.class), anyString())).thenReturn(Mono.just(List.of(TPP_DTO)));
 
         StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
                 .expectNext(true)
@@ -397,7 +397,7 @@ class CitizenServiceTest {
     void getCitizenInBloomFilter_PresentInBloomFilter_ConsentExistsButNoActiveTpp() {
         when(bloomFilterService.contains(FISCAL_CODE)).thenReturn(Mono.just(true));
         when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(CITIZEN_CONSENT));
-        when(tppConnector.getTppsEnabled(any(TppIdList.class))).thenReturn(Mono.just(List.of()));
+        when(tppConnector.getTppsEnabledOrWhitelisted(any(TppIdList.class), anyString())).thenReturn(Mono.just(List.of()));
 
         StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
                 .expectNext(false)
