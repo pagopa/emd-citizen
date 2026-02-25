@@ -92,4 +92,25 @@ class TppConnectorImplTest {
         assertThat(secondTpp.getBusinessName()).isEqualTo("Test Business 2");
         assertThat(secondTpp.getState()).isTrue();
     }
+
+    @Test
+    void testGetTppsEnabledOrWhitelistedOk() throws InterruptedException {
+
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .setBody("[{\"tppId\":\"TPP_OK_1\",\"state\":true}]")
+                .addHeader("Content-Type", "application/json"));
+
+        TppIdList tppIdList = new TppIdList(List.of("TPP_OK_1"), null);
+        Mono<List<TppDTO>> resultMono = tppConnector.getTppsEnabledOrWhitelisted(tppIdList, "FISCAL_CODE");
+        List<TppDTO> tppList = resultMono.block();
+
+        assertThat(tppList).isNotNull();
+        assertThat(tppList).hasSize(1);
+        assertThat(tppList.get(0).getTppId()).isEqualTo("TPP_OK_1");
+
+        var recordedRequest = mockWebServer.takeRequest();
+        assertThat(recordedRequest.getRequestUrl().query()).isNull();
+        assertThat(recordedRequest.getBody().readUtf8()).contains("\"recipientId\":\"FISCAL_CODE\"");
+    }
 }

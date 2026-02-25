@@ -65,15 +65,13 @@ public class TppConnectorImpl implements TppConnector {
     /**
      * {@inheritDoc}
      *
-     * <p>Performs a reactive HTTP POST to {@code /emd/tpp/list} with recipient query parameter.</p>
+     * <p>Performs a reactive HTTP POST to {@code /emd/tpp/list} with recipientId in request body.</p>
      */
     @Override
     public Mono<List<TppDTO>> getTppsEnabledOrWhitelisted(TppIdList tppIdList, String recipient) {
+        tppIdList.setRecipientId(recipient);
         return webClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/emd/tpp/list")
-                        .queryParam("recipient", recipient)
-                        .build())
+                .uri("/emd/tpp/list")
                 .bodyValue(tppIdList)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<>() {
