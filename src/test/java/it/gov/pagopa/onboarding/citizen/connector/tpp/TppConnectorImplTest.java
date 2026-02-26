@@ -67,9 +67,9 @@ class TppConnectorImplTest {
                 .setBody("[{\"tppId\":\"TPP_OK_1\",\"entityId\":\"ENTITY_OK_1\",\"businessName\":\"Test Business 1\",\"messageUrl\":\"https://example.com/message1\",\"authenticationUrl\":\"https://example.com/auth1\",\"authenticationType\":\"OAUTH2\",\"contact\":{\"name\":\"John Doe\",\"number\":\"+1234567890\",\"email\":\"contact1@example.com\"},\"state\":true},{\"tppId\":\"TPP_OK_2\",\"entityId\":\"ENTITY_OK_2\",\"businessName\":\"Test Business 2\",\"messageUrl\":\"https://example.com/message2\",\"authenticationUrl\":\"https://example.com/auth2\",\"authenticationType\":\"OAUTH2\",\"contact\":{\"name\":\"Jane Doe\",\"number\":\"+0987654321\",\"email\":\"contact2@example.com\"},\"state\":true}]")
                 .addHeader("Content-Type", "application/json"));
 
-        TppIdList tppIdList = new TppIdList(List.of("TPP_OK_1", "TPP_OK_2"));
         String recipientId = "RECIPIENT_OK_1";
-        Mono<List<TppDTO>> resultMono = tppConnector.filterEnabledList(tppIdList, recipientId);
+        TppIdList tppIdList = new TppIdList(List.of("TPP_OK_1", "TPP_OK_2"), recipientId);
+        Mono<List<TppDTO>> resultMono = tppConnector.filterEnabledList(tppIdList);
         List<TppDTO> tppList = resultMono.block();
 
         assertThat(tppList).isNotNull();

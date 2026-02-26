@@ -23,9 +23,8 @@ public interface TppConnector {
      * <p>Retrieves TPPs with recipientId on the whitelist and enabled TPPs from a list of TPP identifiers.</p>
      * <p>Delegates to the emd-tpp service filtering endpoint.</p>
      *
-     * @param tppIdList the list of TPP IDs to filter
-     * @param recipientId the id of the recipient for which to filter enabled TPPs
+     * @param tppIdList the list of TPP IDs to filter and the recipientId for whitelist filtering
      * @return {@code Mono<List<TppDTO>>} list of enabled TPPs matching the provided IDs
      */
-    Mono<List<TppDTO>> filterEnabledList(TppIdList tppIdList, String recipientId);
+    Mono<List<TppDTO>> filterEnabledList(TppIdList tppIdList);
 }

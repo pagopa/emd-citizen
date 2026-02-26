@@ -395,7 +395,7 @@ public class CitizenServiceImpl implements CitizenService {
                                     .map(Map.Entry::getKey)
                                     .toList();
                             // check for tpp with state = true
-                            return tppConnector.filterEnabledList(new TppIdList(list), fiscalCode);
+                            return tppConnector.filterEnabledList(new TppIdList(list, fiscalCode));
                         })
                         .map(listTpp -> !listTpp.isEmpty())
                         .defaultIfEmpty(false)
