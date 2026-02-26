@@ -386,7 +386,7 @@ class CitizenServiceTest {
     void getCitizenInBloomFilter_PresentInBloomFilter_ConsentExistsWithActiveTpp() {
         when(bloomFilterService.contains(FISCAL_CODE)).thenReturn(Mono.just(true));
         when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(CITIZEN_CONSENT));
-        when(tppConnector.getTppsEnabled(any(TppIdList.class))).thenReturn(Mono.just(List.of(TPP_DTO)));
+        when(tppConnector.filterEnabledList(any(TppIdList.class), anyString())).thenReturn(Mono.just(List.of(TPP_DTO)));
 
         StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
                 .expectNext(true)
@@ -397,7 +397,7 @@ class CitizenServiceTest {
     void getCitizenInBloomFilter_PresentInBloomFilter_ConsentExistsButNoActiveTpp() {
         when(bloomFilterService.contains(FISCAL_CODE)).thenReturn(Mono.just(true));
         when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.just(CITIZEN_CONSENT));
-        when(tppConnector.getTppsEnabled(any(TppIdList.class))).thenReturn(Mono.just(List.of()));
+        when(tppConnector.filterEnabledList(any(TppIdList.class), anyString())).thenReturn(Mono.just(List.of()));
 
         StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
                 .expectNext(false)

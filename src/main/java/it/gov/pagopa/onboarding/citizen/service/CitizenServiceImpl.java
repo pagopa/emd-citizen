@@ -366,7 +366,7 @@ public class CitizenServiceImpl implements CitizenService {
      *   <li>If present, query DB for citizen consents.</li>
      *   <li>Filter consents with tppState = true.</li>
      *   <li>Call TPP service to verify which TPPs are still active.</li>
-     *   <li>Return true if at least one active TPP exists.</li>
+     *   <li>Return true if at least one active TPP or not active with a whitelistRecipient not empty exists.</li>
      * </ol>
      * <p>Errors:</p>
      * <ul>
@@ -395,7 +395,7 @@ public class CitizenServiceImpl implements CitizenService {
                                     .map(Map.Entry::getKey)
                                     .toList();
                             // check for tpp with state = true
-                            return tppConnector.getTppsEnabled(new TppIdList(list));
+                            return tppConnector.filterEnabledList(new TppIdList(list), fiscalCode);
                         })
                         .map(listTpp -> !listTpp.isEmpty())
                         .defaultIfEmpty(false)

@@ -68,7 +68,8 @@ class TppConnectorImplTest {
                 .addHeader("Content-Type", "application/json"));
 
         TppIdList tppIdList = new TppIdList(List.of("TPP_OK_1", "TPP_OK_2"));
-        Mono<List<TppDTO>> resultMono = tppConnector.getTppsEnabled(tppIdList);
+        String recipientId = "RECIPIENT_OK_1";
+        Mono<List<TppDTO>> resultMono = tppConnector.filterEnabledList(tppIdList, recipientId);
         List<TppDTO> tppList = resultMono.block();
 
         assertThat(tppList).isNotNull();
