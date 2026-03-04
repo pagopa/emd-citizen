@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/pagopa/emd-citizen/compare/v1.0.6...v1.1.0) (2026-03-04)
+
+
+### Features
+
+* MMC-357 update endpoint of tpp connector ([#85](https://github.com/pagopa/emd-citizen/issues/85)) ([430ab18](https://github.com/pagopa/emd-citizen/commit/430ab18a444eb9b16b2c1accdeefab4bdb7cdacc))
+
+
+### Bug Fixes
+
+* [MMC-297] remove cf validation to sync with message-core ([#83](https://github.com/pagopa/emd-citizen/issues/83)) ([db3f40b](https://github.com/pagopa/emd-citizen/commit/db3f40bc1f3ce170cf6e9b7b1f5efa70babb7de9))
+
 ## [1.0.6](https://github.com/pagopa/emd-citizen/compare/v1.0.5...v1.0.6) (2026-02-10)
 
 
