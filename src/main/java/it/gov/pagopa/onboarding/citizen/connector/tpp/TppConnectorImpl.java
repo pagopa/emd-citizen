@@ -50,10 +50,10 @@ public class TppConnectorImpl implements TppConnector {
     /**
      * {@inheritDoc}
      *
-     * <p>Performs a reactive HTTP POST to {@code /emd/tpp/list} with the provided TPP IDs.</p>
+     * <p>Performs a reactive HTTP POST to {@code /emd/tpp/list} with the provided TPP IDs and recipientId.</p>
      */
     @Override
-    public Mono<List<TppDTO>> getTppsEnabled(TppIdList tppIdList) {
+    public Mono<List<TppDTO>> filterEnabledList(TppIdList tppIdList) {
         return webClient.post()
                 .uri("/emd/tpp/list")
                 .bodyValue(tppIdList)
