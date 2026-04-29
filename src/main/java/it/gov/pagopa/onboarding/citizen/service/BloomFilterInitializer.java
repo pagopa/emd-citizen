@@ -14,6 +14,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -91,13 +92,16 @@ public class BloomFilterInitializer {
      *   <li>Release lock</li>
      * </ol>
      *
-     * <p><b>Note:</b> If lock cannot be acquired, initialization is skipped (another instance is handling it).</p>
+     * <p><b>Note:</b> Uses {@code .block()} instead of {@code .subscribe()} to guarantee the pod
+     * does NOT become Ready (readinessProbe passes) before the Bloom Filter is fully populated.
+     * Without this, the first requests after a Rolling Update would bypass the filter entirely.
+     * {@code @PostConstruct} is called on a Spring-managed thread (non-Reactor), so {@code .block()} is safe.</p>
      */
     @PostConstruct
     public void initialize() {
         acquireLock()
             .flatMap(this::processInitialization)
-            .subscribe();
+            .block(Duration.ofSeconds(120));
     }
 
     /**
@@ -220,12 +224,23 @@ public class BloomFilterInitializer {
      *   <li>Re-populate with latest fiscal codes</li>
      *   <li>Release lock</li>
      * </ol>
+     *
+     * <p><b>Note:</b> Uses {@code .block()} instead of {@code .subscribe()} because this method
+     * is called by Spring's {@code TaskScheduler} on a blocking thread.
+     * Spring's graceful shutdown waits for the {@code @Scheduled} method to return before
+     * destroying the context — with {@code .subscribe()} (fire-and-forget), a shutdown during
+     * reset would leave the Bloom Filter deleted but not recreated, corrupting the shared
+     * Redis state for all pod instances.</p>
      */
     @Scheduled(cron = "0 0 4 * * ?")
     public void resetBloomFilter() {
-        acquireLock()
-            .flatMap(this::processReset)
-            .subscribe();
+        try {
+            acquireLock()
+                .flatMap(this::processReset)
+                .block(Duration.ofSeconds(90));
+        } catch (Exception e) {
+            log.error("[BLOOM-FILTER-INITIALIZER] Reset failed or timed out: {}", e.getMessage(), e);
+        }
     }
 
     /**
@@ -269,10 +284,18 @@ public class BloomFilterInitializer {
 
     /**
      * <p>Releases the distributed lock acquired for Bloom Filter operations.</p>
+     *
+     * <p><b>Note:</b> {@code RLockReactive.unlock()} returns a {@code Mono<Void>} — calling it
+     * without subscribing is a no-op and leaves the lock held until its TTL expiry (60s).
+     * {@code .subscribe()} here is safe and intentional: the unlock is a fire-and-complete
+     * side-effect that does not need to be awaited by the caller chain.</p>
      */
     private void releaseLock() {
-        redissonClient.getLock(REDIS_LOCK_NAME).unlock();
-        log.info("[BLOOM-FILTER-INITIALIZER] Lock released.");
+        redissonClient.getLock(REDIS_LOCK_NAME)
+                .unlock()
+                .doOnSuccess(v -> log.info("[BLOOM-FILTER-INITIALIZER] Lock released."))
+                .doOnError(e -> log.error("[BLOOM-FILTER-INITIALIZER] Failed to release lock: {}", e.getMessage(), e))
+                .subscribe();
     }
 
 }
