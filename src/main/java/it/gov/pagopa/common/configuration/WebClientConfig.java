@@ -45,7 +45,7 @@ public class WebClientConfig {
      * intentionally left uncapped, which can exhaust file descriptors in
      * high-concurrency scenarios.
      */
-    private static final int MAX_CONNECTIONS = 50;
+    private static final int MAX_CONNECTIONS = 300;
 
     /**
      * Maximum number of requests that may queue waiting for a connection when the
