@@ -8,8 +8,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.List;
 
 import static it.gov.pagopa.onboarding.citizen.enums.AuthenticationType.OAUTH2;
@@ -20,14 +24,33 @@ class TppConnectorImplTest {
     private MockWebServer mockWebServer;
     private TppConnectorImpl tppConnector;
 
+    // ── helpers ──────────────────────────────────────────────────────────────
+
+    private static final String TPP_JSON =
+            "{\"tppId\":\"TPP_OK_1\",\"entityId\":\"ENTITY_OK_1\",\"businessName\":\"Test Business\"," +
+            "\"messageUrl\":\"https://example.com/message\",\"authenticationUrl\":\"https://example.com/auth\"," +
+            "\"authenticationType\":\"OAUTH2\",\"contact\":{\"name\":\"John Doe\",\"number\":\"+1234567890\"," +
+            "\"email\":\"contact@example.com\"},\"state\":true}";
+
+    private static MockResponse okTppResponse() {
+        return new MockResponse()
+                .setResponseCode(200)
+                .setBody(TPP_JSON)
+                .addHeader("Content-Type", "application/json");
+    }
+
+    /** Enqueues a response that forcefully closes the connection (simulates Connection reset). */
+    private static MockResponse connectionResetResponse() {
+        return new MockResponse().setSocketPolicy(okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START);
+    }
+
+    // ── lifecycle ─────────────────────────────────────────────────────────────
+
     @BeforeEach
     void setUp() throws Exception {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
-
-        WebClient.Builder webClientBuilder = WebClient.builder();
-
-        tppConnector = new TppConnectorImpl(webClientBuilder, mockWebServer.url("/").toString());
+        tppConnector = new TppConnectorImpl(WebClient.builder(), mockWebServer.url("/").toString());
     }
 
     @AfterEach
@@ -35,9 +58,10 @@ class TppConnectorImplTest {
         mockWebServer.shutdown();
     }
 
+    // ── existing tests ────────────────────────────────────────────────────────
+
     @Test
     void testGetTppInfoOk() {
-
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setBody("{\"tppId\":\"TPP_OK_1\",\"entityId\":\"ENTITY_OK_1\",\"businessName\":\"Test Business\",\"messageUrl\":\"https://example.com/message\",\"authenticationUrl\":\"https://example.com/auth\",\"authenticationType\":\"OAUTH2\",\"contact\":{\"name\":\"John Doe\",\"number\":\"+1234567890\",\"email\":\"contact@example.com\"},\"state\":true}")
@@ -61,7 +85,6 @@ class TppConnectorImplTest {
 
     @Test
     void testGetTppsEnabledOk() {
-
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setBody("[{\"tppId\":\"TPP_OK_1\",\"entityId\":\"ENTITY_OK_1\",\"businessName\":\"Test Business 1\",\"messageUrl\":\"https://example.com/message1\",\"authenticationUrl\":\"https://example.com/auth1\",\"authenticationType\":\"OAUTH2\",\"contact\":{\"name\":\"John Doe\",\"number\":\"+1234567890\",\"email\":\"contact1@example.com\"},\"state\":true},{\"tppId\":\"TPP_OK_2\",\"entityId\":\"ENTITY_OK_2\",\"businessName\":\"Test Business 2\",\"messageUrl\":\"https://example.com/message2\",\"authenticationUrl\":\"https://example.com/auth2\",\"authenticationType\":\"OAUTH2\",\"contact\":{\"name\":\"Jane Doe\",\"number\":\"+0987654321\",\"email\":\"contact2@example.com\"},\"state\":true}]")
@@ -92,5 +115,84 @@ class TppConnectorImplTest {
         assertThat(secondTpp.getEntityId()).isEqualTo("ENTITY_OK_2");
         assertThat(secondTpp.getBusinessName()).isEqualTo("Test Business 2");
         assertThat(secondTpp.getState()).isTrue();
+    }
+
+    // ── retry tests ───────────────────────────────────────────────────────────
+
+    /**
+     * Simulates 2 stale-connection drops followed by a good response on get().
+     * The retry policy allows 2 attempts → the 3rd call (original + 2 retries) must succeed.
+     */
+    @Test
+    void testGet_retriesOnConnectionResetAndSucceeds() {
+        // 1st attempt: connection reset
+        mockWebServer.enqueue(connectionResetResponse());
+        // 2nd attempt (retry 1): connection reset
+        mockWebServer.enqueue(connectionResetResponse());
+        // 3rd attempt (retry 2): success
+        mockWebServer.enqueue(okTppResponse());
+
+        StepVerifier.create(tppConnector.get("TPP_OK_1"))
+                .assertNext(dto -> assertThat(dto.getTppId()).isEqualTo("TPP_OK_1"))
+                .verifyComplete();
+    }
+
+    /**
+     * Simulates 3 consecutive stale-connection drops on get().
+     * The retry policy allows only 2 retries → the error must be propagated.
+     */
+    @Test
+    void testGet_exhaustsRetriesAndPropagatesError() {
+        mockWebServer.enqueue(connectionResetResponse());
+        mockWebServer.enqueue(connectionResetResponse());
+        mockWebServer.enqueue(connectionResetResponse());
+
+        StepVerifier.create(tppConnector.get("TPP_OK_1"))
+                .expectErrorMatches(ex ->
+                        ex instanceof WebClientRequestException ||
+                        // reactor wraps exhausted retries in a RetryExhaustedException whose cause is the original
+                        (ex.getCause() instanceof WebClientRequestException))
+                .verify();
+    }
+
+    /**
+     * Simulates 2 stale-connection drops followed by a good response on getTppsEnabled().
+     * Since this is a POST with the conservative retry policy
+     * ({@code connectFailureOnly}), the retry MUST NOT happen — the error from
+     * the first disconnect is propagated immediately to avoid duplicate side-effects.
+     */
+    @Test
+    void testGetTppsEnabled_doesNotRetryOnConnectionReset() {
+        mockWebServer.enqueue(connectionResetResponse());
+        // The successful response below would only be consumed if a retry happened.
+        // With connectFailureOnly() it must be left untouched.
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .setBody("[]")
+                .addHeader("Content-Type", "application/json"));
+
+        StepVerifier.create(tppConnector.filterEnabledList(new TppIdList(List.of("TPP_OK_1"), "RECIPIENT_OK_1")))
+                .expectErrorMatches(ex ->
+                        ex instanceof WebClientRequestException ||
+                        (ex.getCause() instanceof WebClientRequestException))
+                .verify();
+    }
+
+    /**
+     * Simulates 3 consecutive stale-connection drops on getTppsEnabled().
+     * No retry happens (POST policy), so the error propagates after the very
+     * first attempt regardless of how many subsequent drops are queued.
+     */
+    @Test
+    void testGetTppsEnabled_propagatesErrorOnConnectionResetWithoutRetrying() {
+        mockWebServer.enqueue(connectionResetResponse());
+        mockWebServer.enqueue(connectionResetResponse());
+        mockWebServer.enqueue(connectionResetResponse());
+
+        StepVerifier.create(tppConnector.filterEnabledList(new TppIdList(List.of("TPP_OK_1"), "RECIPIENT_OK_1")))
+                .expectErrorMatches(ex ->
+                        ex instanceof WebClientRequestException ||
+                        (ex.getCause() instanceof WebClientRequestException))
+                .verify();
     }
 }

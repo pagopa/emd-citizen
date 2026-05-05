@@ -1,7 +1,9 @@
 package it.gov.pagopa.onboarding.citizen.connector.tpp;
 
+import it.gov.pagopa.common.configuration.WebClientRetrySpecs;
 import it.gov.pagopa.onboarding.citizen.dto.TppDTO;
 import it.gov.pagopa.onboarding.citizen.dto.TppIdList;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
@@ -10,22 +12,14 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-/**
- * <p>Reactive {@link TppConnector} implementation using Spring {@link WebClient}
- * to fetch Third Party Provider (TPP) data from a remote service.</p>
- */
 @Service
+@Slf4j
 public class TppConnectorImpl implements TppConnector {
 
-    /**
-     * <p>Configured WebClient pointing to the TPP remote service base URL.</p>
-     */
     private final WebClient webClient;
 
     /**
-     * <p>Constructs the connector initializing the WebClient with the provided base URL.</p>
-     *
-     * @param webClientBuilder Spring-injected builder to create WebClient instances
+     * @param webClientBuilder pre-configured builder from {@code WebClientConfig}
      * @param baseUrl remote TPP service base URL (property: {@code rest-client.tpp.baseUrl})
      */
     public TppConnectorImpl(WebClient.Builder webClientBuilder,
@@ -36,21 +30,24 @@ public class TppConnectorImpl implements TppConnector {
     /**
      * {@inheritDoc}
      *
-     * <p>Performs a reactive HTTP GET to {@code /emd/tpp/{tppId}}.</p>
+     * <p>Idempotent GET → permissive retry on any transient network error.
      */
     @Override
     public Mono<TppDTO> get(String tppId) {
         return webClient.get()
-            .uri("/emd/tpp/" + tppId)
+            .uri("/emd/tpp/{tppId}", tppId)
             .retrieve()
-            .bodyToMono(new ParameterizedTypeReference<>() {
-            });
+            .bodyToMono(new ParameterizedTypeReference<TppDTO>() {})
+            .retryWhen(WebClientRetrySpecs.transientNetwork())
+            .doOnError(ex -> log.error(
+                    "[TPP-CONNECTOR] GET /emd/tpp/{{tppId}} failed: {}", ex.getMessage()));
     }
 
     /**
      * {@inheritDoc}
      *
-     * <p>Performs a reactive HTTP POST to {@code /emd/tpp/list} with the provided TPP IDs and recipientId.</p>
+     * <p>Non-idempotent POST → conservative retry only on TCP connect failures
+     * to avoid duplicate side-effects on the upstream service.
      */
     @Override
     public Mono<List<TppDTO>> filterEnabledList(TppIdList tppIdList) {
@@ -58,7 +55,9 @@ public class TppConnectorImpl implements TppConnector {
                 .uri("/emd/tpp/list")
                 .bodyValue(tppIdList)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<>() {
-                });
+                .bodyToMono(new ParameterizedTypeReference<List<TppDTO>>() {})
+                .retryWhen(WebClientRetrySpecs.connectFailureOnly())
+                .doOnError(ex -> log.error(
+                        "[TPP-CONNECTOR] POST /emd/tpp/list failed: {}", ex.getMessage()));
     }
 }
