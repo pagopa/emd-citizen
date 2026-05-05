@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/pagopa/emd-citizen/compare/v1.1.1...v1.1.2) (2026-05-05)
+
+
+### Bug Fixes
+
+* [MMC-542] IllegalMonitorStateException on Bloom Filter lock release in multi-pod environment ([#90](https://github.com/pagopa/emd-citizen/issues/90)) ([4a8c072](https://github.com/pagopa/emd-citizen/commit/4a8c072b1ab116ed45d5cac84fcfa7d34e97aa62))
+
 ## [1.1.1](https://github.com/pagopa/emd-citizen/compare/v1.1.0...v1.1.1) (2026-05-05)
 
 
