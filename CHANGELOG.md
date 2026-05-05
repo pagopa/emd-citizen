@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/pagopa/emd-citizen/compare/v1.1.0...v1.1.1) (2026-05-05)
+
+
+### Bug Fixes
+
+* [MMC-525][MMC-539] WebClient stale connections pool config and graceful shutdown ([#87](https://github.com/pagopa/emd-citizen/issues/87)) ([4d83fc2](https://github.com/pagopa/emd-citizen/commit/4d83fc23e5973e06e7b4d750f228e42fb197e885))
+
 ## [1.1.0](https://github.com/pagopa/emd-citizen/compare/v1.0.6...v1.1.0) (2026-03-04)
 
 
