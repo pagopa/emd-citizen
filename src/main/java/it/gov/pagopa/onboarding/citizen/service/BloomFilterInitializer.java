@@ -99,9 +99,13 @@ public class BloomFilterInitializer {
      */
     @PostConstruct
     public void initialize() {
-        acquireLock()
-            .flatMap(this::processInitialization)
-            .block(Duration.ofSeconds(120));
+        try {
+            acquireLock()
+                .flatMap(this::processInitialization)
+                .block(Duration.ofSeconds(120));
+        } catch (Exception e) {
+            log.error("[BLOOM-FILTER-INITIALIZER] Initialization failed or timed out: {}", e.getMessage(), e);
+        }
     }
 
     /**
@@ -285,17 +289,20 @@ public class BloomFilterInitializer {
     /**
      * <p>Releases the distributed lock acquired for Bloom Filter operations.</p>
      *
-     * <p><b>Note:</b> {@code RLockReactive.unlock()} returns a {@code Mono<Void>} — calling it
-     * without subscribing is a no-op and leaves the lock held until its TTL expiry (60s).
-     * {@code .subscribe()} here is safe and intentional: the unlock is a fire-and-complete
-     * side-effect that does not need to be awaited by the caller chain.</p>
+     * <p><b>Note:</b> Uses blocking call to ensure the lock is released on the same thread
+     * that acquired it. This prevents IllegalMonitorStateException when the reactive chain
+     * completes on a different thread (e.g., Netty thread).</p>
      */
     private void releaseLock() {
-        redissonClient.getLock(REDIS_LOCK_NAME)
-                .unlock()
-                .doOnSuccess(v -> log.info("[BLOOM-FILTER-INITIALIZER] Lock released."))
-                .doOnError(e -> log.error("[BLOOM-FILTER-INITIALIZER] Failed to release lock: {}", e.getMessage(), e))
-                .subscribe();
+        try {
+            redissonClient.getLock(REDIS_LOCK_NAME)
+                    .unlock()
+                    .doOnSuccess(v -> log.info("[BLOOM-FILTER-INITIALIZER] Lock released."))
+                    .doOnError(e -> log.error("[BLOOM-FILTER-INITIALIZER] Failed to release lock: {}", e.getMessage(), e))
+                    .block(Duration.ofSeconds(5));
+        } catch (Exception e) {
+            log.error("[BLOOM-FILTER-INITIALIZER] Error releasing lock: {}", e.getMessage(), e);
+        }
     }
 
 }
