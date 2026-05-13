@@ -71,7 +71,33 @@ public class ErrorManager {
     }
   }
 
+  /**
+    * Extracts and formats HTTP request details (Method and URI) for logging purposes,
+    * automatically applying masking logic to sensitive Personally Identifiable Information (PII).
+    *
+    * <p>This method scans the request URI for strings matching the <b>Italian Fiscal Code</b>
+    * pattern, including alphanumeric variants resulting from "omocodia" (homocode) management.
+    * Any detected occurrence is replaced with a protection mask ({@code ******}) to ensure
+    * GDPR compliance and prevent personal data leakage into application logs.</p>
+    *
+    * <p><b>Transformation Example:</b></p>
+    * <pre>
+    * Input:  GET https://api.pagopa.it/emd/citizen/RSSMRA85T10A562S/consent
+    * Output: GET https://api.pagopa.it/emd/citizen/{@code ******}/consent}
+    * </pre>
+    *
+    * @param request the {@link ServerHttpRequest} object from which to extract details.
+    * @return a formatted {@link String} as "METHOD URI", with sensitive data obscured.
+    */
   public static String getRequestDetails(ServerHttpRequest request) {
-    return "%s %s".formatted(request.getMethod(), request.getURI());
+    String uri = request.getURI().toString();
+
+    // Regex for Italian Fiscal Code (handles standard and homocode variants)
+    String fiscalCodeRegex = "([A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z])";
+
+    // Masking sensitive occurrences
+    String maskedUri = uri.replaceAll(fiscalCodeRegex, "******");
+    
+    return "%s %s".formatted(request.getMethod(), maskedUri);
   }
 }
