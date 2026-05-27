@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/pagopa/emd-citizen/compare/v1.1.2...v1.1.3) (2026-05-27)
+
+
+### Bug Fixes
+
+* [MMC-545] Apply regex ([#93](https://github.com/pagopa/emd-citizen/issues/93)) ([2de194f](https://github.com/pagopa/emd-citizen/commit/2de194fa71b804f62a25cf932e90decf1238b44b))
+
 ## [1.1.2](https://github.com/pagopa/emd-citizen/compare/v1.1.1...v1.1.2) (2026-05-05)
 
 
