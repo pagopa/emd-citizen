@@ -652,11 +652,11 @@
       "sha256": "xeLAW0-uujzzdMxq8p1vSn6WnXyiIr6VjggAx5oC7k4="
     },
     {
-      "id": "io.netty:netty-handler:jar:4.1.135.Final",
+      "id": "io.netty:netty-handler:jar:4.2.15.Final",
       "artifactId": "netty-handler",
       "groupId": "io.netty",
-      "version": "4.1.135.Final",
-      "sha256": "JF504EtvTo75iFMVJBLjvxSZzm_PFTKbeYyM42w1N-I="
+      "version": "4.2.15.Final",
+      "sha256": "mbWeS-pyIg0q7VLfi6832XQxsGreCxNSJs33MWiXXqs="
     },
     {
       "id": "io.netty:netty-transport-native-unix-common:jar:4.2.15.Final",
@@ -1366,6 +1366,13 @@
       "sha256": "cZCVwH1CA5YTINpZNEHYs7ZDwY6x2Bqpjqkzu36zUbo="
     },
     {
+      "id": "com.vaadin.external.google:android-json:jar:0.0.20131108.vaadin1",
+      "artifactId": "android-json",
+      "groupId": "com.vaadin.external.google",
+      "version": "0.0.20131108.vaadin1",
+      "sha256": "37e64vQEz-C3K00jlEaYy3FrdmUXGBKgpND1kmwPrHk="
+    },
+    {
       "id": "org.springframework:spring-core:jar:7.0.8",
       "artifactId": "spring-core",
       "groupId": "org.springframework",
@@ -1392,6 +1399,20 @@
       "groupId": "org.xmlunit",
       "version": "2.12.0",
       "sha256": "sml-UuOoJOCHSzaYsMT2dsc2MBvCjoKFtnq1OFYE1P4="
+    },
+    {
+      "id": "org.springframework.boot:spring-boot-webflux-test:jar:4.1.0",
+      "artifactId": "spring-boot-webflux-test",
+      "groupId": "org.springframework.boot",
+      "version": "4.1.0",
+      "sha256": "dFzkzzHxXIah4af0LKHLGxgcfzVjkv1cYpYTn4d0HSc="
+    },
+    {
+      "id": "org.springframework.boot:spring-boot-webtestclient:jar:4.1.0",
+      "artifactId": "spring-boot-webtestclient",
+      "groupId": "org.springframework.boot",
+      "version": "4.1.0",
+      "sha256": "CdY0RXJcwWKRw3MC2KOMYKUnTXqhmYh4zqPOOTx4RVo="
     },
     {
       "id": "io.projectreactor:reactor-test:jar:3.8.6",

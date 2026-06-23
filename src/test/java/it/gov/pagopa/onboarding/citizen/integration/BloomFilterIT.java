@@ -13,7 +13,7 @@ import org.redisson.api.RBloomFilterReactive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
@@ -50,7 +50,7 @@ public class BloomFilterIT extends BaseIT {
     @Autowired
     BloomFilterInitializer bloomFilterInitializer;
 
-    @MockBean
+    @MockitoBean
     private TppConnectorImpl tppConnector;
 
     /**
