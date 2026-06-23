@@ -281,13 +281,6 @@
       "sha256": "RGEykqkcIx2B050FsQVQuZiOfcrzuTG3AOhvsKwCmTc="
     },
     {
-      "id": "org.springframework.boot:spring-boot-persistence:jar:4.1.0",
-      "artifactId": "spring-boot-persistence",
-      "groupId": "org.springframework.boot",
-      "version": "4.1.0",
-      "sha256": "2dkmIkxzi9YVJxjAeBNOOuoQV9tNakUsN60SCJPg5NY="
-    },
-    {
       "id": "org.springframework.boot:spring-boot-mongodb:jar:4.1.0",
       "artifactId": "spring-boot-mongodb",
       "groupId": "org.springframework.boot",
@@ -517,6 +510,13 @@
       "groupId": "io.swagger.core.v3",
       "version": "2.2.22",
       "sha256": "PYIK0uScFYtdl4fFkou0hVo5Hb_2damle9l4526Y8Ik="
+    },
+    {
+      "id": "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.21.4",
+      "artifactId": "jackson-datatype-jsr310",
+      "groupId": "com.fasterxml.jackson.datatype",
+      "version": "2.21.4",
+      "sha256": "0axLmLcDBOVkSEI1if3l53WxAIiWQ60erWLMeBFjNoQ="
     },
     {
       "id": "org.webjars:swagger-ui:jar:5.17.14",
@@ -876,11 +876,11 @@
       "sha256": "W4ORuquvPgagtQ1JYljkWLcXA-nYYcni93RpJ6KEfAM="
     },
     {
-      "id": "org.springframework.boot:spring-boot-jackson2:jar:4.0.6",
+      "id": "org.springframework.boot:spring-boot-jackson2:jar:4.1.0",
       "artifactId": "spring-boot-jackson2",
       "groupId": "org.springframework.boot",
-      "version": "4.0.6",
-      "sha256": "D32GKdr6X5KX2IxOxV3azdYajNto2NUYQk1sjIrBOUA="
+      "version": "4.1.0",
+      "sha256": "gPbQ-uvMyy_i3CedZ9y8Gr7lYWx6P0G0YZxzxnb2xVA="
     },
     {
       "id": "com.azure:azure-spring-data-cosmos:jar:7.3.0",
@@ -888,13 +888,6 @@
       "groupId": "com.azure",
       "version": "7.3.0",
       "sha256": "1LPzQ61xuWOFe5fw4cOv1NG_mSL_jhrM2QwqSzPxJH0="
-    },
-    {
-      "id": "org.springframework.boot:spring-boot-persistence:jar:4.0.6",
-      "artifactId": "spring-boot-persistence",
-      "groupId": "org.springframework.boot",
-      "version": "4.0.6",
-      "sha256": "DHCLoZUBJizwdTl6fAihGsj5PnRb-dvjfiCaEvRkuDQ="
     },
     {
       "id": "org.springframework:spring-beans:jar:7.0.8",
@@ -930,6 +923,13 @@
       "groupId": "org.springframework",
       "version": "7.0.8",
       "sha256": "PJfDirWcd-6IbgjM-Alva7WKEkX2jf7XpA6T9BxDX5o="
+    },
+    {
+      "id": "org.springframework.boot:spring-boot-persistence:jar:4.1.0",
+      "artifactId": "spring-boot-persistence",
+      "groupId": "org.springframework.boot",
+      "version": "4.1.0",
+      "sha256": "2dkmIkxzi9YVJxjAeBNOOuoQV9tNakUsN60SCJPg5NY="
     },
     {
       "id": "com.azure:azure-cosmos:jar:4.80.0",
@@ -1042,13 +1042,6 @@
       "groupId": "io.netty",
       "version": "2.0.77.Final",
       "sha256": "-2gHRMswWlk3PxKv3V1J-qqgVEgfwS4MWHfnHuBzKMM="
-    },
-    {
-      "id": "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.21.4",
-      "artifactId": "jackson-datatype-jsr310",
-      "groupId": "com.fasterxml.jackson.datatype",
-      "version": "2.21.4",
-      "sha256": "0axLmLcDBOVkSEI1if3l53WxAIiWQ60erWLMeBFjNoQ="
     },
     {
       "id": "io.dropwizard.metrics:metrics-core:jar:4.1.0",
