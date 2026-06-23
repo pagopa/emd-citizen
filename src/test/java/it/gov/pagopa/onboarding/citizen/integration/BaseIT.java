@@ -55,6 +55,6 @@ abstract class BaseIT {
         registry.add("spring.data.redis.ssl.enabled", () -> "false");
         registry.add("spring.data.redis.password", () -> REDIS_PASSWORD);
 
-        registry.add("spring.data.mongodb.uri", mongo::getReplicaSetUrl);
+        registry.add("spring.mongodb.uri", mongo::getReplicaSetUrl);
     }
 }
