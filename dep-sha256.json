@@ -470,46 +470,46 @@
       "sha256": "dfvaRUVvEj-24gKKYYlELY0HMLNXrc5MCm1-eJ9wZps="
     },
     {
-      "id": "org.springdoc:springdoc-openapi-starter-webflux-ui:jar:2.6.0",
+      "id": "org.springdoc:springdoc-openapi-starter-webflux-ui:jar:3.0.3",
       "artifactId": "springdoc-openapi-starter-webflux-ui",
       "groupId": "org.springdoc",
-      "version": "2.6.0",
-      "sha256": "c1UXMJ0tOfP9B2GUT3UJsbqDS0d1c1sm3bKQBDrPdxw="
+      "version": "3.0.3",
+      "sha256": "BW58oBHJ52Rp1NxTHBudWXJW9p93qEfuCoX_44yZia0="
     },
     {
-      "id": "org.springdoc:springdoc-openapi-starter-webflux-api:jar:2.6.0",
+      "id": "org.springdoc:springdoc-openapi-starter-webflux-api:jar:3.0.3",
       "artifactId": "springdoc-openapi-starter-webflux-api",
       "groupId": "org.springdoc",
-      "version": "2.6.0",
-      "sha256": "ndHq6tz0AZm1HQ6TGKROwt5oORJOOswDWgml76nvcYg="
+      "version": "3.0.3",
+      "sha256": "pY8TCqYMRwAeDXtrXmEe278Yf1iqfWl91yCsIg9Xs4Q="
     },
     {
-      "id": "org.springdoc:springdoc-openapi-starter-common:jar:2.6.0",
+      "id": "org.springdoc:springdoc-openapi-starter-common:jar:3.0.3",
       "artifactId": "springdoc-openapi-starter-common",
       "groupId": "org.springdoc",
-      "version": "2.6.0",
-      "sha256": "XgctL-LWTQauh5GDQMgIo7nWdTexZFqR5hUUOMcU-3Q="
+      "version": "3.0.3",
+      "sha256": "oLWmpThLSjZxj9emnvvUgxH9X0BMls4oamwoXF0AOOY="
     },
     {
-      "id": "io.swagger.core.v3:swagger-core-jakarta:jar:2.2.22",
+      "id": "io.swagger.core.v3:swagger-core-jakarta:jar:2.2.47",
       "artifactId": "swagger-core-jakarta",
       "groupId": "io.swagger.core.v3",
-      "version": "2.2.22",
-      "sha256": "ktUd-iPsCZDNH3RbD7DcFeMf_SlBZ6GeqJE9Oxh-bcY="
+      "version": "2.2.47",
+      "sha256": "5jt4weWwSeZnDKm7Q8PzXPNi7MCKxZp4OZSmpzKn1-s="
     },
     {
-      "id": "io.swagger.core.v3:swagger-annotations-jakarta:jar:2.2.22",
+      "id": "io.swagger.core.v3:swagger-annotations-jakarta:jar:2.2.47",
       "artifactId": "swagger-annotations-jakarta",
       "groupId": "io.swagger.core.v3",
-      "version": "2.2.22",
-      "sha256": "8srvwX95iaWa6ll4X3RiAeqIY1y1xEDFgtmo69vyqW8="
+      "version": "2.2.47",
+      "sha256": "mzCzGfHDGZPmEo0i4SZSvppohYnjDGeBnthOlbluf4g="
     },
     {
-      "id": "io.swagger.core.v3:swagger-models-jakarta:jar:2.2.22",
+      "id": "io.swagger.core.v3:swagger-models-jakarta:jar:2.2.47",
       "artifactId": "swagger-models-jakarta",
       "groupId": "io.swagger.core.v3",
-      "version": "2.2.22",
-      "sha256": "PYIK0uScFYtdl4fFkou0hVo5Hb_2damle9l4526Y8Ik="
+      "version": "2.2.47",
+      "sha256": "FdEPT36sHgKo_5QLQwxjT8nf4INopU3_oyFswtyBGqI="
     },
     {
       "id": "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:jar:2.21.4",
@@ -526,11 +526,18 @@
       "sha256": "0axLmLcDBOVkSEI1if3l53WxAIiWQ60erWLMeBFjNoQ="
     },
     {
-      "id": "org.webjars:swagger-ui:jar:5.17.14",
+      "id": "org.webjars:swagger-ui:jar:5.32.2",
       "artifactId": "swagger-ui",
       "groupId": "org.webjars",
-      "version": "5.17.14",
-      "sha256": "PRb-mb5-9_xv1rmgttEuOlREc12KLAxiRvvIBNpRA7s="
+      "version": "5.32.2",
+      "sha256": "HbE4ZhGx89ccyKzGoYmMO1FAYK0BBVuukE4klp1ZHtA="
+    },
+    {
+      "id": "org.webjars:webjars-locator-lite:jar:1.1.3",
+      "artifactId": "webjars-locator-lite",
+      "groupId": "org.webjars",
+      "version": "1.1.3",
+      "sha256": "e2fE5pQ3qcMrnJAb-qBWx-Lx22JAF1fwI4fB8BS9AMQ="
     },
     {
       "id": "org.redisson:redisson-spring-boot-starter:jar:4.6.0",
