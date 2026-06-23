@@ -512,6 +512,13 @@
       "sha256": "PYIK0uScFYtdl4fFkou0hVo5Hb_2damle9l4526Y8Ik="
     },
     {
+      "id": "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:jar:2.21.4",
+      "artifactId": "jackson-dataformat-yaml",
+      "groupId": "com.fasterxml.jackson.dataformat",
+      "version": "2.21.4",
+      "sha256": "BV60wAirEvDLY-k6ZFRGPQMv3g_KhZQ9afjcdGlInks="
+    },
+    {
       "id": "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.21.4",
       "artifactId": "jackson-datatype-jsr310",
       "groupId": "com.fasterxml.jackson.datatype",
@@ -526,11 +533,11 @@
       "sha256": "PRb-mb5-9_xv1rmgttEuOlREc12KLAxiRvvIBNpRA7s="
     },
     {
-      "id": "org.redisson:redisson-spring-boot-starter:jar:3.43.0",
+      "id": "org.redisson:redisson-spring-boot-starter:jar:4.6.0",
       "artifactId": "redisson-spring-boot-starter",
       "groupId": "org.redisson",
-      "version": "3.43.0",
-      "sha256": "7cn_OV_Be7I1yIzhqKSPd7_OGd3qQTg6FqGgjUh8qnc="
+      "version": "4.6.0",
+      "sha256": "EgGtvLt-aB89qI3UqeTzJgDC4FVg3W54XZ71ZCdgEXo="
     },
     {
       "id": "org.springframework.boot:spring-boot-starter-data-redis:jar:4.1.0",
@@ -554,11 +561,11 @@
       "sha256": "D5ZpTruI_ta_Su9ggBDCPukipHbdceD6t2yp7Q6qcLA="
     },
     {
-      "id": "org.redisson:redisson:jar:3.43.0",
+      "id": "org.redisson:redisson:jar:4.6.0",
       "artifactId": "redisson",
       "groupId": "org.redisson",
-      "version": "3.43.0",
-      "sha256": "yGr6v2NGFTyn78PNbFxEuLoO2kXwinv6Q27BlcvX8ME="
+      "version": "4.6.0",
+      "sha256": "jVofi3V4LiykMWwdR1YG58KSNVUP2fOqtRLPCuirliw="
     },
     {
       "id": "io.netty:netty-common:jar:4.2.15.Final",
@@ -694,34 +701,6 @@
       "sha256": "RFCP0VdlAGiMeQsZCs3Rb-xPjHmj4LkAr9cFA88FX1U="
     },
     {
-      "id": "com.fasterxml.jackson.core:jackson-annotations:jar:2.21",
-      "artifactId": "jackson-annotations",
-      "groupId": "com.fasterxml.jackson.core",
-      "version": "2.21",
-      "sha256": "U8oIX0oVD3A_SeGqvZNb0DtD4eo9VdE1Q4KSryLO9Ws="
-    },
-    {
-      "id": "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:jar:2.21.4",
-      "artifactId": "jackson-dataformat-yaml",
-      "groupId": "com.fasterxml.jackson.dataformat",
-      "version": "2.21.4",
-      "sha256": "BV60wAirEvDLY-k6ZFRGPQMv3g_KhZQ9afjcdGlInks="
-    },
-    {
-      "id": "com.fasterxml.jackson.core:jackson-core:jar:2.21.4",
-      "artifactId": "jackson-core",
-      "groupId": "com.fasterxml.jackson.core",
-      "version": "2.21.4",
-      "sha256": "S0CgY5byOfjeLaV0Ga3ebpTl7cGKIXHUceoF7u1OXC0="
-    },
-    {
-      "id": "com.fasterxml.jackson.core:jackson-databind:jar:2.21.4",
-      "artifactId": "jackson-databind",
-      "groupId": "com.fasterxml.jackson.core",
-      "version": "2.21.4",
-      "sha256": "OIjp5pq2b7rKrMmuoOn_vxU2gojkrKRosCTboRwJ-_k="
-    },
-    {
       "id": "net.bytebuddy:byte-buddy:jar:1.18.10",
       "artifactId": "byte-buddy",
       "groupId": "net.bytebuddy",
@@ -736,11 +715,11 @@
       "sha256": "5cZ2cViXEkEB90kA3R-Y67ytnaOrLf-6xudxJhIJRCc="
     },
     {
-      "id": "org.redisson:redisson-spring-data-34:jar:3.43.0",
-      "artifactId": "redisson-spring-data-34",
+      "id": "org.redisson:redisson-spring-data-41:jar:4.6.0",
+      "artifactId": "redisson-spring-data-41",
       "groupId": "org.redisson",
-      "version": "3.43.0",
-      "sha256": "95IR7z7RNXHF9EbvPoHvU4pvK7h8cVzrTUXtxNL8q08="
+      "version": "4.6.0",
+      "sha256": "SkxMHDeEc5lxckUHlUEO-OKi3EAF29BpQb4ZECiqOBY="
     },
     {
       "id": "org.springframework.data:spring-data-redis:jar:4.1.0",
@@ -1058,11 +1037,32 @@
       "sha256": "lRD5GkvixwB1OtJEWWtnQkyzLCNlnbHcU0IZIm5d86M="
     },
     {
+      "id": "com.fasterxml.jackson.core:jackson-core:jar:2.21.4",
+      "artifactId": "jackson-core",
+      "groupId": "com.fasterxml.jackson.core",
+      "version": "2.21.4",
+      "sha256": "S0CgY5byOfjeLaV0Ga3ebpTl7cGKIXHUceoF7u1OXC0="
+    },
+    {
+      "id": "com.fasterxml.jackson.core:jackson-databind:jar:2.21.4",
+      "artifactId": "jackson-databind",
+      "groupId": "com.fasterxml.jackson.core",
+      "version": "2.21.4",
+      "sha256": "OIjp5pq2b7rKrMmuoOn_vxU2gojkrKRosCTboRwJ-_k="
+    },
+    {
       "id": "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.21.4",
       "artifactId": "jackson-datatype-jdk8",
       "groupId": "com.fasterxml.jackson.datatype",
       "version": "2.21.4",
       "sha256": "Ld5KjxqtMwbAQPVv9A2oHG1Y3O80NMAIScm84J9WoHQ="
+    },
+    {
+      "id": "com.fasterxml.jackson.core:jackson-annotations:jar:2.21",
+      "artifactId": "jackson-annotations",
+      "groupId": "com.fasterxml.jackson.core",
+      "version": "2.21",
+      "sha256": "U8oIX0oVD3A_SeGqvZNb0DtD4eo9VdE1Q4KSryLO9Ws="
     },
     {
       "id": "org.javatuples:javatuples:jar:1.2",
