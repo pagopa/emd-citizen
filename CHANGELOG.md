@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/pagopa/emd-citizen/compare/v1.1.3...v1.2.0) (2026-06-26)
+
+
+### Features
+
+* MMC-748 update dependency emd citizen ([#109](https://github.com/pagopa/emd-citizen/issues/109)) ([0c867ed](https://github.com/pagopa/emd-citizen/commit/0c867ed67aa8952dedf0c8ecc8c515ef2c777f53))
+
+
+### Bug Fixes
+
+* **deps:** bump the non-major-updates group with 6 updates ([#102](https://github.com/pagopa/emd-citizen/issues/102)) ([02d0131](https://github.com/pagopa/emd-citizen/commit/02d0131048c2a841f7a8ca08cb8c174f6af7eaf4))
+
 ## [1.1.3](https://github.com/pagopa/emd-citizen/compare/v1.1.2...v1.1.3) (2026-05-27)
 
 
