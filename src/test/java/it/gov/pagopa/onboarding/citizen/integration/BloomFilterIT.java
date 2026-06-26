@@ -13,7 +13,7 @@ import org.redisson.api.RBloomFilterReactive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
@@ -50,18 +50,32 @@ public class BloomFilterIT extends BaseIT {
     @Autowired
     BloomFilterInitializer bloomFilterInitializer;
 
-    @MockBean
+    @MockitoBean
     private TppConnectorImpl tppConnector;
 
     /**
-     * Drops the collection before each test to ensure isolation.
-     * onErrorResume prevents failures if the collection does not exist yet.
+     * Drops the MongoDB collection and resets the Bloom Filter before each test to ensure isolation.
+     * onErrorResume prevents failures if either resource does not exist yet.
      */
     @BeforeEach
     void clean() {
         StepVerifier.create(
                 mongoTemplate.dropCollection("citizen_consents")
                         .onErrorResume(e -> Mono.empty())
+        ).verifyComplete();
+
+        RBloomFilterReactive<String> bf = bloomFilterInitializer.getBloomFilter();
+        StepVerifier.create(
+                bf.delete()
+                        .then(bf.tryInit(
+                                bloomFilterInitializer.getExpectedInsertions(),
+                                bloomFilterInitializer.getFalseProbability()
+                        ))
+                        .then()
+                        .onErrorResume(e -> {
+                                log.warn("[TEST] Bloom filter reset failed: {}", e.getMessage());
+                                return Mono.empty();
+                        })
         ).verifyComplete();
     }
 

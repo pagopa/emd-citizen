@@ -5,7 +5,7 @@ import it.gov.pagopa.common.utils.CommonConstants;
 import lombok.Getter;
 import lombok.Setter;
 import org.bson.types.Decimal128;
-import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
+import org.springframework.boot.mongodb.autoconfigure.MongoClientSettingsBuilderCustomizer;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 @EnableConfigurationProperties(MongoConfig.MongoDbCustomProperties.class)
 public class MongoConfig {
 
-    @ConfigurationProperties(prefix = "spring.data.mongodb.config")
+    @ConfigurationProperties(prefix = "spring.mongodb.config")
     @Getter
     @Setter
     public static class MongoDbCustomProperties {

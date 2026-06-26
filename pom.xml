@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.3</version>
+		<version>4.1.0</version>
 	</parent>
 
 	<groupId>it.gov.pagopa.citizen</groupId>
@@ -44,12 +44,12 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
-            <version>2.6.0</version>
+            <version>3.0.3</version>
         </dependency>
 		<dependency>
 			<groupId>org.redisson</groupId>
 			<artifactId>redisson-spring-boot-starter</artifactId>
-			<version>3.43.0</version>
+			<version>4.6.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.azure.spring</groupId>
@@ -72,12 +72,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>com.vaadin.external.google</groupId>
-					<artifactId>android-json</artifactId>
-				</exclusion>
-			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-webflux-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.projectreactor</groupId>
@@ -118,7 +117,7 @@
 			<dependency>
 				<groupId>com.azure.spring</groupId>
 				<artifactId>spring-cloud-azure-dependencies</artifactId>
-				<version>5.16.0</version>
+				<version>7.3.0</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -126,7 +125,7 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>2023.0.2</version>
+				<version>2025.1.2</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -147,13 +146,13 @@
 			<dependency>
 				<groupId>io.netty</groupId>
 				<artifactId>netty-handler</artifactId>
-				<version>4.1.135.Final</version>
+				<version>4.2.15.Final</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-webflux</artifactId>
-				<version>6.1.14</version>
+				<version>7.0.8</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
