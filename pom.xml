@@ -49,7 +49,7 @@
 		<dependency>
 			<groupId>org.redisson</groupId>
 			<artifactId>redisson-spring-boot-starter</artifactId>
-			<version>4.6.0</version>
+			<version>4.6.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.azure.spring</groupId>
@@ -146,7 +146,7 @@
 			<dependency>
 				<groupId>io.netty</groupId>
 				<artifactId>netty-handler</artifactId>
-				<version>4.2.15.Final</version>
+				<version>4.2.16.Final</version>
 			</dependency>
 
 			<dependency>
