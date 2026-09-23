@@ -1,6 +1,8 @@
 package it.gov.pagopa.onboarding.citizen.service;
 
 import it.gov.pagopa.common.utils.Utils;
+import it.gov.pagopa.common.configuration.MongoRetrySpecs;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.onboarding.citizen.configuration.ExceptionMap;
 import it.gov.pagopa.onboarding.citizen.connector.tpp.TppConnectorImpl;
 import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.ExceptionMessage;
@@ -12,6 +14,7 @@ import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
 import it.gov.pagopa.onboarding.citizen.model.ConsentDetails;
 import it.gov.pagopa.onboarding.citizen.repository.CitizenRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -218,6 +221,9 @@ public class CitizenServiceImpl implements CitizenService {
         log.info("[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] Received hashedFiscalCode: {}", Utils.createSHA256(fiscalCode));
 
         return citizenRepository.findByFiscalCode(fiscalCode)
+                .retryWhen(MongoRetrySpecs.cosmosDbThrottling())
+                .onErrorMap(MongoRetrySpecs::isThrottled,
+                        error -> new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "CONSENT_DB_THROTTLED", "Consent database throttled"))
                 .switchIfEmpty(Mono.empty())
                 .map(citizenConsent -> citizenConsent.getConsents().entrySet().stream()
                         .filter(tpp -> tpp.getValue().getTppState())
@@ -389,6 +395,9 @@ public class CitizenServiceImpl implements CitizenService {
                     log.info("[EMD-CITIZEN][BLOOM-FILTER-SEARCH] Fiscal Code {} found in bloom filter. Checking consents in DB...", hashedFiscalCode);
 
                     return citizenRepository.findByFiscalCode(fiscalCode)
+                        .retryWhen(MongoRetrySpecs.cosmosDbThrottling())
+                        .onErrorMap(MongoRetrySpecs::isThrottled,
+                                error -> new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "CONSENT_DB_THROTTLED", "Consent database throttled"))
                         .flatMap(citizenConsent -> {
                             List<String> list = citizenConsent.getConsents().entrySet().stream()
                                     .filter(tpp -> tpp.getValue().getTppState())
