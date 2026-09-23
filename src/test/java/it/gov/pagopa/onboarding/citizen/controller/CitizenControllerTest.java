@@ -1,5 +1,6 @@
 package it.gov.pagopa.onboarding.citizen.controller;
 
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentStateUpdateDTO;
 import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentDTOFaker;
@@ -14,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
@@ -116,6 +118,28 @@ class CitizenControllerTest {
                     Assertions.assertNotNull(resultResponse);
                     Assertions.assertEquals(tppEnabledList.size(), resultResponse.size());
                 });
+    }
+
+    @Test
+    void getTppEnabledList_Throttled_Returns429() {
+        Mockito.when(citizenService.getTppEnabledList(FISCAL_CODE))
+                .thenReturn(Mono.error(new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "CONSENT_DB_THROTTLED", "Consent database throttled")));
+
+        webClient.get()
+                .uri("/emd/citizen/list/{fiscalCode}/enabled/tpp", FISCAL_CODE)
+                .exchange()
+                .expectStatus().isEqualTo(429);
+    }
+
+    @Test
+    void bloomFilterSearch_Throttled_Returns429() {
+        Mockito.when(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
+                .thenReturn(Mono.error(new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "CONSENT_DB_THROTTLED", "Consent database throttled")));
+
+        webClient.get()
+                .uri("/emd/citizen/filter/{fiscalCode}", FISCAL_CODE)
+                .exchange()
+                .expectStatus().isEqualTo(429);
     }
 
     @Test

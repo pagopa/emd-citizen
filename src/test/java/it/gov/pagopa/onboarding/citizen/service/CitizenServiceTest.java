@@ -1,5 +1,6 @@
 package it.gov.pagopa.onboarding.citizen.service;
 
+import com.mongodb.MongoException;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.onboarding.citizen.configuration.ExceptionMap;
 import it.gov.pagopa.onboarding.citizen.connector.tpp.TppConnectorImpl;
@@ -34,6 +35,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -232,6 +234,49 @@ class CitizenServiceTest {
     }
 
     @Test
+    void getTppEnabledList_ThrottledOnce_RetriesOnlyRead() {
+        AtomicInteger reads = new AtomicInteger();
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.defer(() ->
+                reads.incrementAndGet() == 1
+                        ? Mono.error(new MongoException(16500, "RequestRateTooLarge"))
+                        : Mono.just(CITIZEN_CONSENT)));
+
+        StepVerifier.create(citizenService.getTppEnabledList(FISCAL_CODE))
+                .expectNextCount(1)
+                .verifyComplete();
+        assertEquals(2, reads.get());
+    }
+
+    @Test
+    void getTppEnabledList_ThrottlingExhausted_Returns429() {
+        AtomicInteger reads = new AtomicInteger();
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.defer(() -> {
+            reads.incrementAndGet();
+            return Mono.error(new MongoException(16500, "RequestRateTooLarge"));
+        }));
+
+        StepVerifier.create(citizenService.getTppEnabledList(FISCAL_CODE))
+                .expectErrorMatches(error -> error instanceof ClientExceptionWithBody response
+                        && response.getHttpStatus().value() == 429)
+                .verify();
+        assertEquals(4, reads.get());
+    }
+
+    @Test
+    void getTppEnabledList_OtherMongoError_DoesNotRetry() {
+        AtomicInteger reads = new AtomicInteger();
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.defer(() -> {
+            reads.incrementAndGet();
+            return Mono.error(new MongoException(42, "Other Mongo failure"));
+        }));
+
+        StepVerifier.create(citizenService.getTppEnabledList(FISCAL_CODE))
+                .expectError(MongoException.class)
+                .verify();
+        assertEquals(1, reads.get());
+    }
+
+    @Test
     void testGetTppEnabledList_Empty() {
         when(citizenRepository.findByFiscalCode(FISCAL_CODE)).thenReturn(Mono.empty());
 
@@ -412,6 +457,18 @@ class CitizenServiceTest {
         StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
                 .expectNext(false)
                 .verifyComplete();
+    }
+
+    @Test
+    void getCitizenInBloomFilter_ThrottlingExhausted_Returns429() {
+        when(bloomFilterService.contains(FISCAL_CODE)).thenReturn(Mono.just(true));
+        when(citizenRepository.findByFiscalCode(FISCAL_CODE))
+                .thenReturn(Mono.error(new MongoException(16500, "RequestRateTooLarge")));
+
+        StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
+                .expectErrorMatches(error -> error instanceof ClientExceptionWithBody response
+                        && response.getHttpStatus().value() == 429)
+                .verify();
     }
 }
 
