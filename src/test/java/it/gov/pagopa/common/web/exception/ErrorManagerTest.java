@@ -13,9 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
@@ -26,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.regex.Pattern;
 
 @WebFluxTest(value = {
-        ErrorManagerTest.TestController.class}, excludeAutoConfiguration = SecurityAutoConfiguration.class)
+        ErrorManagerTest.TestController.class})
 @ContextConfiguration(classes = {ErrorManagerTest.TestController.class, ErrorManager.class})
 @Slf4j
 class ErrorManagerTest {
@@ -34,7 +33,7 @@ class ErrorManagerTest {
 
   @Autowired
   private WebTestClient webTestClient;
-  @SpyBean
+  @MockitoSpyBean
   private TestController testControllerSpy;
 
   private static MemoryAppender memoryAppender;

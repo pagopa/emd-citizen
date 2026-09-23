@@ -9,7 +9,7 @@ import org.redisson.api.RLockReactive;
 import org.redisson.api.RedissonReactiveClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
@@ -31,7 +31,7 @@ class BloomFilterPropertiesTest {
   @Value("${app.bloomFilter.falseProbability}")
   private double falseProbability;
 
-  @MockBean
+  @MockitoBean
   private BloomFilterInitializer bloomFilterInitializer;
 
   @Configuration

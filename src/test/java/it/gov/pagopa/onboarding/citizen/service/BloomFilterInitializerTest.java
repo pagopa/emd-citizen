@@ -12,7 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.redisson.api.RBloomFilterReactive;
 import org.redisson.api.RLockReactive;
 import org.redisson.api.RedissonReactiveClient;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -39,10 +39,10 @@ class BloomFilterInitializerTest {
     @Mock
     private RLockReactive lock;
 
-    @MockBean
+    @MockitoBean
     private RedissonReactiveClient redissonClient;
 
-    @MockBean
+    @MockitoBean
     private CitizenRepository citizenRepository;
 
     private BloomFilterInitializer bloomFilterInitializer;

@@ -24,7 +24,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.redisson.api.RBloomFilterReactive;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
@@ -54,13 +54,13 @@ class CitizenServiceTest {
     @Autowired
     CitizenServiceImpl citizenService;
 
-    @MockBean
+    @MockitoBean
     BloomFilterServiceImpl bloomFilterService;
 
-    @MockBean
+    @MockitoBean
     CitizenRepository citizenRepository;
 
-    @MockBean
+    @MockitoBean
     TppConnectorImpl tppConnector;
 
     @Autowired

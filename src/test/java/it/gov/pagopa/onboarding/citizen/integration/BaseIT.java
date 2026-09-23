@@ -3,7 +3,7 @@ package it.gov.pagopa.onboarding.citizen.integration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -55,6 +55,6 @@ abstract class BaseIT {
         registry.add("spring.data.redis.ssl.enabled", () -> "false");
         registry.add("spring.data.redis.password", () -> REDIS_PASSWORD);
 
-        registry.add("spring.data.mongodb.uri", mongo::getReplicaSetUrl);
+        registry.add("spring.mongodb.uri", mongo::getReplicaSetUrl);
     }
 }

@@ -11,8 +11,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
@@ -24,10 +24,10 @@ import java.util.List;
 @WebFluxTest(CitizenControllerImpl.class)
 class CitizenControllerTest {
 
-    @MockBean
+    @MockitoBean
     private CitizenServiceImpl citizenService;
 
-    @MockBean
+    @MockitoBean
     private BloomFilterServiceImpl bloomFilterService;
 
     @Autowired
