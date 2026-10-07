@@ -39,8 +39,8 @@ public class FiscalCodeSearchValidator {
         if (cursor == null) {
             return null;
         }
-        if (!COMPLETE_FISCAL_CODE.matcher(cursor).matches()) {
-            throw badRequest("Il cursore deve essere un Codice Fiscale completo valido.");
+        if (cursor.length() != 16 || !ALPHANUMERIC.matcher(cursor).matches()) {
+            throw badRequest("Il cursore deve contenere 16 caratteri alfanumerici.");
         }
         String normalizedCursor = cursor.toUpperCase(Locale.ROOT);
         if (!normalizedCursor.startsWith(normalizedFiscalCode)) {
