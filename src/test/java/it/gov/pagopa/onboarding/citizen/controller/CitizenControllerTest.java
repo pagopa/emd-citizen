@@ -2,6 +2,8 @@ package it.gov.pagopa.onboarding.citizen.controller;
 
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentStateUpdateDTO;
+import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
+import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
 import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentDTOFaker;
 import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentStateUpdateDTOFaker;
 import it.gov.pagopa.onboarding.citizen.service.BloomFilterServiceImpl;
@@ -34,6 +36,25 @@ class CitizenControllerTest {
 
     private static final String FISCAL_CODE = "MLXHZZ43A70H203T";
     private static final String TPP_ID  = "ae46399d-a3e4-a3d9-a2b8-a1c8fd5f5e40-1732202076421";
+
+
+    @Test
+    void searchByFiscalCode_UsesOptionalCursor() {
+        PagedResponse<FiscalCodeSearchResult> response = new PagedResponse<>(
+                List.of(new FiscalCodeSearchResult(FISCAL_CODE, 2)), 10, 21, 3,
+                "MLXHZZ43A70H203T", true);
+        Mockito.when(citizenService.searchByFiscalCode("MLX", null, 10)).thenReturn(Mono.just(response));
+
+        webClient.get()
+                .uri("/emd/citizen/search?fiscalCode=MLX&size=10")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.content[0].fiscalCode").isEqualTo(FISCAL_CODE)
+                .jsonPath("$.content[0].consentCount").isEqualTo(2)
+                .jsonPath("$.nextCursor").isEqualTo("MLXHZZ43A70H203T")
+                .jsonPath("$.hasNext").isEqualTo(true);
+    }
 
 
     @Test
@@ -117,6 +138,7 @@ class CitizenControllerTest {
                     Assertions.assertEquals(tppEnabledList.size(), resultResponse.size());
                 });
     }
+
 
     @Test
     void get_Ok() {

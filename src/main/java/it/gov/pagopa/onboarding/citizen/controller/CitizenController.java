@@ -8,8 +8,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
+import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
 import it.gov.pagopa.onboarding.citizen.service.CitizenService;
-import jakarta.validation.constraints.Pattern;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -29,6 +30,20 @@ import java.util.List;
 )
 @RequestMapping("/emd/citizen")
 public interface CitizenController {
+
+    @Operation(summary = "Ricerca paginata per prefisso o Codice Fiscale completo",
+            description = "Accetta da 3 a 16 caratteri alfanumerici; usa il cursore restituito per la pagina successiva. size è compresa tra 1 e 100.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Risultati e metadati di paginazione"),
+            @ApiResponse(responseCode = "400", description = "Parametri di ricerca o paginazione non validi")
+    })
+    @GetMapping("/search")
+    Mono<ResponseEntity<PagedResponse<FiscalCodeSearchResult>>> searchByFiscalCode(
+            @Parameter(description = "Codice Fiscale o suo prefisso", example = "RSSMRA")
+            @RequestParam("fiscalCode") String fiscalCode,
+            @Parameter(description = "CF dell'ultimo risultato della pagina precedente")
+            @RequestParam(name = "cursor", required = false) String cursor,
+            @RequestParam(name = "size", defaultValue = "10") int size);
 
     /**
      * <p>Creates or reuses a consent for the specified TPP.</p>

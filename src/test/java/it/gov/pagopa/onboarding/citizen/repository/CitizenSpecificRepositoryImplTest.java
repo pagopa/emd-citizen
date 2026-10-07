@@ -2,6 +2,8 @@ package it.gov.pagopa.onboarding.citizen.repository;
 
 import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
 import it.gov.pagopa.onboarding.citizen.model.ConsentDetails;
+import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
+import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -202,5 +204,32 @@ class CitizenSpecificRepositoryImplTest {
                 .expectNextMatches(result -> result.getConsents().containsKey(tppId) && result.getConsents().get(tppId).getTppState())
                 .verifyComplete();
 
+    }
+
+    @Test
+    void countByFiscalCodePrefixOrExact_UsesAggregationCount() {
+        when(mongoTemplate.aggregate(
+                Mockito.any(Aggregation.class),
+                Mockito.eq("citizen_consents"),
+                Mockito.eq(Document.class)
+        )).thenReturn(Flux.just(new Document("total", 12L)));
+
+        StepVerifier.create(repository.countByFiscalCodePrefixOrExact("RSSMRA"))
+                .expectNext(12L)
+                .verifyComplete();
+    }
+
+    @Test
+    void searchByFiscalCodePrefixOrExact_UsesCursorQuery() {
+        FiscalCodeSearchResult result = new FiscalCodeSearchResult("RSSMRA85T10A562S", 4);
+        when(mongoTemplate.aggregate(
+                Mockito.any(Aggregation.class),
+                Mockito.eq("citizen_consents"),
+                Mockito.eq(FiscalCodeSearchResult.class)
+        )).thenReturn(Flux.just(result));
+
+        StepVerifier.create(repository.searchByFiscalCodePrefixOrExact("RSSMRA", "RSSMRA84T10A562S", 11))
+                .expectNext(result)
+                .verifyComplete();
     }
 }

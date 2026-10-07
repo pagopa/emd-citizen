@@ -6,6 +6,8 @@ import it.gov.pagopa.onboarding.citizen.connector.tpp.TppConnectorImpl;
 import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.ExceptionMessage;
 import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.ExceptionName;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
+import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
 import it.gov.pagopa.onboarding.citizen.dto.TppIdList;
 import it.gov.pagopa.onboarding.citizen.dto.mapper.CitizenConsentObjectToDTOMapper;
 import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
@@ -33,18 +35,21 @@ public class CitizenServiceImpl implements CitizenService {
     private final ExceptionMap exceptionMap;
     private final TppConnectorImpl tppConnector;
     private final BloomFilterServiceImpl bloomFilterService;
+    private final FiscalCodeSearchValidator fiscalCodeSearchValidator;
     private static final String CONSENT_NOT_FOUND = "[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] No consents found.";
 
     public CitizenServiceImpl(CitizenRepository citizenRepository,
                               CitizenConsentObjectToDTOMapper mapperToDTO,
                               ExceptionMap exceptionMap,
                               TppConnectorImpl tppConnector,
-                              BloomFilterServiceImpl bloomFilterService) {
+                              BloomFilterServiceImpl bloomFilterService,
+                              FiscalCodeSearchValidator fiscalCodeSearchValidator) {
         this.citizenRepository = citizenRepository;
         this.mapperToDTO = mapperToDTO;
         this.exceptionMap = exceptionMap;
         this.tppConnector = tppConnector;
         this.bloomFilterService = bloomFilterService;
+        this.fiscalCodeSearchValidator = fiscalCodeSearchValidator;
     }
 
     /**
@@ -407,6 +412,28 @@ public class CitizenServiceImpl implements CitizenService {
                             }
                         });
                 });
+    }
+
+    @Override
+    public Mono<PagedResponse<FiscalCodeSearchResult>> searchByFiscalCode(String fiscalCode, String cursor, int size) {
+        return Mono.defer(() -> {
+            String normalizedFiscalCode = fiscalCodeSearchValidator.validateAndNormalize(fiscalCode);
+            fiscalCodeSearchValidator.validateSize(size);
+            String normalizedCursor = fiscalCodeSearchValidator.validateAndNormalizeCursor(cursor, normalizedFiscalCode);
+
+            return Mono.zip(
+                    citizenRepository.countByFiscalCodePrefixOrExact(normalizedFiscalCode),
+                    citizenRepository.searchByFiscalCodePrefixOrExact(normalizedFiscalCode, normalizedCursor, size + 1).collectList()
+            ).map(result -> {
+                long totalElements = result.getT1();
+                long totalPages = totalElements / size + (totalElements % size == 0 ? 0 : 1);
+                List<FiscalCodeSearchResult> fetched = result.getT2();
+                boolean hasNext = fetched.size() > size;
+                List<FiscalCodeSearchResult> content = hasNext ? fetched.subList(0, size) : fetched;
+                String nextCursor = hasNext ? content.get(content.size() - 1).fiscalCode() : null;
+                return new PagedResponse<>(content, size, totalElements, totalPages, nextCursor, hasNext);
+            });
+        });
     }
 
 }

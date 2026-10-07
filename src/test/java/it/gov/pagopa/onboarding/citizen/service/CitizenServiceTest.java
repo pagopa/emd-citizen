@@ -4,6 +4,7 @@ import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.onboarding.citizen.configuration.ExceptionMap;
 import it.gov.pagopa.onboarding.citizen.connector.tpp.TppConnectorImpl;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
 import it.gov.pagopa.onboarding.citizen.dto.TppDTO;
 import it.gov.pagopa.onboarding.citizen.dto.TppIdList;
 import it.gov.pagopa.onboarding.citizen.dto.mapper.CitizenConsentObjectToDTOMapper;
@@ -46,7 +47,8 @@ import static org.mockito.Mockito.when;
         BloomFilterServiceImpl.class,
         CitizenConsentObjectToDTOMapper.class,
         CitizenConsentDTOToObjectMapper.class,
-        ExceptionMap.class
+        ExceptionMap.class,
+        FiscalCodeSearchValidator.class
 })
 class CitizenServiceTest {
     @Autowired
@@ -412,6 +414,36 @@ class CitizenServiceTest {
         StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
                 .expectNext(false)
                 .verifyComplete();
+    }
+
+    @Test
+    void searchByFiscalCode_UsesKeysetCursorAndBuildsNextPageMetadata() {
+        List<FiscalCodeSearchResult> fetched = List.of(
+                new FiscalCodeSearchResult("RSSMRA85T10A562S", 2),
+                new FiscalCodeSearchResult("RSSMRA86T10A562S", 1),
+                new FiscalCodeSearchResult("RSSMRA87T10A562S", 3));
+        when(citizenRepository.countByFiscalCodePrefixOrExact("RSSMRA")).thenReturn(Mono.just(25L));
+        when(citizenRepository.searchByFiscalCodePrefixOrExact("RSSMRA", null, 3)).thenReturn(Flux.fromIterable(fetched));
+
+        StepVerifier.create(citizenService.searchByFiscalCode("rssmra", null, 2))
+                .assertNext(response -> {
+                    assertEquals(2, response.content().size());
+                    assertEquals(2, response.pageSize());
+                    assertEquals(25, response.totalElements());
+                    assertEquals(13, response.totalPages());
+                    assertEquals("RSSMRA86T10A562S", response.nextCursor());
+                    assertTrue(response.hasNext());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void searchByFiscalCode_RejectsInvalidCursorBeforeRepositoryAccess() {
+        StepVerifier.create(citizenService.searchByFiscalCode("RSSMRA", "invalid", 10))
+                .expectError()
+                .verify();
+
+        Mockito.verifyNoInteractions(citizenRepository);
     }
 }
 

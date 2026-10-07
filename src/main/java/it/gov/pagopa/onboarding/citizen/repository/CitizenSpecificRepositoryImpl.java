@@ -1,10 +1,13 @@
 package it.gov.pagopa.onboarding.citizen.repository;
 
 import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
+import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
 import lombok.Data;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -26,6 +29,45 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
     private final ReactiveMongoTemplate mongoTemplate;
 
     private static final String FISCAL_CODE = "fiscalCode";
+
+    @Override
+    public Mono<Long> countByFiscalCodePrefixOrExact(String normalizedFiscalCode) {
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(fiscalCodeCriteria(normalizedFiscalCode)),
+                Aggregation.count().as("total")
+        );
+        return mongoTemplate.aggregate(aggregation, "citizen_consents", Document.class)
+                .next()
+                .map(result -> ((Number) result.get("total")).longValue())
+                .defaultIfEmpty(0L);
+    }
+
+    @Override
+    public Flux<FiscalCodeSearchResult> searchByFiscalCodePrefixOrExact(String normalizedFiscalCode, String afterFiscalCode, int limit) {
+        Criteria matchCriteria = fiscalCodeCriteria(normalizedFiscalCode);
+        if (afterFiscalCode != null) {
+            matchCriteria = new Criteria().andOperator(
+                    matchCriteria,
+                    Criteria.where(FISCAL_CODE).gt(afterFiscalCode)
+            );
+        }
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(matchCriteria),
+                Aggregation.sort(Sort.by(Sort.Direction.ASC, FISCAL_CODE)),
+                Aggregation.limit(limit),
+                Aggregation.project(FISCAL_CODE)
+                        .andExpression("{ $size: { $objectToArray: { $ifNull: [ \"$consents\", {} ] } } }")
+                        .as("consentCount")
+        );
+
+        return mongoTemplate.aggregate(aggregation, "citizen_consents", FiscalCodeSearchResult.class);
+    }
+
+    private Criteria fiscalCodeCriteria(String normalizedFiscalCode) {
+        return normalizedFiscalCode.length() == 16
+                ? Criteria.where(FISCAL_CODE).is(normalizedFiscalCode)
+                : Criteria.where(FISCAL_CODE).regex("^" + normalizedFiscalCode);
+    }
 
     public CitizenSpecificRepositoryImpl(ReactiveMongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
