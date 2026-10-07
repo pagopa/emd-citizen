@@ -420,17 +420,18 @@ public class CitizenServiceImpl implements CitizenService {
             String normalizedFiscalCode = fiscalCodeSearchValidator.validateAndNormalize(fiscalCode);
             fiscalCodeSearchValidator.validateSize(size);
             String normalizedCursor = fiscalCodeSearchValidator.validateAndNormalizeCursor(cursor, normalizedFiscalCode);
+            int fetchLimit = Math.addExact(size, 1);
 
             return Mono.zip(
                     citizenRepository.countByFiscalCodePrefixOrExact(normalizedFiscalCode),
-                    citizenRepository.searchByFiscalCodePrefixOrExact(normalizedFiscalCode, normalizedCursor, size + 1).collectList()
+                    citizenRepository.searchByFiscalCodePrefixOrExact(normalizedFiscalCode, normalizedCursor, fetchLimit).collectList()
             ).map(result -> {
                 long totalElements = result.getT1();
                 long totalPages = totalElements / size + (totalElements % size == 0 ? 0 : 1);
                 List<FiscalCodeSearchResult> fetched = result.getT2();
                 boolean hasNext = fetched.size() > size;
                 List<FiscalCodeSearchResult> content = hasNext ? fetched.subList(0, size) : fetched;
-                String nextCursor = hasNext ? content.get(content.size() - 1).fiscalCode() : null;
+                String nextCursor = hasNext ? content.getLast().fiscalCode() : null;
                 return new PagedResponse<>(content, size, totalElements, totalPages, nextCursor, hasNext);
             });
         });
