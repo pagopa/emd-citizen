@@ -7,6 +7,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.Mockito.when;
@@ -231,5 +233,14 @@ class CitizenSpecificRepositoryImplTest {
         StepVerifier.create(repository.searchByFiscalCodePrefixOrExact("RSSMRA", "RSSMRA84T10A562S", 11))
                 .expectNext(result)
                 .verifyComplete();
+
+        ArgumentCaptor<Aggregation> aggregationCaptor = ArgumentCaptor.forClass(Aggregation.class);
+        Mockito.verify(mongoTemplate).aggregate(
+                aggregationCaptor.capture(),
+                Mockito.eq("citizen_consents"),
+                Mockito.eq(FiscalCodeSearchResult.class)
+        );
+        List<Document> pipeline = aggregationCaptor.getValue().toPipeline(Aggregation.DEFAULT_CONTEXT);
+        Assertions.assertTrue(pipeline.get(3).get("$project", Document.class).containsKey("consentCount"));
     }
 }

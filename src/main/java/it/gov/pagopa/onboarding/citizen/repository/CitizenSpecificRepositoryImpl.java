@@ -6,11 +6,14 @@ import lombok.Data;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 /**
  * <p>Implementation of custom MongoDB aggregation queries for {@link CitizenConsent}.</p>
@@ -51,13 +54,16 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
                     Criteria.where(FISCAL_CODE).gt(afterFiscalCode)
             );
         }
+        AggregationOperation consentCountProjection = context -> new Document("$project",
+                new Document(FISCAL_CODE, 1)
+                        .append("consentCount", new Document("$size",
+                                new Document("$objectToArray",
+                                        new Document("$ifNull", List.of("$consents", new Document()))))));
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(matchCriteria),
                 Aggregation.sort(Sort.by(Sort.Direction.ASC, FISCAL_CODE)),
                 Aggregation.limit(limit),
-                Aggregation.project(FISCAL_CODE)
-                        .andExpression("{ $size: { $objectToArray: { $ifNull: [ \"$consents\", {} ] } } }")
-                        .as("consentCount")
+                consentCountProjection
         );
 
         return mongoTemplate.aggregate(aggregation, "citizen_consents", FiscalCodeSearchResult.class);
@@ -99,10 +105,12 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
      * @return {@code Mono<CitizenConsent>} with {@code fiscalCode} only (consents is null), empty if no enabled consents
      */
     public Mono<CitizenConsent> findByFiscalCodeWithAtLeastOneConsent(String fiscalCode) {
+        AggregationOperation consentsArrayProjection = context -> new Document("$project",
+                new Document(FISCAL_CODE, 1)
+                        .append("consentsArray", new Document("$objectToArray", "$consents")));
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where(FISCAL_CODE).is(fiscalCode)),
-                Aggregation.project(FISCAL_CODE)
-                        .andExpression("{ $objectToArray: \"$consents\" }").as("consentsArray"),
+                consentsArrayProjection,
                 Aggregation.match(Criteria.where("consentsArray.v.tppState").is(true))
         );
 
