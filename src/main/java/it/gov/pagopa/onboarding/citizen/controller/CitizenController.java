@@ -7,7 +7,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentSearchRequest;
+import it.gov.pagopa.onboarding.citizen.dto.EnrichedCitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
 import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
 import it.gov.pagopa.onboarding.citizen.service.CitizenService;
@@ -44,6 +47,21 @@ public interface CitizenController {
             @Parameter(description = "CF dell'ultimo risultato della pagina precedente")
             @RequestParam(name = "cursor", required = false) String cursor,
             @RequestParam(name = "size", defaultValue = "10") int size);
+
+    @Operation(
+            summary = "Recupera i consensi del cittadino arricchiti con i dati TPP",
+            description = "Riceve il Codice Fiscale nel body, cerca il documento del cittadino e recupera entityId e businessName per ogni TPP."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Consensi recuperati con i dettagli TPP",
+                    content = @Content(schema = @Schema(implementation = EnrichedCitizenConsentDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Codice Fiscale mancante o non valido"),
+            @ApiResponse(responseCode = "404", description = "Cittadino non trovato"),
+            @ApiResponse(responseCode = "500", description = "Errore interno o del connettore TPP")
+    })
+    @PostMapping("/consent/search")
+    Mono<ResponseEntity<EnrichedCitizenConsentDTO>> searchCitizenConsents(
+            @Valid @RequestBody CitizenConsentSearchRequest request);
 
     /**
      * <p>Creates or reuses a consent for the specified TPP.</p>
