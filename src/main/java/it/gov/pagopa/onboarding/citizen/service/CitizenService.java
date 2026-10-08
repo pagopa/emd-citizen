@@ -1,6 +1,8 @@
 package it.gov.pagopa.onboarding.citizen.service;
 
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
+import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -90,4 +92,6 @@ public interface CitizenService {
      * @return {@code Mono<Boolean>} {@code true} if present and an enabled consent exists
      */
     Mono<Boolean> getCitizenInBloomFilter(String fiscalCode);
+
+    Mono<PagedResponse<FiscalCodeSearchResult>> searchByFiscalCode(String fiscalCode, String cursor, int size);
 }
