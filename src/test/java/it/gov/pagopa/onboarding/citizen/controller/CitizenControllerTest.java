@@ -288,12 +288,12 @@ class CitizenControllerTest {
         Mockito.when(citizenService.deleteCitizenConsent(FISCAL_CODE))
                 .thenReturn(Mono.just(mockConsent));
         webClient.delete()
-                .uri("/emd/citizen/test/delete/{fiscalCode}", FISCAL_CODE)
+                .uri("/emd/citizen/{fiscalCode}", FISCAL_CODE)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBodyList(CitizenConsentDTO.class)
-                .value(response -> Assertions.assertEquals(1, response.size()));
+                .expectBody(CitizenConsentDTO.class)
+                .value(response -> Assertions.assertEquals(mockConsent, response));
     }
 
 }
