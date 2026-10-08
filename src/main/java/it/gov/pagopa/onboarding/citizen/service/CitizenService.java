@@ -1,6 +1,7 @@
 package it.gov.pagopa.onboarding.citizen.service;
 
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.EnrichedCitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
 import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
 import reactor.core.publisher.Mono;
@@ -67,6 +68,8 @@ public interface CitizenService {
      * @throws RuntimeException if citizen is missing
      */
     Mono<CitizenConsentDTO> getCitizenConsentsListEnabled(String fiscalCode);
+
+    Mono<EnrichedCitizenConsentDTO> searchCitizenConsents(String fiscalCode);
 
     /**
      * <p>Retrieves citizens having an enabled consent for the given TPP id.</p>

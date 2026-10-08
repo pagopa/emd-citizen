@@ -1,6 +1,9 @@
 package it.gov.pagopa.onboarding.citizen.controller;
 
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.onboarding.citizen.dto.EnrichedCitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentSearchRequest;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentStateUpdateDTO;
 import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
 import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
@@ -16,10 +19,12 @@ import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 
 @WebFluxTest(CitizenControllerImpl.class)
 class CitizenControllerTest {
@@ -54,6 +59,54 @@ class CitizenControllerTest {
                 .jsonPath("$.content[0].consentCount").isEqualTo(2)
                 .jsonPath("$.nextCursor").isEqualTo("MLXHZZ43A70H203T")
                 .jsonPath("$.hasNext").isEqualTo(true);
+    }
+
+    @Test
+    void searchCitizenConsents_ReturnsEnrichedConsents() {
+        EnrichedCitizenConsentDTO response = EnrichedCitizenConsentDTO.builder()
+                .fiscalCode(FISCAL_CODE)
+                .consents(Map.of(TPP_ID, EnrichedCitizenConsentDTO.EnrichedConsentDTO.builder()
+                        .tppState(true)
+                        .entityId("entity-123")
+                        .businessName("Nome Azienda TPP")
+                        .build()))
+                .build();
+        Mockito.when(citizenService.searchCitizenConsents(FISCAL_CODE)).thenReturn(Mono.just(response));
+
+        webClient.post()
+                .uri("/emd/citizen/consent/search")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new CitizenConsentSearchRequest(FISCAL_CODE))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.fiscalCode").isEqualTo(FISCAL_CODE)
+                .jsonPath("$.consents." + TPP_ID + ".entityId").isEqualTo("entity-123")
+                .jsonPath("$.consents." + TPP_ID + ".businessName").isEqualTo("Nome Azienda TPP");
+    }
+
+    @Test
+    void searchCitizenConsents_RejectsInvalidFiscalCode() {
+        webClient.post()
+                .uri("/emd/citizen/consent/search")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"fiscalCode\":\"\"}")
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void searchCitizenConsents_ReturnsNotFoundWhenCitizenIsMissing() {
+        Mockito.when(citizenService.searchCitizenConsents(FISCAL_CODE))
+                .thenReturn(Mono.error(new ClientExceptionWithBody(
+                        HttpStatus.NOT_FOUND, "CITIZEN_NOT_ONBOARDED", "Citizen consent not found")));
+
+        webClient.post()
+                .uri("/emd/citizen/consent/search")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new CitizenConsentSearchRequest(FISCAL_CODE))
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
 

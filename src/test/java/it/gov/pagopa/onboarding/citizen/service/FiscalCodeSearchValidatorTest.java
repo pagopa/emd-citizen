@@ -21,6 +21,11 @@ class FiscalCodeSearchValidatorTest {
     }
 
     @Test
+    void completeFiscalCodeValidationRejectsPrefixes() {
+        assertThrows(ResponseStatusException.class, () -> validator.validateCompleteFiscalCode("RSSMRA"));
+    }
+
+    @Test
     void rejectsTooShortInput() {
         assertBadRequest("AB");
     }

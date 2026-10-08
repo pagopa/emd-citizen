@@ -1,5 +1,6 @@
 package it.gov.pagopa.onboarding.citizen.service;
 
+import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
@@ -11,7 +12,7 @@ import java.util.regex.Pattern;
 public class FiscalCodeSearchValidator {
 
     private static final Pattern ALPHANUMERIC = Pattern.compile("^[A-Za-z0-9]+$");
-    private static final Pattern COMPLETE_FISCAL_CODE = Pattern.compile("^[A-Za-z]{6}[0-9]{2}[A-Za-z]{1}[0-9]{2}[A-Za-z]{1}[0-9]{3}[A-Za-z]{1}$");
+    private static final Pattern COMPLETE_FISCAL_CODE = Pattern.compile(CitizenConstants.ValidationRegex.COMPLETE_FISCAL_CODE);
 
     public String validateAndNormalize(String fiscalCode) {
         if (fiscalCode == null || fiscalCode.length() < 3) {
@@ -27,6 +28,14 @@ public class FiscalCodeSearchValidator {
             throw badRequest("Il Codice Fiscale completo non rispetta il formato previsto.");
         }
         return fiscalCode.toUpperCase(Locale.ROOT);
+    }
+
+    public String validateCompleteFiscalCode(String fiscalCode) {
+        String normalizedFiscalCode = validateAndNormalize(fiscalCode);
+        if (normalizedFiscalCode.length() != 16) {
+            throw badRequest("Il Codice Fiscale completo non rispetta il formato previsto.");
+        }
+        return normalizedFiscalCode;
     }
 
     public void validateSize(int size) {
