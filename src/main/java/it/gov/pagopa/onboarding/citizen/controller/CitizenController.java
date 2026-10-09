@@ -206,16 +206,21 @@ public interface CitizenController {
     /**
      * <p>Deletes the citizen consent aggregate.</p>
      * <p>Delegates to {@link CitizenService#deleteCitizenConsent(String)}.</p>
-     * <p><b>Endpoint:</b> {@code DELETE /emd/citizen/test/delete/{fiscalCode}}</p>
+     * <p><b>Endpoint:</b> {@code DELETE /emd/citizen/{fiscalCode}}</p>
      *
      * @param fiscalCode plain fiscal code (regex validated)
      * @return {@code Mono<ResponseEntity<CitizenConsentDTO>>} 200 OK with deleted snapshot DTO
      */
     @Operation(
-        summary = "Deletes the citizen consent aggregate (Test/Cleanup)",
-        description = "Completely removes the consent aggregate. Warning: intended for testing purposes."
+          summary = "Deletes the citizen consent aggregate",
+          description = "Completely removes the consent aggregate for the specified fiscal code."
     )
-    @DeleteMapping("/test/delete/{fiscalCode}")
+      @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Consent aggregate deleted; returns the deleted snapshot",
+              content = @Content(schema = @Schema(implementation = CitizenConsentDTO.class))),
+          @ApiResponse(responseCode = "404", description = "Citizen consent aggregate not found")
+      })
+      @DeleteMapping("/{fiscalCode}")
     Mono<ResponseEntity<CitizenConsentDTO>> deleteCitizenConsent(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
         @PathVariable String fiscalCode);
