@@ -4,6 +4,8 @@ import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.onboarding.citizen.configuration.ExceptionMap;
 import it.gov.pagopa.onboarding.citizen.connector.tpp.TppConnectorImpl;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.EnrichedCitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
 import it.gov.pagopa.onboarding.citizen.dto.TppDTO;
 import it.gov.pagopa.onboarding.citizen.dto.TppIdList;
 import it.gov.pagopa.onboarding.citizen.dto.mapper.CitizenConsentObjectToDTOMapper;
@@ -42,7 +44,8 @@ import static org.mockito.Mockito.when;
         BloomFilterServiceImpl.class,
         CitizenConsentObjectToDTOMapper.class,
         CitizenConsentDTOToObjectMapper.class,
-        ExceptionMap.class
+        ExceptionMap.class,
+        FiscalCodeSearchValidator.class
 })
 class CitizenServiceTest {
     @Autowired
@@ -61,6 +64,7 @@ class CitizenServiceTest {
     CitizenConsentObjectToDTOMapper dtoMapper;
 
     private static final String FISCAL_CODE = "fiscalCode";
+    private static final String COMPLETE_FISCAL_CODE = "RSSMRA85T10A562S";
     private static final String TPP_ID = "tppId";
     private static final String TPP_ID_2 = "tppId2";
     private static final boolean TPP_STATE = true;
@@ -304,6 +308,59 @@ class CitizenServiceTest {
     }
 
     @Test
+    void searchCitizenConsents_NotFound() {
+        when(citizenRepository.findByFiscalCode(COMPLETE_FISCAL_CODE)).thenReturn(Mono.empty());
+
+        StepVerifier.create(citizenService.searchCitizenConsents(COMPLETE_FISCAL_CODE))
+                .expectErrorMatches(error -> error instanceof ClientExceptionWithBody
+                        && "CITIZEN_NOT_ONBOARDED".equals(((ClientExceptionWithBody) error).getCode()))
+                .verify();
+    }
+
+    @Test
+    void searchCitizenConsents_EnrichesEveryConsentWithTppDetails() {
+        LocalDateTime consentDate = LocalDateTime.of(2025, 10, 17, 13, 18, 37);
+        CitizenConsent citizenConsent = CitizenConsent.builder()
+                .fiscalCode(COMPLETE_FISCAL_CODE)
+                .consents(Map.of(TPP_ID, ConsentDetails.builder().tppState(true).tcDate(consentDate).build()))
+                .build();
+        TppDTO tpp = TppDTO.builder()
+                .tppId(TPP_ID)
+                .entityId("entity-123")
+                .businessName("Nome Azienda TPP")
+                .build();
+        when(citizenRepository.findByFiscalCode(COMPLETE_FISCAL_CODE)).thenReturn(Mono.just(citizenConsent));
+        when(tppConnector.get(TPP_ID)).thenReturn(Mono.just(tpp));
+
+        StepVerifier.create(citizenService.searchCitizenConsents(COMPLETE_FISCAL_CODE))
+                .assertNext(response -> {
+                    assertEquals(COMPLETE_FISCAL_CODE, response.getFiscalCode());
+                    EnrichedCitizenConsentDTO.EnrichedConsentDTO enriched = response.getConsents().get(TPP_ID);
+                    assertNotNull(enriched);
+                    assertTrue(enriched.getTppState());
+                    assertEquals(consentDate, enriched.getTcDate());
+                    assertEquals("entity-123", enriched.getEntityId());
+                    assertEquals("Nome Azienda TPP", enriched.getBusinessName());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void searchCitizenConsents_TppConnectorFailureIsMappedToInternalError() {
+        CitizenConsent citizenConsent = CitizenConsent.builder()
+                .fiscalCode(COMPLETE_FISCAL_CODE)
+                .consents(Map.of(TPP_ID, ConsentDetails.builder().tppState(true).tcDate(LocalDateTime.now()).build()))
+                .build();
+        when(citizenRepository.findByFiscalCode(COMPLETE_FISCAL_CODE)).thenReturn(Mono.just(citizenConsent));
+        when(tppConnector.get(TPP_ID)).thenReturn(Mono.error(new RuntimeException("connector unavailable")));
+
+        StepVerifier.create(citizenService.searchCitizenConsents(COMPLETE_FISCAL_CODE))
+                .expectErrorMatches(error -> error instanceof ClientExceptionWithBody
+                        && "GENERIC_ERROR".equals(((ClientExceptionWithBody) error).getCode()))
+                .verify();
+    }
+
+    @Test
     void getCitizenEnabled_Ok() {
         CitizenConsent citizenConsent1 = CitizenConsent.builder()
                 .fiscalCode("FiscalCode1")
@@ -408,6 +465,36 @@ class CitizenServiceTest {
         StepVerifier.create(citizenService.getCitizenInBloomFilter(FISCAL_CODE))
                 .expectNext(false)
                 .verifyComplete();
+    }
+
+    @Test
+    void searchByFiscalCode_UsesKeysetCursorAndBuildsNextPageMetadata() {
+        List<FiscalCodeSearchResult> fetched = List.of(
+                new FiscalCodeSearchResult("RSSMRA85T10A562S", 2),
+                new FiscalCodeSearchResult("RSSMRA86T10A562S", 1),
+                new FiscalCodeSearchResult("RSSMRA87T10A562S", 3));
+        when(citizenRepository.countByFiscalCodePrefixOrExact("RSSMRA")).thenReturn(Mono.just(25L));
+        when(citizenRepository.searchByFiscalCodePrefixOrExact("RSSMRA", null, 3)).thenReturn(Flux.fromIterable(fetched));
+
+        StepVerifier.create(citizenService.searchByFiscalCode("rssmra", null, 2))
+                .assertNext(response -> {
+                    assertEquals(2, response.content().size());
+                    assertEquals(2, response.pageSize());
+                    assertEquals(25, response.totalElements());
+                    assertEquals(13, response.totalPages());
+                    assertEquals("RSSMRA86T10A562S", response.nextCursor());
+                    assertTrue(response.hasNext());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void searchByFiscalCode_RejectsInvalidCursorBeforeRepositoryAccess() {
+        StepVerifier.create(citizenService.searchByFiscalCode("RSSMRA", "invalid", 10))
+                .expectError()
+                .verify();
+
+        Mockito.verifyNoInteractions(citizenRepository);
     }
 }
 

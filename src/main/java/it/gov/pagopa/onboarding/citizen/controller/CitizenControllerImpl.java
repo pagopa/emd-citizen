@@ -1,6 +1,11 @@
 package it.gov.pagopa.onboarding.citizen.controller;
 
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentSearchRequest;
+import it.gov.pagopa.onboarding.citizen.dto.EnrichedCitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
+import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
+import it.gov.pagopa.onboarding.citizen.service.BloomFilterServiceImpl;
 import it.gov.pagopa.onboarding.citizen.service.CitizenServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +25,17 @@ public class CitizenControllerImpl implements CitizenController {
 
     public CitizenControllerImpl(CitizenServiceImpl citizenService) {
         this.citizenService = citizenService;
+    }
+
+    @Override
+    public Mono<ResponseEntity<PagedResponse<FiscalCodeSearchResult>>> searchByFiscalCode(String fiscalCode, String cursor, int size) {
+        return citizenService.searchByFiscalCode(fiscalCode, cursor, size).map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<EnrichedCitizenConsentDTO>> searchCitizenConsents(CitizenConsentSearchRequest request) {
+        return citizenService.searchCitizenConsents(inputSanitization(request.getFiscalCode()))
+                .map(ResponseEntity::ok);
     }
 
     /**

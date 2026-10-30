@@ -1,6 +1,7 @@
 package it.gov.pagopa.onboarding.citizen.repository;
 
 import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
+import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -15,6 +16,10 @@ import reactor.core.publisher.Mono;
  * @see CitizenRepository
  */
 public interface CitizenSpecificRepository {
+
+    Mono<Long> countByFiscalCodePrefixOrExact(String normalizedFiscalCode);
+
+    Flux<FiscalCodeSearchResult> searchByFiscalCodePrefixOrExact(String normalizedFiscalCode, String afterFiscalCode, int limit);
 
     /**
      * <p>Finds a specific TPP consent within a citizen's document.</p>

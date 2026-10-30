@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.0](https://github.com/pagopa/emd-citizen/compare/v1.2.0...v1.3.0) (2026-10-12)
+
+
+### Features
+
+* [MMC-1155] citizen search api ([#121](https://github.com/pagopa/emd-citizen/issues/121)) ([fd78fe6](https://github.com/pagopa/emd-citizen/commit/fd78fe662f685fd74806b117ac9e25f15eaa6adf))
+* [MMC-1176] add get citizen details endpoint ([#122](https://github.com/pagopa/emd-citizen/issues/122)) ([5e586f8](https://github.com/pagopa/emd-citizen/commit/5e586f8cfaaa1e993daae6fe97ab45111a38c4f4))
+* [MMC-1183] handle consent delete api ([#123](https://github.com/pagopa/emd-citizen/issues/123)) ([68138fa](https://github.com/pagopa/emd-citizen/commit/68138fa272e87f372c58365ec740036f8ddc8f20))
+
 ## [1.2.0](https://github.com/pagopa/emd-citizen/compare/v1.1.3...v1.2.0) (2026-06-26)
 
 

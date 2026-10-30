@@ -47,6 +47,14 @@ public class ExceptionMap {
                 message
             )
         );
+
+        exceptions.put(CitizenConstants.ExceptionName.GENERIC_ERROR, message ->
+            new ClientExceptionWithBody(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                CitizenConstants.ExceptionCode.GENERIC_ERROR,
+                message
+            )
+        );
     }
 
     /**

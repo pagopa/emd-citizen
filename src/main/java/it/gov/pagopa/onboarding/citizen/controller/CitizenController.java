@@ -7,7 +7,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentSearchRequest;
+import it.gov.pagopa.onboarding.citizen.dto.EnrichedCitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
+import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
 import it.gov.pagopa.onboarding.citizen.service.CitizenService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +33,35 @@ import java.util.List;
 )
 @RequestMapping("/emd/citizen")
 public interface CitizenController {
+
+    @Operation(summary = "Ricerca paginata per prefisso o Codice Fiscale completo",
+            description = "Accetta da 3 a 16 caratteri alfanumerici; usa il cursore restituito per la pagina successiva. size è compresa tra 1 e 100.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Risultati e metadati di paginazione"),
+            @ApiResponse(responseCode = "400", description = "Parametri di ricerca o paginazione non validi")
+    })
+    @GetMapping("/search")
+    Mono<ResponseEntity<PagedResponse<FiscalCodeSearchResult>>> searchByFiscalCode(
+            @Parameter(description = "Codice Fiscale o suo prefisso", example = "RSSMRA")
+            @RequestParam("fiscalCode") String fiscalCode,
+            @Parameter(description = "CF dell'ultimo risultato della pagina precedente")
+            @RequestParam(name = "cursor", required = false) String cursor,
+            @RequestParam(name = "size", defaultValue = "10") int size);
+
+    @Operation(
+            summary = "Recupera i consensi del cittadino arricchiti con i dati TPP",
+            description = "Riceve il Codice Fiscale nel body, cerca il documento del cittadino e recupera entityId e businessName per ogni TPP."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Consensi recuperati con i dettagli TPP",
+                    content = @Content(schema = @Schema(implementation = EnrichedCitizenConsentDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Codice Fiscale mancante o non valido"),
+            @ApiResponse(responseCode = "404", description = "Cittadino non trovato"),
+            @ApiResponse(responseCode = "500", description = "Errore interno o del connettore TPP")
+    })
+    @PostMapping("/consent/search")
+    Mono<ResponseEntity<EnrichedCitizenConsentDTO>> searchCitizenConsents(
+            @Valid @RequestBody CitizenConsentSearchRequest request);
 
     /**
      * <p>Creates or reuses a consent for the specified TPP.</p>
@@ -172,16 +206,21 @@ public interface CitizenController {
     /**
      * <p>Deletes the citizen consent aggregate.</p>
      * <p>Delegates to {@link CitizenService#deleteCitizenConsent(String)}.</p>
-     * <p><b>Endpoint:</b> {@code DELETE /emd/citizen/test/delete/{fiscalCode}}</p>
+     * <p><b>Endpoint:</b> {@code DELETE /emd/citizen/{fiscalCode}}</p>
      *
      * @param fiscalCode plain fiscal code (regex validated)
      * @return {@code Mono<ResponseEntity<CitizenConsentDTO>>} 200 OK with deleted snapshot DTO
      */
     @Operation(
-        summary = "Deletes the citizen consent aggregate (Test/Cleanup)",
-        description = "Completely removes the consent aggregate. Warning: intended for testing purposes."
+          summary = "Deletes the citizen consent aggregate",
+          description = "Completely removes the consent aggregate for the specified fiscal code."
     )
-    @DeleteMapping("/test/delete/{fiscalCode}")
+      @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Consent aggregate deleted; returns the deleted snapshot",
+              content = @Content(schema = @Schema(implementation = CitizenConsentDTO.class))),
+          @ApiResponse(responseCode = "404", description = "Citizen consent aggregate not found")
+      })
+      @DeleteMapping("/{fiscalCode}")
     Mono<ResponseEntity<CitizenConsentDTO>> deleteCitizenConsent(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
         @PathVariable String fiscalCode);

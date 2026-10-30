@@ -6,6 +6,9 @@ import it.gov.pagopa.onboarding.citizen.connector.tpp.TppConnectorImpl;
 import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.ExceptionMessage;
 import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants.ExceptionName;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.EnrichedCitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
+import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
 import it.gov.pagopa.onboarding.citizen.dto.TppIdList;
 import it.gov.pagopa.onboarding.citizen.dto.mapper.CitizenConsentObjectToDTOMapper;
 import it.gov.pagopa.onboarding.citizen.model.CitizenConsent;
@@ -14,6 +17,7 @@ import it.gov.pagopa.onboarding.citizen.repository.CitizenRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -33,18 +37,21 @@ public class CitizenServiceImpl implements CitizenService {
     private final ExceptionMap exceptionMap;
     private final TppConnectorImpl tppConnector;
     private final BloomFilterServiceImpl bloomFilterService;
+    private final FiscalCodeSearchValidator fiscalCodeSearchValidator;
     private static final String CONSENT_NOT_FOUND = "[EMD-CITIZEN][FIND-CITIZEN-CONSENTS-ENABLED] No consents found.";
 
     public CitizenServiceImpl(CitizenRepository citizenRepository,
                               CitizenConsentObjectToDTOMapper mapperToDTO,
                               ExceptionMap exceptionMap,
                               TppConnectorImpl tppConnector,
-                              BloomFilterServiceImpl bloomFilterService) {
+                              BloomFilterServiceImpl bloomFilterService,
+                              FiscalCodeSearchValidator fiscalCodeSearchValidator) {
         this.citizenRepository = citizenRepository;
         this.mapperToDTO = mapperToDTO;
         this.exceptionMap = exceptionMap;
         this.tppConnector = tppConnector;
         this.bloomFilterService = bloomFilterService;
+        this.fiscalCodeSearchValidator = fiscalCodeSearchValidator;
     }
 
     /**
@@ -297,8 +304,35 @@ public class CitizenServiceImpl implements CitizenService {
                         log.info(CONSENT_NOT_FOUND);
                     }
                 });
+    }
 
+    @Override
+    public Mono<EnrichedCitizenConsentDTO> searchCitizenConsents(String fiscalCode) {
+        return Mono.defer(() -> {
+            String normalizedFiscalCode = fiscalCodeSearchValidator.validateCompleteFiscalCode(fiscalCode);
+            log.info("[EMD-CITIZEN][SEARCH-CITIZEN-CONSENTS] Searching hashedFiscalCode: {}", Utils.createSHA256(normalizedFiscalCode));
 
+            return citizenRepository.findByFiscalCode(normalizedFiscalCode)
+                    .switchIfEmpty(Mono.error(exceptionMap.throwException(
+                            ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not found")))
+                    .flatMap(citizenConsent -> Flux.fromIterable(citizenConsent.getConsents().entrySet())
+                            .concatMap(entry -> tppConnector.get(entry.getKey())
+                                    .switchIfEmpty(Mono.error(exceptionMap.throwException(
+                                            ExceptionName.GENERIC_ERROR, "TPP details are unavailable")))
+                                    .onErrorMap(error -> exceptionMap.throwException(
+                                            ExceptionName.GENERIC_ERROR, "Failed to retrieve TPP details"))
+                                    .map(tpp -> Map.entry(entry.getKey(), EnrichedCitizenConsentDTO.EnrichedConsentDTO.builder()
+                                            .tppState(entry.getValue().getTppState())
+                                            .tcDate(entry.getValue().getTcDate())
+                                            .entityId(tpp.getEntityId())
+                                            .businessName(tpp.getBusinessName())
+                                            .build())))
+                            .collectMap(Map.Entry::getKey, Map.Entry::getValue)
+                            .map(consents -> EnrichedCitizenConsentDTO.builder()
+                                    .fiscalCode(citizenConsent.getFiscalCode())
+                                    .consents(consents)
+                                    .build()));
+        });
     }
 
     /**
@@ -337,7 +371,7 @@ public class CitizenServiceImpl implements CitizenService {
      * <ol>
      *   <li>Fetch aggregate; if absent -> error.</li>
      *   <li>Delete by id.</li>
-     *   <li>Return DTO snapshot.</li>
+     *   <li>After deletion succeeds, return the DTO snapshot.</li>
      * </ol>
      * <p>Errors:</p>
      * <ul>
@@ -349,13 +383,22 @@ public class CitizenServiceImpl implements CitizenService {
      */
     @Override
     public Mono<CitizenConsentDTO> deleteCitizenConsent(String fiscalCode) {
-        return citizenRepository.findByFiscalCode(fiscalCode)
-                .switchIfEmpty(Mono.error(exceptionMap.throwException
-                        (ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not founded during delete process ")))
-                .flatMap(citizenConsent ->
-                        citizenRepository.deleteById(citizenConsent.getId())
-                                .then(Mono.just(mapperToDTO.map(citizenConsent)))
-                );
+        String hashedFiscalCode = Utils.createSHA256(fiscalCode);
+        return Mono.defer(() -> {
+            log.info("[EMD-CITIZEN][DELETE-CITIZEN-CONSENT] Starting deletion for hashedFiscalCode: {}", hashedFiscalCode);
+            return citizenRepository.findByFiscalCode(fiscalCode)
+                    .switchIfEmpty(Mono.defer(() -> {
+                        log.info("[EMD-CITIZEN][DELETE-CITIZEN-CONSENT] No aggregate found for hashedFiscalCode: {}", hashedFiscalCode);
+                        return Mono.error(exceptionMap.throwException(
+                                ExceptionName.CITIZEN_NOT_ONBOARDED,
+                                "Citizen consent not founded during delete process "));
+                    }))
+                    .flatMap(citizenConsent -> citizenRepository.deleteById(citizenConsent.getId())
+                            .then(Mono.fromSupplier(() -> mapperToDTO.map(citizenConsent)))
+                            .doOnSuccess(deleted -> log.info(
+                                    "[EMD-CITIZEN][DELETE-CITIZEN-CONSENT] Deleted aggregate for hashedFiscalCode: {}",
+                                    hashedFiscalCode)));
+        });
     }
 
     /**
@@ -407,6 +450,29 @@ public class CitizenServiceImpl implements CitizenService {
                             }
                         });
                 });
+    }
+
+    @Override
+    public Mono<PagedResponse<FiscalCodeSearchResult>> searchByFiscalCode(String fiscalCode, String cursor, int size) {
+        return Mono.defer(() -> {
+            String normalizedFiscalCode = fiscalCodeSearchValidator.validateAndNormalize(fiscalCode);
+            fiscalCodeSearchValidator.validateSize(size);
+            String normalizedCursor = fiscalCodeSearchValidator.validateAndNormalizeCursor(cursor, normalizedFiscalCode);
+            int fetchLimit = Math.addExact(size, 1);
+
+            return Mono.zip(
+                    citizenRepository.countByFiscalCodePrefixOrExact(normalizedFiscalCode),
+                    citizenRepository.searchByFiscalCodePrefixOrExact(normalizedFiscalCode, normalizedCursor, fetchLimit).collectList()
+            ).map(result -> {
+                long totalElements = result.getT1();
+                long totalPages = totalElements / size + (totalElements % size == 0 ? 0 : 1);
+                List<FiscalCodeSearchResult> fetched = result.getT2();
+                boolean hasNext = fetched.size() > size;
+                List<FiscalCodeSearchResult> content = hasNext ? fetched.subList(0, size) : fetched;
+                String nextCursor = hasNext ? content.getLast().fiscalCode() : null;
+                return new PagedResponse<>(content, size, totalElements, totalPages, nextCursor, hasNext);
+            });
+        });
     }
 
 }
