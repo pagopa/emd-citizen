@@ -12,8 +12,6 @@ import org.springframework.web.reactive.function.client.WebClientRequestExceptio
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.io.IOException;
-import java.net.Socket;
 import java.util.List;
 
 import static it.gov.pagopa.onboarding.citizen.enums.AuthenticationType.OAUTH2;
@@ -29,8 +27,7 @@ class TppConnectorImplTest {
     private static final String TPP_JSON =
             "{\"tppId\":\"TPP_OK_1\",\"entityId\":\"ENTITY_OK_1\",\"businessName\":\"Test Business\"," +
             "\"messageUrl\":\"https://example.com/message\",\"authenticationUrl\":\"https://example.com/auth\"," +
-            "\"authenticationType\":\"OAUTH2\",\"contact\":{\"name\":\"John Doe\",\"number\":\"+1234567890\"," +
-            "\"email\":\"contact@example.com\"},\"state\":true}";
+            "\"authenticationType\":\"OAUTH2\",\"state\":true}";
 
     private static MockResponse okTppResponse() {
         return new MockResponse()
@@ -64,7 +61,7 @@ class TppConnectorImplTest {
     void testGetTppInfoOk() {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
-                .setBody("{\"tppId\":\"TPP_OK_1\",\"entityId\":\"ENTITY_OK_1\",\"businessName\":\"Test Business\",\"messageUrl\":\"https://example.com/message\",\"authenticationUrl\":\"https://example.com/auth\",\"authenticationType\":\"OAUTH2\",\"contact\":{\"name\":\"John Doe\",\"number\":\"+1234567890\",\"email\":\"contact@example.com\"},\"state\":true}")
+                .setBody("{\"tppId\":\"TPP_OK_1\",\"entityId\":\"ENTITY_OK_1\",\"businessName\":\"Test Business\",\"messageUrl\":\"https://example.com/message\",\"authenticationUrl\":\"https://example.com/auth\",\"authenticationType\":\"OAUTH2\",\"state\":true}")
                 .addHeader("Content-Type", "application/json"));
 
         Mono<TppDTO> resultMono = tppConnector.get("TPP_OK_1");
@@ -77,9 +74,6 @@ class TppConnectorImplTest {
         assertThat(tppDTO.getMessageUrl()).isEqualTo("https://example.com/message");
         assertThat(tppDTO.getAuthenticationUrl()).isEqualTo("https://example.com/auth");
         assertThat(tppDTO.getAuthenticationType()).isEqualTo(OAUTH2);
-        assertThat(tppDTO.getContact().getName()).isEqualTo("John Doe");
-        assertThat(tppDTO.getContact().getNumber()).isEqualTo("+1234567890");
-        assertThat(tppDTO.getContact().getEmail()).isEqualTo("contact@example.com");
         assertThat(tppDTO.getState()).isTrue();
     }
 
@@ -87,7 +81,7 @@ class TppConnectorImplTest {
     void testGetTppsEnabledOk() {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
-                .setBody("[{\"tppId\":\"TPP_OK_1\",\"entityId\":\"ENTITY_OK_1\",\"businessName\":\"Test Business 1\",\"messageUrl\":\"https://example.com/message1\",\"authenticationUrl\":\"https://example.com/auth1\",\"authenticationType\":\"OAUTH2\",\"contact\":{\"name\":\"John Doe\",\"number\":\"+1234567890\",\"email\":\"contact1@example.com\"},\"state\":true},{\"tppId\":\"TPP_OK_2\",\"entityId\":\"ENTITY_OK_2\",\"businessName\":\"Test Business 2\",\"messageUrl\":\"https://example.com/message2\",\"authenticationUrl\":\"https://example.com/auth2\",\"authenticationType\":\"OAUTH2\",\"contact\":{\"name\":\"Jane Doe\",\"number\":\"+0987654321\",\"email\":\"contact2@example.com\"},\"state\":true}]")
+                .setBody("[{\"tppId\":\"TPP_OK_1\",\"entityId\":\"ENTITY_OK_1\",\"businessName\":\"Test Business 1\",\"messageUrl\":\"https://example.com/message1\",\"authenticationUrl\":\"https://example.com/auth1\",\"authenticationType\":\"OAUTH2\",\"state\":true},{\"tppId\":\"TPP_OK_2\",\"entityId\":\"ENTITY_OK_2\",\"businessName\":\"Test Business 2\",\"messageUrl\":\"https://example.com/message2\",\"authenticationUrl\":\"https://example.com/auth2\",\"authenticationType\":\"OAUTH2\",\"state\":true}]")
                 .addHeader("Content-Type", "application/json"));
 
         String recipientId = "RECIPIENT_OK_1";
@@ -105,9 +99,6 @@ class TppConnectorImplTest {
         assertThat(firstTpp.getMessageUrl()).isEqualTo("https://example.com/message1");
         assertThat(firstTpp.getAuthenticationUrl()).isEqualTo("https://example.com/auth1");
         assertThat(firstTpp.getAuthenticationType()).isEqualTo(OAUTH2);
-        assertThat(firstTpp.getContact().getName()).isEqualTo("John Doe");
-        assertThat(firstTpp.getContact().getNumber()).isEqualTo("+1234567890");
-        assertThat(firstTpp.getContact().getEmail()).isEqualTo("contact1@example.com");
         assertThat(firstTpp.getState()).isTrue();
 
         TppDTO secondTpp = tppList.get(1);
