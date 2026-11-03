@@ -1,6 +1,9 @@
 package it.gov.pagopa.onboarding.citizen.service;
 
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.EnrichedCitizenConsentDTO;
+import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
+import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -66,6 +69,8 @@ public interface CitizenService {
      */
     Mono<CitizenConsentDTO> getCitizenConsentsListEnabled(String fiscalCode);
 
+    Mono<EnrichedCitizenConsentDTO> searchCitizenConsents(String fiscalCode);
+
     /**
      * <p>Retrieves citizens having an enabled consent for the given TPP id.</p>
      *
@@ -90,4 +95,6 @@ public interface CitizenService {
      * @return {@code Mono<Boolean>} {@code true} if present and an enabled consent exists
      */
     Mono<Boolean> getCitizenInBloomFilter(String fiscalCode);
+
+    Mono<PagedResponse<FiscalCodeSearchResult>> searchByFiscalCode(String fiscalCode, String cursor, int size);
 }
