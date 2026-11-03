@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/pagopa/emd-citizen/compare/v1.3.0...v1.4.0) (2026-11-03)
+
+
+### Features
+
+* [MMC-776] kafka scaling improvements ([#120](https://github.com/pagopa/emd-citizen/issues/120)) ([18762d5](https://github.com/pagopa/emd-citizen/commit/18762d5e27b76c5e0a1ed10cfc638c0704badd52))
+
 ## [1.3.0](https://github.com/pagopa/emd-citizen/compare/v1.2.0...v1.3.0) (2026-10-12)
 
 
