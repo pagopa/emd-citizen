@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/pagopa/emd-citizen/compare/v1.4.0...v1.4.1) (2026-11-09)
+
+
+### Bug Fixes
+
+* [MMC-1314] Tpp refactor ([#129](https://github.com/pagopa/emd-citizen/issues/129)) ([6dc777e](https://github.com/pagopa/emd-citizen/commit/6dc777e69d6c07c23b51e06ae29662a16502fc3f))
+
 ## [1.4.0](https://github.com/pagopa/emd-citizen/compare/v1.3.0...v1.4.0) (2026-11-03)
 
 
