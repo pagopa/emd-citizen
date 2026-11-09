@@ -18,9 +18,6 @@ public class TppDTO {
     private String messageUrl;
     private String authenticationUrl;
     private AuthenticationType authenticationType;
-    private Contact contact;
     private Boolean state;
-
-
 
 }
