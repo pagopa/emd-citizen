@@ -35,7 +35,6 @@ import java.util.List;
     description = "API per la gestione del ciclo di vita dei consensi del cittadino."
 )
 @RequestMapping("/emd/citizen")
-@Validated
 public interface CitizenController {
 
     @Operation(summary = "Ricerca paginata per prefisso o Codice Fiscale completo",
