@@ -17,6 +17,7 @@ import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
 import it.gov.pagopa.onboarding.citizen.service.CitizenService;
 import jakarta.validation.constraints.Pattern;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -34,6 +35,7 @@ import java.util.List;
     description = "API per la gestione del ciclo di vita dei consensi del cittadino."
 )
 @RequestMapping("/emd/citizen")
+@Validated
 public interface CitizenController {
 
     @Operation(summary = "Ricerca paginata per prefisso o Codice Fiscale completo",
@@ -86,6 +88,7 @@ public interface CitizenController {
     @PostMapping("/{fiscalCode}/{tppId}")
     Mono<ResponseEntity<CitizenConsentDTO>> saveCitizenConsent(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S", required = true)
+        @Pattern(regexp = CitizenConstants.ValidationRegex.COMPLETE_FISCAL_CODE, message = "Fiscal Code format is invalid")
         @PathVariable String fiscalCode,
 
         @Parameter(description = "TPP identifier", example = "TPP_XYZ_123", required = true)
@@ -111,6 +114,7 @@ public interface CitizenController {
     @PutMapping("/{fiscalCode}/{tppId}")
     Mono<ResponseEntity<CitizenConsentDTO>> stateSwitch(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
+        @Pattern(regexp = CitizenConstants.ValidationRegex.COMPLETE_FISCAL_CODE, message = "Fiscal Code format is invalid")
         @PathVariable String fiscalCode,
 
         @Parameter(description = "TPP identifier", example = "TPP_XYZ_123")
@@ -149,6 +153,7 @@ public interface CitizenController {
     @GetMapping("/{fiscalCode}/{tppId}")
     Mono<ResponseEntity<CitizenConsentDTO>> getCitizenConsentStatus(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
+        @Pattern(regexp = CitizenConstants.ValidationRegex.COMPLETE_FISCAL_CODE, message = "Fiscal Code format is invalid")
         @PathVariable String fiscalCode,
 
         @Parameter(description = "TPP identifier", example = "TPP_XYZ_123")
