@@ -8,12 +8,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentSearchRequest;
 import it.gov.pagopa.onboarding.citizen.dto.EnrichedCitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
 import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
 import it.gov.pagopa.onboarding.citizen.service.CitizenService;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -243,6 +245,6 @@ public interface CitizenController {
     @GetMapping("/filter/{fiscalCode}")
     Mono<ResponseEntity<String>> bloomFilterSearch(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable String fiscalCode);
+        @PathVariable @Pattern(regexp = CitizenConstants.ValidationRegex.FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
 
 }

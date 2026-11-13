@@ -4,6 +4,7 @@ package it.gov.pagopa.common.web.exception;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,8 @@ import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -37,6 +40,12 @@ class ValidationExceptionHandlerTest {
         String testEndpoint(@RequestBody @Valid ValidationDTO body, @RequestHeader("data") String data) {
             return "OK";
         }
+
+      @GetMapping("/test-path/{code}")
+      String testPathEndpoint(
+          @PathVariable @Pattern(regexp = "^[A-Z]{3}$", message = "Invalid code format") String code) {
+        return "OK";
+      }
     }
 
     @Data
@@ -99,4 +108,19 @@ class ValidationExceptionHandlerTest {
                     assertThat(errorDTO.getMessage()).isEqualTo("Invalid request");  // Check the message from ErrorDTO
                 });
     }
+
+  @Test
+  void testHandleHandlerMethodValidationException() {
+    webTestClient.get()
+        .uri("/test-path/{code}", "abc")
+        .exchange()
+        .expectStatus().isBadRequest()
+        .expectBody(ErrorDTO.class)
+        .consumeWith(response -> {
+          ErrorDTO errorDTO = response.getResponseBody();
+          assertThat(errorDTO).isNotNull();
+          assertThat(errorDTO.getCode()).isEqualTo("INVALID_REQUEST");
+          assertThat(errorDTO.getMessage()).isEqualTo("[code]: Invalid code format");
+        });
+  }
 }
