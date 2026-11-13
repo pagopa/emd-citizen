@@ -288,7 +288,6 @@ class CitizenControllerTest {
             String resultResponse = response.getResponseBody();
             System.out.println("Test case: fiscalCode - Response: " + resultResponse);
 
-            // Utilizzo di Assertions di Jupiter
             Assertions.assertNotNull(resultResponse);
             Assertions.assertTrue(resultResponse.contains("INVALID_REQUEST"),
                 "Response should contain 'INVALID_REQUEST'");
