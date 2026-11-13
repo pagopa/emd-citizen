@@ -96,7 +96,7 @@ public class ErrorManager {
     String uri = request.getURI().toString();
 
     // Regex for Italian Fiscal Code (handles standard and homocode variants)
-    String fiscalCodeRegex = "([A-Z]{3,6}[0-9LMNPQRSTUV]{1,2}[ABCDEHLMPRST]?[0-9LMNPQRSTUV]{1,2}[A-Z]?[0-9LMNPQRSTUV]{1,3}[A-Z]?)";
+    String fiscalCodeRegex = "([A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z])";
 
     // Masking sensitive occurrences
     String maskedUri = uri.replaceAll(fiscalCodeRegex, "******");
