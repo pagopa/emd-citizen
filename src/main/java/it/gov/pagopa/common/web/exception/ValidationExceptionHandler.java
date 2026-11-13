@@ -15,6 +15,7 @@ import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.server.MissingRequestValueException;
+import org.springframework.web.server.ServerWebExchange;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -53,7 +54,7 @@ public class ValidationExceptionHandler {
     @ExceptionHandler(HandlerMethodValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorDTO handlerMethodValidationException(
-        HandlerMethodValidationException ex, ServerHttpRequest request) {
+        HandlerMethodValidationException ex, ServerWebExchange exchange) {
 
         String message = ex.getParameterValidationResults().stream()
             .flatMap(result -> result.getResolvableErrors().stream()
@@ -63,7 +64,7 @@ public class ValidationExceptionHandler {
             .collect(Collectors.joining("; "));
 
         log.info("A HandlerMethodValidationException occurred handling request {}: HttpStatus 400 - {}",
-            ErrorManager.getRequestDetails(request), message);
+            ErrorManager.describe(exchange), message);
         log.debug("Something went wrong while validating http request", ex);
 
         return new ErrorDTO(templateValidationErrorDTO.getCode(), message);
