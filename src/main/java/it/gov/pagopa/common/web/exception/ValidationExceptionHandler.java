@@ -1,7 +1,6 @@
 package it.gov.pagopa.common.web.exception;
 
 import it.gov.pagopa.common.web.dto.ErrorDTO;
-import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -65,28 +64,6 @@ public class ValidationExceptionHandler {
 
         log.info("A HandlerMethodValidationException occurred handling request {}: HttpStatus 400 - {}",
             ErrorManager.getRequestDetails(request), message);
-        log.debug("Something went wrong while validating http request", ex);
-
-        return new ErrorDTO(templateValidationErrorDTO.getCode(), message);
-    }
-
-    @ExceptionHandler(ConstraintViolationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorDTO handleConstraintViolationException(
-            ConstraintViolationException ex, ServerHttpRequest request) {
-
-        String message = ex.getConstraintViolations().stream()
-                .map(violation -> {
-                    String propertyPath = violation.getPropertyPath().toString();
-                    // propertyPath is like "methodName.fiscalCode"; keep only the last segment
-                    String fieldName = propertyPath.contains(".")
-                            ? propertyPath.substring(propertyPath.lastIndexOf('.') + 1)
-                            : propertyPath;
-                    return String.format("[%s]: %s", fieldName, violation.getMessage());
-                }).collect(Collectors.joining("; "));
-
-        log.info("A ConstraintViolationException occurred handling request {}: HttpStatus 400 - {}",
-                ErrorManager.getRequestDetails(request), message);
         log.debug("Something went wrong while validating http request", ex);
 
         return new ErrorDTO(templateValidationErrorDTO.getCode(), message);
