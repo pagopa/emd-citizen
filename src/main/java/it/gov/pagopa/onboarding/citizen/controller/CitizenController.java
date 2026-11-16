@@ -245,6 +245,11 @@ public interface CitizenController {
     @GetMapping("/filter/{fiscalCode}")
     Mono<ResponseEntity<String>> bloomFilterSearch(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable @Pattern(regexp = CitizenConstants.ValidationRegex.FISCAL_CODE_STRUCTURE_REGEX, message = "Invalid fiscal code format") String fiscalCode);
+        @PathVariable
+        @Pattern(
+            regexp = CitizenConstants.ValidationRegex.FISCAL_CODE_STRUCTURE_REGEX,
+            flags = Pattern.Flag.CASE_INSENSITIVE,
+            message = "Invalid fiscal code format")
+        String fiscalCode);
 
 }
