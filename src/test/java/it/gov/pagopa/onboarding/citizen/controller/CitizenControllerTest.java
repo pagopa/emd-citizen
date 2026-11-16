@@ -256,6 +256,19 @@ class CitizenControllerTest {
                     Assertions.assertEquals("OK", resultResponse);
                 });
     }
+
+    @Test
+    void getAllFiscalCode_LowercaseCF_Ok() {
+      String lower = "mlxhzz43a70h203t";
+      Mockito.when(citizenService.getCitizenInBloomFilter(lower))
+          .thenReturn(Mono.just(true));
+
+      webClient.get()
+          .uri("/emd/citizen/filter/{fiscalCode}", lower)
+          .exchange()
+          .expectStatus().isOk();
+    }
+
     @Test
     void getAllFiscalCode_NoChannelsEnabled() {
         CitizenConsentDTO mockConsent = CitizenConsentDTOFaker.mockInstance(true);
@@ -357,8 +370,7 @@ class CitizenControllerTest {
         Arguments.of("RSSMRA85T10A562SX"),      // 17 characters
         Arguments.of("RSSMRA8WT10A562S"),       // W not allowed in numeric positions
         Arguments.of("RSSMRA85T10A5621"),       // last character is a digit instead of a letter
-        Arguments.of("RSSMRA85T10A562$"),       // special character
-        Arguments.of("rssmra85t10a562s")       // lowercase
+        Arguments.of("RSSMRA85T10A562$")       // special character
     );
   }
 
