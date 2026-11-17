@@ -350,7 +350,6 @@ class CitizenControllerTest {
         Arguments.of("   ", "The fiscalCode field is required"),
         Arguments.of("A".repeat(101), "The fiscalCode field must be between 1 and 100"));
   }
-  }
 
 
 }
