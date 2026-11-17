@@ -2,7 +2,6 @@ package it.gov.pagopa.onboarding.citizen.controller;
 
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.onboarding.citizen.dto.EnrichedCitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentSearchRequest;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentStateUpdateDTO;
@@ -18,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
