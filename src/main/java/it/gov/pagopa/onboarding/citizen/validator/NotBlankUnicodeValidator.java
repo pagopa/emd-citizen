@@ -9,8 +9,6 @@ public class NotBlankUnicodeValidator implements ConstraintValidator<NotBlankUni
 
   @Override
   public boolean isValid(String value, ConstraintValidatorContext ctx) {
-    if (value == null) return false;
-    if (value.isEmpty()) return false;
     return !BLANK_PATTERN.matcher(value).matches();
   }
 }
