@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Optional;
+import org.springframework.web.reactive.HandlerMapping;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.util.pattern.PathPattern;
 
 @RestControllerAdvice
 @Slf4j
@@ -99,5 +102,22 @@ public class ErrorManager {
     String maskedUri = uri.replaceAll(fiscalCodeRegex, "******");
     
     return "%s %s".formatted(request.getMethod(), maskedUri);
+  }
+
+  /**
+   * Returns a log-safe description of the request as {@code "<METHOD> <path>"}, using the
+   * matched path pattern (e.g. {@code /emd/citizen/filter/{fiscalCode}}) instead of the real path, and
+   * omitting the query string, so that personal data never reaches the logs.
+   * Falls back to the raw path if no pattern is available.
+   *
+   * @param exchange the current server exchange
+   * @return the HTTP method followed by the path pattern or raw path
+   */
+  public static String describe(ServerWebExchange exchange) {
+    PathPattern pattern = exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+    String path = pattern != null
+        ? pattern.getPatternString()
+        : exchange.getRequest().getPath().value();
+    return exchange.getRequest().getMethod() + " " + path;
   }
 }

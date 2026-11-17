@@ -12,8 +12,12 @@ import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentDTOFaker;
 import it.gov.pagopa.onboarding.citizen.faker.CitizenConsentStateUpdateDTOFaker;
 import it.gov.pagopa.onboarding.citizen.service.BloomFilterServiceImpl;
 import it.gov.pagopa.onboarding.citizen.service.CitizenServiceImpl;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
@@ -252,6 +256,19 @@ class CitizenControllerTest {
                     Assertions.assertEquals("OK", resultResponse);
                 });
     }
+
+    @Test
+    void getAllFiscalCode_LowercaseCF_Ok() {
+      String lower = "mlxhzz43a70h203t";
+      Mockito.when(citizenService.getCitizenInBloomFilter(lower))
+          .thenReturn(Mono.just(true));
+
+      webClient.get()
+          .uri("/emd/citizen/filter/{fiscalCode}", lower)
+          .exchange()
+          .expectStatus().isOk();
+    }
+
     @Test
     void getAllFiscalCode_NoChannelsEnabled() {
         CitizenConsentDTO mockConsent = CitizenConsentDTOFaker.mockInstance(true);
@@ -269,6 +286,32 @@ class CitizenControllerTest {
                     Assertions.assertEquals("NO CHANNELS ENABLED", resultResponse);
                 });
     }
+
+    // Validation tests for @Size, @Pattern and @NotNull constraints
+    @ParameterizedTest
+    @MethodSource("provideInvalidCF")
+    void getAllFiscalCode_InvalidCF(String fiscalCode) {
+
+      webClient.get()
+          .uri("/emd/citizen/filter/{fiscalCode}",fiscalCode)
+          .exchange()
+          .expectStatus().isBadRequest()
+          .expectBody(String.class)
+          .consumeWith(response -> {
+            String resultResponse = response.getResponseBody();
+            System.out.println("Test case: fiscalCode - Response: " + resultResponse);
+
+            Assertions.assertNotNull(resultResponse);
+            Assertions.assertTrue(resultResponse.contains("INVALID_REQUEST"),
+                "Response should contain 'INVALID_REQUEST'");
+            Assertions.assertTrue(resultResponse.contains("[fiscalCode]"),
+                "Response should contain field name: [fiscalCode]");
+            Assertions.assertTrue(resultResponse.contains("Invalid fiscal code format"),
+                "Response should contain expected message part: Invalid fiscal code format");
+
+          });
+    }
+
 
     @Test
     void getCitizenConsentsListEnabled_ShouldReturnCitizenConsent() {
@@ -318,5 +361,18 @@ class CitizenControllerTest {
                 .expectBody(CitizenConsentDTO.class)
                 .value(response -> Assertions.assertEquals(mockConsent, response));
     }
+
+  private static Stream<Arguments> provideInvalidCF() {
+    return Stream.of(
+        Arguments.of("test"),
+        Arguments.of(" "),
+        Arguments.of("RSSMRA85T10A562"),        // 15 characters
+        Arguments.of("RSSMRA85T10A562SX"),      // 17 characters
+        Arguments.of("RSSMRA8WT10A562S"),       // W not allowed in numeric positions
+        Arguments.of("RSSMRA85T10A5621"),       // last character is a digit instead of a letter
+        Arguments.of("RSSMRA85T10A562$")       // special character
+    );
+  }
+
 
 }

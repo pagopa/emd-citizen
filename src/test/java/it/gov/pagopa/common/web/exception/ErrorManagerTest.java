@@ -14,13 +14,17 @@ import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
+import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.pattern.PathPatternParser;
 
 import java.util.regex.Pattern;
 
@@ -200,6 +204,29 @@ class ErrorManagerTest {
             .expectStatus().is5xxServerError()
             .expectBody()
             .json(EXPECTED_GENERIC_ERROR);
+  }
+
+  @Test
+  void describeUsesPathPatternInsteadOfRealPath() {
+    MockServerWebExchange exchange = MockServerWebExchange.from(
+        MockServerHttpRequest.get("/test/filter/RSSMRA80A01H501?foo=bar").build());
+    exchange.getAttributes().put(
+        HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,
+        new PathPatternParser().parse("/test/filter/{fiscalCode}"));
+
+    String described = ErrorManager.describe(exchange);
+
+    Assertions.assertEquals("GET /test/filter/{fiscalCode}", described);
+    Assertions.assertFalse(described.contains("RSSMRA80A01H501"));
+    Assertions.assertFalse(described.contains("foo"));
+  }
+
+  @Test
+  void describeFallsBackToPathWithoutQueryString() {
+    MockServerWebExchange exchange = MockServerWebExchange.from(
+        MockServerHttpRequest.get("/test/missing?secret=abc").build());
+
+    Assertions.assertEquals("GET /test/missing", ErrorManager.describe(exchange));
   }
 
   public static void checkStackTraceSuppressedLog(MemoryAppender memoryAppender, String expectedLoggedMessage) {

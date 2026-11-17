@@ -31,7 +31,7 @@ public class CitizenConstants {
     public static final class ValidationRegex {
 
         public static final String COMPLETE_FISCAL_CODE = "^[A-Za-z]{6}[0-9]{2}[A-Za-z][0-9]{2}[A-Za-z][0-9]{3}[A-Za-z]$";
-
+        public static final String FISCAL_CODE_STRUCTURE_REGEX = "^[A-Z]{6}[0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$";
         private ValidationRegex() {}
     }
 
