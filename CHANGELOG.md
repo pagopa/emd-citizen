@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.2](https://github.com/pagopa/emd-citizen/compare/v1.4.1...v1.4.2) (2026-11-19)
+
+
+### Bug Fixes
+
+* [MMC-1421] fix validation fiscalCode bloom filter api ([#137](https://github.com/pagopa/emd-citizen/issues/137)) ([51b2df8](https://github.com/pagopa/emd-citizen/commit/51b2df8b646b33cbd419c90fc16cc5d9f8294b2e))
+* [MMC-903] Change regex to same validation on message-core for recipientId ([#138](https://github.com/pagopa/emd-citizen/issues/138)) ([6f0a6b8](https://github.com/pagopa/emd-citizen/commit/6f0a6b832ff1ca410113894f74fb71b4a7449049))
+
 ## [1.4.1](https://github.com/pagopa/emd-citizen/compare/v1.4.0...v1.4.1) (2026-11-09)
 
 
