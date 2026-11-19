@@ -7,15 +7,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import it.gov.pagopa.onboarding.citizen.validator.NotBlankUnicode;
 import jakarta.validation.Valid;
-import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentSearchRequest;
 import it.gov.pagopa.onboarding.citizen.dto.EnrichedCitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
 import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
 import it.gov.pagopa.onboarding.citizen.service.CitizenService;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -246,10 +246,8 @@ public interface CitizenController {
     Mono<ResponseEntity<String>> bloomFilterSearch(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
         @PathVariable
-        @Pattern(
-            regexp = CitizenConstants.ValidationRegex.FISCAL_CODE_STRUCTURE_REGEX,
-            flags = Pattern.Flag.CASE_INSENSITIVE,
-            message = "Invalid fiscal code format")
+        @Size(min = 1, max = 100, message = "The fiscalCode field must be between 1 and 100")
+        @NotBlankUnicode(message = "The fiscalCode field is required")
         String fiscalCode);
 
 }
