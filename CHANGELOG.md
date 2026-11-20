@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.3](https://github.com/pagopa/emd-citizen/compare/v1.4.2...v1.4.3) (2026-11-20)
+
+
+### Bug Fixes
+
+* [MMC-1464] accept recipient IDs between 1 and 100 characters ([#141](https://github.com/pagopa/emd-citizen/issues/141)) ([4211236](https://github.com/pagopa/emd-citizen/commit/4211236538a980688393f80ee21c7a0b46e8791c))
+
 ## [1.4.2](https://github.com/pagopa/emd-citizen/compare/v1.4.1...v1.4.2) (2026-11-19)
 
 
