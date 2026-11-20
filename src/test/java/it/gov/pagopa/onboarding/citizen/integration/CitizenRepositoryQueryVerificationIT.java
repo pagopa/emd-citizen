@@ -81,6 +81,31 @@ public class CitizenRepositoryQueryVerificationIT extends BaseIT {
     }
 
     @Test
+    void searchTreatsSpecialCharactersAsLiteralPrefixes() {
+        StepVerifier.create(mongoTemplate.save(CitizenConsent.builder()
+                .fiscalCode("a.b")
+                .consents(Map.of())
+                .build(), COLLECTION_NAME)).expectNextCount(1).verifyComplete();
+        StepVerifier.create(mongoTemplate.save(CitizenConsent.builder()
+                .fiscalCode("axb")
+                .consents(Map.of())
+                .build(), COLLECTION_NAME)).expectNextCount(1).verifyComplete();
+        StepVerifier.create(mongoTemplate.save(CitizenConsent.builder()
+                .fiscalCode("x\0y")
+                .consents(Map.of())
+                .build(), COLLECTION_NAME)).expectNextCount(1).verifyComplete();
+
+        StepVerifier.create(repository.countByFiscalCodePrefixOrExact("a."))
+                .expectNext(1L).verifyComplete();
+        StepVerifier.create(repository.searchByFiscalCodePrefixOrExact("a.", null, 10))
+                .expectNextMatches(result -> result.fiscalCode().equals("a.b"))
+                .verifyComplete();
+        StepVerifier.create(repository.searchByFiscalCodePrefixOrExact("x\0", null, 10))
+                .expectNextMatches(result -> result.fiscalCode().equals("x\0y"))
+                .verifyComplete();
+    }
+
+    @Test
     void testFindByFiscalCode() {
         log.info("=== EXECUTING findByFiscalCode ===");
 

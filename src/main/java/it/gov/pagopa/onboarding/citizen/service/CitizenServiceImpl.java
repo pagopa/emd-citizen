@@ -315,10 +315,9 @@ public class CitizenServiceImpl implements CitizenService {
     @Override
     public Mono<EnrichedCitizenConsentDTO> searchCitizenConsents(String fiscalCode) {
         return Mono.defer(() -> {
-            String normalizedFiscalCode = fiscalCodeSearchValidator.validateCompleteFiscalCode(fiscalCode);
-            log.info("[EMD-CITIZEN][SEARCH-CITIZEN-CONSENTS] Searching hashedFiscalCode: {}", Utils.createSHA256(normalizedFiscalCode));
+            log.info("[EMD-CITIZEN][SEARCH-CITIZEN-CONSENTS] Searching hashedFiscalCode: {}", Utils.createSHA256(fiscalCode));
 
-            return citizenRepository.findByFiscalCode(normalizedFiscalCode)
+            return citizenRepository.findByFiscalCode(fiscalCode)
                     .switchIfEmpty(Mono.error(exceptionMap.throwException(
                             ExceptionName.CITIZEN_NOT_ONBOARDED, "Citizen consent not found")))
                     .flatMap(citizenConsent -> Flux.fromIterable(citizenConsent.getConsents().entrySet())
@@ -464,14 +463,13 @@ public class CitizenServiceImpl implements CitizenService {
     @Override
     public Mono<PagedResponse<FiscalCodeSearchResult>> searchByFiscalCode(String fiscalCode, String cursor, int size) {
         return Mono.defer(() -> {
-            String normalizedFiscalCode = fiscalCodeSearchValidator.validateAndNormalize(fiscalCode);
             fiscalCodeSearchValidator.validateSize(size);
-            String normalizedCursor = fiscalCodeSearchValidator.validateAndNormalizeCursor(cursor, normalizedFiscalCode);
+            String normalizedCursor = fiscalCodeSearchValidator.validateAndNormalizeCursor(cursor, fiscalCode);
             int fetchLimit = Math.addExact(size, 1);
 
             return Mono.zip(
-                    citizenRepository.countByFiscalCodePrefixOrExact(normalizedFiscalCode),
-                    citizenRepository.searchByFiscalCodePrefixOrExact(normalizedFiscalCode, normalizedCursor, fetchLimit).collectList()
+                    citizenRepository.countByFiscalCodePrefixOrExact(fiscalCode),
+                    citizenRepository.searchByFiscalCodePrefixOrExact(fiscalCode, normalizedCursor, fetchLimit).collectList()
             ).map(result -> {
                 long totalElements = result.getT1();
                 long totalPages = totalElements / size + (totalElements % size == 0 ? 0 : 1);

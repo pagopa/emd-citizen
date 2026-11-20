@@ -14,6 +14,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * <p>Implementation of custom MongoDB aggregation queries for {@link CitizenConsent}.</p>
@@ -72,7 +73,7 @@ public class CitizenSpecificRepositoryImpl implements CitizenSpecificRepository 
     private Criteria fiscalCodeCriteria(String normalizedFiscalCode) {
         return normalizedFiscalCode.length() == 16
                 ? Criteria.where(FISCAL_CODE).is(normalizedFiscalCode)
-                : Criteria.where(FISCAL_CODE).regex("^" + normalizedFiscalCode);
+                : Criteria.where(FISCAL_CODE).regex("^" + Pattern.quote(normalizedFiscalCode).replace("\0", "\\E\\x00\\Q"));
     }
 
     public CitizenSpecificRepositoryImpl(ReactiveMongoTemplate mongoTemplate) {

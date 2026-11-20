@@ -24,9 +24,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpMethod;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -342,10 +344,79 @@ class CitizenControllerTest {
                 .value(response -> Assertions.assertEquals(mockConsent, response));
     }
 
+    @ParameterizedTest
+    @MethodSource("fiscalCodeEndpoints")
+    void fiscalCodePathAcceptsLengthsAndRejectsTooLong(HttpMethod method, String path) {
+        ClientExceptionWithBody notFound = new ClientExceptionWithBody(HttpStatus.NOT_FOUND, "NOT_FOUND", "not found");
+        Mockito.when(citizenService.createCitizenConsent(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.error(notFound));
+        Mockito.when(citizenService.switchState(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.error(notFound));
+        Mockito.when(citizenService.getCitizenConsentStatus(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.error(notFound));
+        Mockito.when(citizenService.getCitizenConsentsList(Mockito.anyString())).thenReturn(Mono.error(notFound));
+        Mockito.when(citizenService.getCitizenConsentsListEnabled(Mockito.anyString())).thenReturn(Mono.error(notFound));
+        Mockito.when(citizenService.getTppEnabledList(Mockito.anyString())).thenReturn(Mono.error(notFound));
+        Mockito.when(citizenService.getCitizenInBloomFilter(Mockito.anyString())).thenReturn(Mono.error(notFound));
+        Mockito.when(citizenService.deleteCitizenConsent(Mockito.anyString())).thenReturn(Mono.error(notFound));
+
+        for (String value : List.of("a", " ", "a".repeat(100), "!@._-", "a/b?c", "😀")) {
+            webClient.method(method).uri(path, value).exchange().expectStatus().isNotFound();
+        }
+        Mockito.clearInvocations(citizenService);
+        webClient.method(method).uri(path, "a".repeat(101)).exchange().expectStatus().isBadRequest();
+        Mockito.verifyNoInteractions(citizenService);
+    }
+
+    private static Stream<Arguments> fiscalCodeEndpoints() {
+        return Stream.of(
+                Arguments.of(HttpMethod.POST, "/emd/citizen/{fiscalCode}/tpp"),
+                Arguments.of(HttpMethod.PUT, "/emd/citizen/{fiscalCode}/tpp"),
+                Arguments.of(HttpMethod.GET, "/emd/citizen/{fiscalCode}/tpp"),
+                Arguments.of(HttpMethod.GET, "/emd/citizen/list/{fiscalCode}"),
+                Arguments.of(HttpMethod.GET, "/emd/citizen/list/{fiscalCode}/enabled"),
+                Arguments.of(HttpMethod.GET, "/emd/citizen/list/{fiscalCode}/enabled/tpp"),
+                Arguments.of(HttpMethod.GET, "/emd/citizen/filter/{fiscalCode}"),
+                Arguments.of(HttpMethod.DELETE, "/emd/citizen/{fiscalCode}")
+        );
+    }
+
+    @Test
+    void emptyFiscalCodePathIsRejected() {
+        for (String path : List.of("/emd/citizen//tpp", "/emd/citizen/list/", "/emd/citizen/filter/",
+                "/emd/citizen/list//enabled", "/emd/citizen/list//enabled/tpp")) {
+            webClient.get().uri(URI.create(path)).exchange().expectStatus().isBadRequest();
+        }
+        Mockito.verifyNoInteractions(citizenService);
+    }
+
+    @Test
+    void searchCitizenConsentsAcceptsArbitraryIdentifier() {
+        Mockito.when(citizenService.searchCitizenConsents(" "))
+                .thenReturn(Mono.error(new ClientExceptionWithBody(HttpStatus.NOT_FOUND, "NOT_FOUND", "not found")));
+        webClient.post().uri("/emd/citizen/consent/search")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new CitizenConsentSearchRequest(" "))
+                .exchange().expectStatus().isNotFound();
+        webClient.post().uri("/emd/citizen/consent/search")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new CitizenConsentSearchRequest("a".repeat(101)))
+                .exchange().expectStatus().isBadRequest();
+    }
+
+    @Test
+    void searchQueryUsesTheSameLengthConstraint() {
+        Mockito.when(citizenService.searchByFiscalCode(Mockito.anyString(), Mockito.isNull(), Mockito.eq(10)))
+                .thenReturn(Mono.error(new ClientExceptionWithBody(HttpStatus.NOT_FOUND, "NOT_FOUND", "not found")));
+        for (String value : List.of(" ", "a", "a".repeat(100))) {
+            webClient.get().uri(builder -> builder.path("/emd/citizen/search")
+                            .queryParam("fiscalCode", "{value}").build(value))
+                    .exchange().expectStatus().isNotFound();
+        }
+        webClient.get().uri(builder -> builder.path("/emd/citizen/search")
+                        .queryParam("fiscalCode", "{value}").build("a".repeat(101)))
+                .exchange().expectStatus().isBadRequest();
+    }
+
   private static Stream<Arguments> provideInvalidCF() {
     return Stream.of(
-        Arguments.of(" ", "The fiscalCode field is required"),
-        Arguments.of("   ", "The fiscalCode field is required"),
         Arguments.of("A".repeat(101), "The fiscalCode field must be between 1 and 100"));
   }
 

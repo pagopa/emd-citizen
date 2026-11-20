@@ -207,6 +207,14 @@ class ErrorManagerTest {
   }
 
   @Test
+  void masksArbitraryCitizenIdentifiersInPathsAndQueries() {
+    var pathRequest = MockServerHttpRequest.get("/emd/citizen/filter/secret-123").build();
+    var queryRequest = MockServerHttpRequest.get("/emd/citizen/search?fiscalCode=secret-123").build();
+    Assertions.assertEquals("GET /emd/citizen/***", ErrorManager.getRequestDetails(pathRequest));
+    Assertions.assertEquals("GET /emd/citizen/***", ErrorManager.getRequestDetails(queryRequest));
+  }
+
+  @Test
   void describeUsesPathPatternInsteadOfRealPath() {
     MockServerWebExchange exchange = MockServerWebExchange.from(
         MockServerHttpRequest.get("/test/filter/RSSMRA80A01H501?foo=bar").build());

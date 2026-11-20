@@ -78,7 +78,7 @@ public class ErrorManager {
     * Extracts and formats HTTP request details (Method and URI) for logging purposes,
     * automatically applying masking logic to sensitive Personally Identifiable Information (PII).
     *
-    * <p>This method scans the request URI for strings matching the <b>Italian Fiscal Code</b>
+    * <p>Citizen request paths and queries are masked entirely. Other request URIs are scanned for strings matching the <b>Italian Fiscal Code</b>
     * pattern, including alphanumeric variants resulting from "omocodia" (homocode) management.
     * Any detected occurrence is replaced with a protection mask ({@code ******}) to ensure
     * GDPR compliance and prevent personal data leakage into application logs.</p>
@@ -86,13 +86,17 @@ public class ErrorManager {
     * <p><b>Transformation Example:</b></p>
     * <pre>
     * Input:  GET https://api.pagopa.it/emd/citizen/RSSMRA85T10A562S/consent
-    * Output: GET https://api.pagopa.it/emd/citizen/{@code ******}/consent}
+    * Output: GET /emd/citizen/***
     * </pre>
     *
     * @param request the {@link ServerHttpRequest} object from which to extract details.
     * @return a formatted {@link String} as "METHOD URI", with sensitive data obscured.
     */
   public static String getRequestDetails(ServerHttpRequest request) {
+    String path = request.getURI().getRawPath();
+    if (path.equals("/emd/citizen") || path.startsWith("/emd/citizen/")) {
+      return "%s /emd/citizen/***".formatted(request.getMethod());
+    }
     String uri = request.getURI().toString();
 
     // Regex for Italian Fiscal Code (handles standard and homocode variants)
