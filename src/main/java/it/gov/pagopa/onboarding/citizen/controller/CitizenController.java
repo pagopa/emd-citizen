@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.gov.pagopa.onboarding.citizen.validator.NotBlankUnicode;
+import it.gov.pagopa.onboarding.citizen.validator.RecipientId;
 import jakarta.validation.Valid;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.CitizenConsentSearchRequest;
@@ -15,7 +15,6 @@ import it.gov.pagopa.onboarding.citizen.dto.EnrichedCitizenConsentDTO;
 import it.gov.pagopa.onboarding.citizen.dto.FiscalCodeSearchResult;
 import it.gov.pagopa.onboarding.citizen.dto.PagedResponse;
 import it.gov.pagopa.onboarding.citizen.service.CitizenService;
-import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -25,7 +24,7 @@ import java.util.List;
 /**
  * <p>Reactive REST contract exposing citizen consent operations.</p>
  *
- * <p>Each method sanitizes raw inputs in the implementation and delegates business logic to {@link CitizenService}.</p>
+ * <p>Methods delegate business logic to {@link CitizenService}.</p>
  *
  * <p>Error semantics and domain flows are documented in the service layer; controller focuses on HTTP contract.</p>
  */
@@ -37,7 +36,7 @@ import java.util.List;
 public interface CitizenController {
 
     @Operation(summary = "Ricerca paginata per prefisso o Codice Fiscale completo",
-            description = "Accetta da 3 a 16 caratteri alfanumerici; usa il cursore restituito per la pagina successiva. size è compresa tra 1 e 100.")
+            description = "Accetta da 1 a 100 caratteri; usa il cursore restituito per la pagina successiva. size è compresa tra 1 e 100.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Risultati e metadati di paginazione"),
             @ApiResponse(responseCode = "400", description = "Parametri di ricerca o paginazione non validi")
@@ -45,7 +44,7 @@ public interface CitizenController {
     @GetMapping("/search")
     Mono<ResponseEntity<PagedResponse<FiscalCodeSearchResult>>> searchByFiscalCode(
             @Parameter(description = "Codice Fiscale o suo prefisso", example = "RSSMRA")
-            @RequestParam("fiscalCode") String fiscalCode,
+            @RequestParam("fiscalCode") @RecipientId String fiscalCode,
             @Parameter(description = "CF dell'ultimo risultato della pagina precedente")
             @RequestParam(name = "cursor", required = false) String cursor,
             @RequestParam(name = "size", defaultValue = "10") int size);
@@ -70,8 +69,8 @@ public interface CitizenController {
      * <p>Delegates to {@link CitizenService#createCitizenConsent(String, String)}.</p>
      * <p><b>Endpoint:</b> {@code POST /emd/citizen/{fiscalCode}/{tppId}}</p>
      *
-     * @param fiscalCode plain fiscal code (regex validated)
-     * @param tppId TPP identifier (regex validated)
+     * @param fiscalCode recipient identifier (1 to 100 characters)
+     * @param tppId TPP identifier
      * @return {@code Mono<ResponseEntity<CitizenConsentDTO>>} 200 OK with requested consent DTO
      */
     @Operation(
@@ -81,12 +80,12 @@ public interface CitizenController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Consent created or retrieved successfully",
             content = @Content(schema = @Schema(implementation = CitizenConsentDTO.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid Fiscal Code or TPP format")
+        @ApiResponse(responseCode = "400", description = "Invalid recipient identifier length")
     })
     @PostMapping("/{fiscalCode}/{tppId}")
     Mono<ResponseEntity<CitizenConsentDTO>> saveCitizenConsent(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S", required = true)
-        @PathVariable String fiscalCode,
+        @PathVariable @RecipientId String fiscalCode,
 
         @Parameter(description = "TPP identifier", example = "TPP_XYZ_123", required = true)
         @PathVariable String tppId);
@@ -96,8 +95,8 @@ public interface CitizenController {
      * <p>Delegates to {@link CitizenService#switchState(String, String)}.</p>
      * <p><b>Endpoint:</b> {@code PUT /emd/citizen/{fiscalCode}/{tppId}}</p>
      *
-     * @param fiscalCode plain fiscal code (regex validated)
-     * @param tppId TPP identifier (regex validated)
+     * @param fiscalCode recipient identifier (1 to 100 characters)
+     * @param tppId TPP identifier
      * @return {@code Mono<ResponseEntity<CitizenConsentDTO>>} 200 OK with updated consent DTO
      */
     @Operation(
@@ -111,7 +110,7 @@ public interface CitizenController {
     @PutMapping("/{fiscalCode}/{tppId}")
     Mono<ResponseEntity<CitizenConsentDTO>> stateSwitch(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable String fiscalCode,
+        @PathVariable @RecipientId String fiscalCode,
 
         @Parameter(description = "TPP identifier", example = "TPP_XYZ_123")
         @PathVariable String tppId);
@@ -121,7 +120,7 @@ public interface CitizenController {
      * <p>Delegates to {@link CitizenService#getTppEnabledList(String)}.</p>
      * <p><b>Endpoint:</b> {@code GET /emd/citizen/list/{fiscalCode}/enabled/tpp}</p>
      *
-     * @param fiscalCode plain fiscal code (regex validated)
+     * @param fiscalCode recipient identifier (1 to 100 characters)
      * @return {@code Mono<ResponseEntity<List<String>>>} 200 OK with enabled TPP ids (possibly empty)
      */
     @Operation(
@@ -131,15 +130,15 @@ public interface CitizenController {
     @GetMapping("/list/{fiscalCode}/enabled/tpp")
     Mono<ResponseEntity<List<String>>> getTppEnabledList(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable String fiscalCode);
+        @PathVariable @RecipientId String fiscalCode);
 
     /**
      * <p>Retrieves consent status for the given TPP.</p>
      * <p>Delegates to {@link CitizenService#getCitizenConsentStatus(String, String)}.</p>
      * <p><b>Endpoint:</b> {@code GET /emd/citizen/{fiscalCode}/{tppId}}</p>
      *
-     * @param fiscalCode plain fiscal code (regex validated)
-     * @param tppId TPP identifier (regex validated)
+     * @param fiscalCode recipient identifier (1 to 100 characters)
+     * @param tppId TPP identifier
      * @return {@code Mono<ResponseEntity<CitizenConsentDTO>>} 200 OK with consent DTO
      */
     @Operation(
@@ -149,7 +148,7 @@ public interface CitizenController {
     @GetMapping("/{fiscalCode}/{tppId}")
     Mono<ResponseEntity<CitizenConsentDTO>> getCitizenConsentStatus(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable String fiscalCode,
+        @PathVariable @RecipientId String fiscalCode,
 
         @Parameter(description = "TPP identifier", example = "TPP_XYZ_123")
         @PathVariable String tppId);
@@ -159,7 +158,7 @@ public interface CitizenController {
      * <p>Delegates to {@link CitizenService#getCitizenConsentsList(String)}.</p>
      * <p><b>Endpoint:</b> {@code GET /emd/citizen/list/{fiscalCode}}</p>
      *
-     * @param fiscalCode plain fiscal code (regex validated)
+     * @param fiscalCode recipient identifier (1 to 100 characters)
      * @return {@code Mono<ResponseEntity<CitizenConsentDTO>>} 200 OK with full consents DTO
      */
     @Operation(
@@ -169,14 +168,14 @@ public interface CitizenController {
     @GetMapping("/list/{fiscalCode}")
     Mono<ResponseEntity<CitizenConsentDTO>> getCitizenConsentsList(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable String fiscalCode);
+        @PathVariable @RecipientId String fiscalCode);
 
     /**
      * <p>Retrieves only enabled consents for the citizen.</p>
      * <p>Delegates to {@link CitizenService#getCitizenConsentsListEnabled(String)}.</p>
      * <p><b>Endpoint:</b> {@code GET /emd/citizen/list/{fiscalCode}/enabled}</p>
      *
-     * @param fiscalCode plain fiscal code (regex validated)
+     * @param fiscalCode recipient identifier (1 to 100 characters)
      * @return {@code Mono<ResponseEntity<CitizenConsentDTO>>} 200 OK with filtered DTO
      */
     @Operation(
@@ -186,14 +185,14 @@ public interface CitizenController {
     @GetMapping("/list/{fiscalCode}/enabled")
     Mono<ResponseEntity<CitizenConsentDTO>> getCitizenConsentsListEnabled(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable String fiscalCode);
+        @PathVariable @RecipientId String fiscalCode);
 
     /**
      * <p>Retrieves citizens with an enabled consent for a TPP id.</p>
      * <p>Delegates to {@link CitizenService#getCitizenEnabled(String)}.</p>
      * <p><b>Endpoint:</b> {@code GET /emd/citizen/{tppId}}</p>
      *
-     * @param tppId TPP identifier (regex validated)
+     * @param tppId TPP identifier
      * @return {@code Mono<ResponseEntity<List<CitizenConsentDTO>>>} 200 OK with list (possibly empty)
      */
     @Operation(
@@ -210,7 +209,7 @@ public interface CitizenController {
      * <p>Delegates to {@link CitizenService#deleteCitizenConsent(String)}.</p>
      * <p><b>Endpoint:</b> {@code DELETE /emd/citizen/{fiscalCode}}</p>
      *
-     * @param fiscalCode plain fiscal code (regex validated)
+     * @param fiscalCode recipient identifier (1 to 100 characters)
      * @return {@code Mono<ResponseEntity<CitizenConsentDTO>>} 200 OK with deleted snapshot DTO
      */
     @Operation(
@@ -225,14 +224,14 @@ public interface CitizenController {
       @DeleteMapping("/{fiscalCode}")
     Mono<ResponseEntity<CitizenConsentDTO>> deleteCitizenConsent(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
-        @PathVariable String fiscalCode);
+        @PathVariable @RecipientId String fiscalCode);
 
     /**
      * <p>Checks Bloom filter membership and enabled consent existence.</p>
      * <p>Delegates to {@link CitizenService#getCitizenInBloomFilter(String)}; maps boolean to textual status.</p>
      * <p><b>Endpoint:</b> {@code GET /emd/citizen/filter/{fiscalCode}}</p>
      *
-     * @param fiscalCode plain fiscal code (regex validated)
+     * @param fiscalCode recipient identifier (1 to 100 characters)
      * @return {@code Mono<ResponseEntity<String>>} 200 OK with status ("OK" or "NO CHANNELS ENABLED")
      */
     @Operation(
@@ -246,8 +245,7 @@ public interface CitizenController {
     Mono<ResponseEntity<String>> bloomFilterSearch(
         @Parameter(description = "Plain fiscal code", example = "RSSMRA85T10A562S")
         @PathVariable
-        @Size(min = 1, max = 100, message = "The fiscalCode field must be between 1 and 100")
-        @NotBlankUnicode(message = "The fiscalCode field is required")
+        @RecipientId
         String fiscalCode);
 
 }

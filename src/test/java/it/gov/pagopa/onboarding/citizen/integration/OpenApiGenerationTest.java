@@ -10,6 +10,14 @@ class OpenApiGenerationTest extends BaseIT {
 
     @Test
     void generateOpenApiFile() throws Exception {
+        webTestClient.get().uri("/v3/api-docs")
+                .exchange().expectStatus().isOk().expectBody()
+                .jsonPath("$.paths['/emd/citizen/{fiscalCode}/{tppId}'].post.parameters[0].schema.minLength").isEqualTo(1)
+                .jsonPath("$.paths['/emd/citizen/{fiscalCode}/{tppId}'].post.parameters[0].schema.maxLength").isEqualTo(100)
+                .jsonPath("$.paths['/emd/citizen/search'].get.parameters[0].schema.minLength").isEqualTo(1)
+                .jsonPath("$.paths['/emd/citizen/search'].get.parameters[0].schema.maxLength").isEqualTo(100)
+                .jsonPath("$.components.schemas.CitizenConsentSearchRequest.properties.fiscalCode.minLength").isEqualTo(1)
+                .jsonPath("$.components.schemas.CitizenConsentSearchRequest.properties.fiscalCode.maxLength").isEqualTo(100);
         // 1. Chiama l'endpoint specifico per lo YAML (.yaml)
         byte[] result = webTestClient.get().uri("/v3/api-docs.yaml") 
                 .exchange()

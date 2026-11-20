@@ -533,7 +533,7 @@ class CitizenServiceTest {
         when(citizenRepository.countByFiscalCodePrefixOrExact("RSSMRA")).thenReturn(Mono.just(25L));
         when(citizenRepository.searchByFiscalCodePrefixOrExact("RSSMRA", null, 3)).thenReturn(Flux.fromIterable(fetched));
 
-        StepVerifier.create(citizenService.searchByFiscalCode("rssmra", null, 2))
+        StepVerifier.create(citizenService.searchByFiscalCode("RSSMRA", null, 2))
                 .assertNext(response -> {
                     assertEquals(2, response.content().size());
                     assertEquals(2, response.pageSize());

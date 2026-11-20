@@ -1,8 +1,7 @@
 package it.gov.pagopa.onboarding.citizen.dto;
 
-import it.gov.pagopa.onboarding.citizen.constants.CitizenConstants;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import io.swagger.v3.oas.annotations.media.Schema;
+import it.gov.pagopa.onboarding.citizen.validator.RecipientId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,10 +13,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class CitizenConsentSearchRequest {
 
-    @NotBlank(message = "Fiscal Code must not be blank")
-    @Pattern(
-            regexp = CitizenConstants.ValidationRegex.COMPLETE_FISCAL_CODE,
-            message = "Fiscal Code format is invalid"
-    )
+    @RecipientId
+    @Schema(type = "string", minLength = RecipientId.MIN_LENGTH, maxLength = RecipientId.MAX_LENGTH)
     private String fiscalCode;
 }
